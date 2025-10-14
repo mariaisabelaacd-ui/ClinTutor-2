@@ -33,9 +33,24 @@ class FirebaseConfig:
             except ValueError:
                 pass  # App não existe, continua com a inicialização
             
-            # Tenta carregar credenciais do Streamlit secrets
+            # Tenta carregar credenciais do Streamlit secrets (Streamlit Cloud)
             if 'firebase_credentials' in st.secrets:
                 cred_dict = st.secrets['firebase_credentials']
+                cred = credentials.Certificate(cred_dict)
+            # Tenta carregar credenciais de variáveis de ambiente (Streamlit Cloud)
+            elif os.getenv('FIREBASE_PROJECT_ID'):
+                cred_dict = {
+                    "type": "service_account",
+                    "project_id": os.getenv('FIREBASE_PROJECT_ID'),
+                    "private_key_id": os.getenv('FIREBASE_PRIVATE_KEY_ID'),
+                    "private_key": os.getenv('FIREBASE_PRIVATE_KEY').replace('\\n', '\n'),
+                    "client_email": os.getenv('FIREBASE_CLIENT_EMAIL'),
+                    "client_id": os.getenv('FIREBASE_CLIENT_ID'),
+                    "auth_uri": os.getenv('FIREBASE_AUTH_URI'),
+                    "token_uri": os.getenv('FIREBASE_TOKEN_URI'),
+                    "auth_provider_x509_cert_url": os.getenv('FIREBASE_AUTH_PROVIDER_X509_CERT_URL'),
+                    "client_x509_cert_url": os.getenv('FIREBASE_CLIENT_X509_CERT_URL')
+                }
                 cred = credentials.Certificate(cred_dict)
             else:
                 # Fallback para arquivo local
@@ -56,7 +71,7 @@ class FirebaseConfig:
                     **Opção A - Arquivo local:**
                     - Salve o arquivo JSON da chave como `firebase-credentials.json` na pasta do projeto
                     
-                    **Opção B - Streamlit Secrets:**
+                    **Opção B - Streamlit Secrets (Streamlit Cloud):**
                     - Adicione as credenciais em `.streamlit/secrets.toml`:
                     ```toml
                     [firebase_credentials]
@@ -71,6 +86,9 @@ class FirebaseConfig:
                     auth_provider_x509_cert_url = "https://www.googleapis.com/oauth2/v1/certs"
                     client_x509_cert_url = "sua-cert-url"
                     ```
+                    
+                    **Opção C - Variáveis de Ambiente (Streamlit Cloud):**
+                    - Configure as variáveis no painel do Streamlit Cloud
                     """)
                     return
             
