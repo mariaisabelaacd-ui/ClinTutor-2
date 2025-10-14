@@ -12,8 +12,16 @@ import numpy as np
 # =============================
 try:
     # A forma correta e segura de carregar a chave a partir dos segredos do Streamlit
-    GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
-    genai.configure(api_key=GOOGLE_API_KEY)
+    if 'google_api' in st.secrets and 'api_key' in st.secrets['google_api']:
+        GOOGLE_API_KEY = st.secrets['google_api']['api_key']
+        genai.configure(api_key=GOOGLE_API_KEY)
+    else:
+        # Fallback para variável de ambiente ou erro
+        GOOGLE_API_KEY = st.secrets.get("GOOGLE_API_KEY", None)
+        if GOOGLE_API_KEY:
+            genai.configure(api_key=GOOGLE_API_KEY)
+        else:
+            raise KeyError("Chave não encontrada")
 except (FileNotFoundError, KeyError):
     # Fallback para avisar o usuário se a chave não for encontrada
     st.error("Chave de API do Google não encontrada! Configure-a em .streamlit/secrets.toml")

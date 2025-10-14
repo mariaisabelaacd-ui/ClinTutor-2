@@ -45,6 +45,8 @@ def show_login_page():
         # Verifica Google API
         if 'google_api' in st.secrets and 'api_key' in st.secrets['google_api']:
             st.success("✅ Chave do Google API encontrada")
+            api_key = st.secrets['google_api']['api_key']
+            st.write(f"**API Key:** {api_key[:10]}...{api_key[-10:]}")
         else:
             st.warning("⚠️ Chave de API do Google não encontrada! Configure-a em .streamlit/secrets.toml")
     else:
