@@ -41,6 +41,12 @@ class FirebaseConfig:
             if 'firebase_credentials' in st.secrets:
                 st.info("✅ Usando credenciais do Streamlit Secrets")
                 cred_dict = st.secrets['firebase_credentials']
+                
+                # Corrige a chave privada se necessário
+                if 'private_key' in cred_dict and isinstance(cred_dict['private_key'], str):
+                    # Garante que as quebras de linha estão corretas
+                    cred_dict['private_key'] = cred_dict['private_key'].replace('\\n', '\n')
+                
                 cred = credentials.Certificate(cred_dict)
             # Tenta carregar credenciais de variáveis de ambiente (Streamlit Cloud)
             elif os.getenv('FIREBASE_PROJECT_ID'):

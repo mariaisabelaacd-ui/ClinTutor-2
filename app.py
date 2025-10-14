@@ -41,6 +41,12 @@ def show_login_page():
             st.write(f"**Project ID:** {cred.get('project_id', 'N/A')}")
         else:
             st.error("❌ Credenciais do Streamlit Secrets NÃO encontradas")
+            
+        # Verifica Google API
+        if 'google_api' in st.secrets and 'api_key' in st.secrets['google_api']:
+            st.success("✅ Chave do Google API encontrada")
+        else:
+            st.warning("⚠️ Chave de API do Google não encontrada! Configure-a em .streamlit/secrets.toml")
     else:
         st.error("❌ st.secrets não disponível")
     
