@@ -1,0 +1,74 @@
+# Firebase Credentials
+firebase-credentials.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Streamlit
+.streamlit/
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# BlackBox Editor
+.blackbox-editor/
+
+# Cache
+.cache/
+
+# Other directories
+.android/
+.clintutor/
+.gradle/
+.icube-remote-ssh/
+.idlerc/
+.kivy/
+.mputils/
+.openjfx/
+.skiko/
+.trae/
+.trae-aicc/
+ai_completion/
+curseforge/
+Muse Hub/
+MyPokeBank/
+OneDrive/
+signer-certillion/
