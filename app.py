@@ -30,11 +30,25 @@ def show_login_page():
     
     st.markdown("---")
     
-    # Status do Firebase
-    if is_firebase_connected():
-        st.success("Conectado ao Firebase - Dados na nuvem")
+    # Status do Firebase com debug
+    st.write("### 🔍 Debug de Conexão Firebase")
+    
+    # Verifica secrets
+    if hasattr(st, 'secrets'):
+        if 'firebase_credentials' in st.secrets:
+            st.success("✅ Credenciais do Streamlit Secrets encontradas")
+            cred = st.secrets['firebase_credentials']
+            st.write(f"**Project ID:** {cred.get('project_id', 'N/A')}")
+        else:
+            st.error("❌ Credenciais do Streamlit Secrets NÃO encontradas")
     else:
-        st.info("Modo local - Dados salvos localmente")
+        st.error("❌ st.secrets não disponível")
+    
+    # Verifica conexão Firebase
+    if is_firebase_connected():
+        st.success("✅ Conectado ao Firebase - Dados na nuvem")
+    else:
+        st.error("❌ Modo local - Dados salvos localmente")
     
     st.markdown("---")
     
