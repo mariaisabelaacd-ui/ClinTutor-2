@@ -29,16 +29,22 @@ class FirebaseConfig:
             try:
                 self.app = get_app()
                 self.db = firestore.client()
+                st.info("🔄 Firebase já estava inicializado")
                 return  # Já está inicializado
             except ValueError:
                 pass  # App não existe, continua com a inicialização
             
+            # Debug: Verifica qual método de credenciais está sendo usado
+            st.info("🔍 Verificando credenciais do Firebase...")
+            
             # Tenta carregar credenciais do Streamlit secrets (Streamlit Cloud)
             if 'firebase_credentials' in st.secrets:
+                st.info("✅ Usando credenciais do Streamlit Secrets")
                 cred_dict = st.secrets['firebase_credentials']
                 cred = credentials.Certificate(cred_dict)
             # Tenta carregar credenciais de variáveis de ambiente (Streamlit Cloud)
             elif os.getenv('FIREBASE_PROJECT_ID'):
+                st.info("✅ Usando credenciais de variáveis de ambiente")
                 cred_dict = {
                     "type": "service_account",
                     "project_id": os.getenv('FIREBASE_PROJECT_ID'),
@@ -54,6 +60,7 @@ class FirebaseConfig:
                 cred = credentials.Certificate(cred_dict)
             else:
                 # Fallback para arquivo local
+                st.info("⚠️ Usando arquivo local (modo offline)")
                 cred_path = os.path.join(os.path.dirname(__file__), 'firebase-credentials.json')
                 if os.path.exists(cred_path):
                     cred = credentials.Certificate(cred_path)
