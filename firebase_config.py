@@ -40,7 +40,7 @@ class FirebaseConfig:
             # Tenta carregar credenciais do Streamlit secrets (Streamlit Cloud)
             if 'firebase_credentials' in st.secrets:
                 st.info("✅ Usando credenciais do Streamlit Secrets")
-                cred_dict = st.secrets['firebase_credentials']
+                cred_dict = dict(st.secrets['firebase_credentials'])  # Cria uma cópia
                 
                 # Corrige a chave privada se necessário
                 if 'private_key' in cred_dict and isinstance(cred_dict['private_key'], str):
