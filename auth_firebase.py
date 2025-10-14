@@ -86,7 +86,7 @@ def register_user_firebase(name: str, email: str, password: str, user_type: str,
             'email': email.lower().strip(),
             'password': hash_password(password),
             'user_type': user_type,
-            'created_at': datetime.now(),
+            'created_at': datetime.now().isoformat(),
             'last_login': None
         }
         
@@ -501,7 +501,7 @@ def create_default_admin():
             'email': 'admin@biotutor.com',
             'password': hash_password('admin123'),
             'user_type': 'admin',
-            'created_at': datetime.now(),
+            'created_at': datetime.now().isoformat(),
             'last_login': None
         }
         

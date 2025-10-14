@@ -47,7 +47,7 @@ def start_case_timer(user_id: str, case_id: str) -> str:
     st.session_state.case_timers[timer_id] = {
         "user_id": user_id,
         "case_id": case_id,
-        "start_time": datetime.now(),
+        "start_time": datetime.now().isoformat(),
         "status": "active"
     }
     
@@ -64,8 +64,10 @@ def end_case_timer(timer_id: str, case_result: Dict) -> Optional[Dict]:
     timer_data = st.session_state.case_timers[timer_id]
     end_time = datetime.now()
     
+    # Converte start_time de string para datetime
+    start_time = datetime.fromisoformat(timer_data["start_time"])
+    
     # Garante que ambos os timestamps tenham o mesmo timezone
-    start_time = timer_data["start_time"]
     if start_time.tzinfo is None:
         start_time = start_time.replace(tzinfo=None)
     if end_time.tzinfo is None:
@@ -82,7 +84,7 @@ def end_case_timer(timer_id: str, case_result: Dict) -> Optional[Dict]:
         "duration_seconds": duration,
         "duration_formatted": format_duration(duration),
         "case_result": case_result,
-        "timestamp": datetime.now()
+        "timestamp": datetime.now().isoformat()
     }
     
     # Salva no Firebase ou local
@@ -116,7 +118,7 @@ def log_chat_interaction(user_id: str, case_id: str, user_message: str, bot_resp
         "user_message": user_message,
         "bot_response": bot_response,
         "response_time_seconds": response_time,
-        "timestamp": datetime.now()
+        "timestamp": datetime.now().isoformat()
     }
     
     save_chat_interaction(interaction)
@@ -262,7 +264,7 @@ def get_user_case_analytics_firebase(user_id: str) -> List[Dict]:
             analytics.append(data)
         
         # Ordena no código por timestamp (mais recente primeiro)
-        analytics.sort(key=lambda x: x.get('timestamp', datetime.min), reverse=True)
+        analytics.sort(key=lambda x: datetime.fromisoformat(x.get('timestamp', datetime.min().isoformat())) if isinstance(x.get('timestamp'), str) else x.get('timestamp', datetime.min), reverse=True)
         
         print(f"DEBUG: Encontrados {len(analytics)} analytics para usuário {user_id}")
         return analytics
@@ -304,7 +306,7 @@ def get_user_chat_interactions_firebase(user_id: str, case_id: str = None) -> Li
             interactions.append(data)
         
         # Ordena no código por timestamp (mais recente primeiro)
-        interactions.sort(key=lambda x: x.get('timestamp', datetime.min), reverse=True)
+        interactions.sort(key=lambda x: datetime.fromisoformat(x.get('timestamp', datetime.min().isoformat())) if isinstance(x.get('timestamp'), str) else x.get('timestamp', datetime.min), reverse=True)
         
         return interactions
     except Exception as e:
@@ -426,7 +428,10 @@ def get_user_detailed_stats(user_id: str) -> Dict[str, Any]:
             recent_cases.append(c)
     cases_by_day = {}
     for case_data in recent_cases:
-        day = case_data.get('timestamp', datetime.now()).strftime('%Y-%m-%d')
+        timestamp = case_data.get('timestamp', datetime.now())
+        if isinstance(timestamp, str):
+            timestamp = datetime.fromisoformat(timestamp)
+        day = timestamp.strftime('%Y-%m-%d')
         cases_by_day[day] = cases_by_day.get(day, 0) + 1
     
     return {
@@ -437,13 +442,18 @@ def get_user_detailed_stats(user_id: str) -> Dict[str, Any]:
         'avg_chat_response_time_formatted': format_duration(avg_response_time),
         'recent_cases_count': len(recent_cases),
         'cases_by_day': cases_by_day,
-        'last_activity': max([c.get('timestamp', datetime.min) for c in case_analytics + chat_interactions], default=datetime.min)
+        'last_activity': max([datetime.fromisoformat(c.get('timestamp', datetime.min().isoformat())) if isinstance(c.get('timestamp'), str) else c.get('timestamp', datetime.min) for c in case_analytics + chat_interactions], default=datetime.min)
     }
 
 def _is_today(timestamp) -> bool:
     """Verifica se um timestamp é de hoje"""
     try:
         now = datetime.now()
+        
+        # Converte string para datetime se necessário
+        if isinstance(timestamp, str):
+            timestamp = datetime.fromisoformat(timestamp)
+        
         # Garante que ambos tenham o mesmo timezone
         if hasattr(timestamp, 'tzinfo') and timestamp.tzinfo is not None:
             timestamp = timestamp.replace(tzinfo=None)
@@ -477,6 +487,6 @@ def get_global_stats() -> Dict[str, Any]:
         'total_chat_interactions': total_chat_interactions,
         'average_accuracy_rate': avg_accuracy,
         'active_users_today': len([user_id for user_id, data in all_analytics.items() 
-                                  if any(_is_today(case.get('timestamp', datetime.min)) 
+                                  if any(_is_today(case.get('timestamp', datetime.min().isoformat())) 
                                         for case in data['case_analytics'] + data['chat_interactions'])])
     }
