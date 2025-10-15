@@ -402,8 +402,15 @@ def get_timestamp_sort_key(x):
     """Função auxiliar para ordenação de timestamps"""
     timestamp = x.get('timestamp', datetime.min.isoformat())
     if isinstance(timestamp, str):
-        return datetime.fromisoformat(timestamp)
+        dt = datetime.fromisoformat(timestamp)
+        # Garante que seja timezone-naive para comparação
+        if dt.tzinfo is not None:
+            dt = dt.replace(tzinfo=None)
+        return dt
     elif hasattr(timestamp, 'timestamp'):
+        # Se for um objeto datetime, garante que seja timezone-naive
+        if timestamp.tzinfo is not None:
+            return timestamp.replace(tzinfo=None)
         return timestamp
     else:
         return datetime.min
@@ -432,19 +439,35 @@ def get_user_detailed_stats(user_id: str) -> Dict[str, Any]:
     recent_cases = []
     for c in case_analytics:
         timestamp = c.get('timestamp', now)
-        # Garante que ambos tenham o mesmo timezone
+        
+        # Converte string para datetime se necessário
+        if isinstance(timestamp, str):
+            timestamp = datetime.fromisoformat(timestamp)
+        
+        # Garante que ambos tenham o mesmo timezone (timezone-naive)
         if hasattr(timestamp, 'tzinfo') and timestamp.tzinfo is not None:
             timestamp = timestamp.replace(tzinfo=None)
         if hasattr(now, 'tzinfo') and now.tzinfo is not None:
             now = now.replace(tzinfo=None)
         
-        if (now - timestamp).days <= 7:
-            recent_cases.append(c)
+        # Verifica se é dos últimos 7 dias
+        try:
+            if (now - timestamp).days <= 7:
+                recent_cases.append(c)
+        except (TypeError, ValueError):
+            # Se houver erro na operação, pula este caso
+            continue
+            
     cases_by_day = {}
     for case_data in recent_cases:
         timestamp = case_data.get('timestamp', datetime.now())
         if isinstance(timestamp, str):
             timestamp = datetime.fromisoformat(timestamp)
+        
+        # Garante timezone-naive
+        if hasattr(timestamp, 'tzinfo') and timestamp.tzinfo is not None:
+            timestamp = timestamp.replace(tzinfo=None)
+            
         day = timestamp.strftime('%Y-%m-%d')
         cases_by_day[day] = cases_by_day.get(day, 0) + 1
     
@@ -468,14 +491,15 @@ def _is_today(timestamp) -> bool:
         if isinstance(timestamp, str):
             timestamp = datetime.fromisoformat(timestamp)
         
-        # Garante que ambos tenham o mesmo timezone
+        # Garante que ambos sejam timezone-naive
         if hasattr(timestamp, 'tzinfo') and timestamp.tzinfo is not None:
             timestamp = timestamp.replace(tzinfo=None)
         if hasattr(now, 'tzinfo') and now.tzinfo is not None:
             now = now.replace(tzinfo=None)
         
+        # Verifica se é do mesmo dia
         return (now - timestamp).days == 0
-    except Exception:
+    except (TypeError, ValueError, AttributeError):
         return False
 
 def get_global_stats() -> Dict[str, Any]:
