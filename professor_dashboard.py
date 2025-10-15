@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
+import datetime as dt
 from typing import Dict, List, Any
 from analytics import (
     get_all_users_analytics, get_user_detailed_stats, get_global_stats,
@@ -354,7 +355,7 @@ def show_student_details_tab(all_users: List[Dict], all_analytics: Dict, period:
                 'Tempo': format_duration(case_data.get('duration_seconds', 0)),
                 'Acertou': '✅' if is_correct else '❌',
                 'Pontos': case_result.get('points_gained', 0),
-                'Data': case_data.get('timestamp', datetime.now()).strftime('%d/%m/%Y %H:%M')
+                'Data': (datetime.fromisoformat(case_data.get('timestamp', datetime.now().isoformat())) if isinstance(case_data.get('timestamp'), str) else case_data.get('timestamp', datetime.now())).strftime('%d/%m/%Y %H:%M')
             })
         
         # Ordena por data (mais recente primeiro)
@@ -425,7 +426,11 @@ def show_chat_interactions_tab(all_users: List[Dict], all_analytics: Dict, perio
         case_id = interaction.get('case_id')
         case_info = get_case(case_id)
         
-        with st.expander(f"💬 {case_info.get('titulo', 'Caso')} - {interaction.get('timestamp', datetime.now()).strftime('%d/%m/%Y %H:%M')}"):
+        timestamp = interaction.get('timestamp', datetime.now())
+        if isinstance(timestamp, str):
+            timestamp = datetime.fromisoformat(timestamp)
+        timestamp_str = timestamp.strftime('%d/%m/%Y %H:%M')
+        with st.expander(f"💬 {case_info.get('titulo', 'Caso')} - {timestamp_str}"):
             col1, col2 = st.columns(2)
             
             with col1:
