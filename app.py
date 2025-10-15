@@ -364,7 +364,7 @@ def auto_fill_fields():
     st.rerun()
 
 def show_case_timer():
-    """Mostra o timer do caso atual para o aluno"""
+    """Mostra o timer do caso atual para o aluno em tempo real"""
     if not hasattr(st.session_state, 'current_timer_id') or not st.session_state.current_timer_id:
         return
     
@@ -382,24 +382,53 @@ def show_case_timer():
     # Converte start_time para datetime
     from datetime import datetime
     start_time = datetime.fromisoformat(start_time_str)
-    current_time = datetime.now()
     
-    # Calcula tempo decorrido
-    elapsed_seconds = (current_time - start_time).total_seconds()
+    # Cria container para o timer
+    timer_placeholder = st.empty()
     
-    # Formata o tempo
-    hours = int(elapsed_seconds // 3600)
-    minutes = int((elapsed_seconds % 3600) // 60)
-    seconds = int(elapsed_seconds % 60)
+    # Timer em tempo real usando JavaScript
+    timer_js = f"""
+    <script>
+    (function() {{
+        const startTime = new Date('{start_time.isoformat()}').getTime();
+        
+        function updateTimer() {{
+            const now = new Date().getTime();
+            const elapsed = now - startTime;
+            
+            const hours = Math.floor(elapsed / (1000 * 60 * 60));
+            const minutes = Math.floor((elapsed % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((elapsed % (1000 * 60)) / 1000);
+            
+            let timeStr;
+            if (hours > 0) {{
+                timeStr = hours.toString().padStart(2, '0') + ':' + 
+                         minutes.toString().padStart(2, '0') + ':' + 
+                         seconds.toString().padStart(2, '0');
+            }} else {{
+                timeStr = minutes.toString().padStart(2, '0') + ':' + 
+                         seconds.toString().padStart(2, '0');
+            }}
+            
+            const timerElement = document.getElementById('realtime-timer');
+            if (timerElement) {{
+                timerElement.innerHTML = '⏱️ ' + timeStr;
+            }}
+        }}
+        
+        // Atualiza a cada segundo
+        setInterval(updateTimer, 1000);
+        updateTimer(); // Chama imediatamente
+        
+        // Garante que o timer continue funcionando
+        window.timerInterval = setInterval(updateTimer, 1000);
+    }})();
+    </script>
+    """
     
-    if hours > 0:
-        time_str = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
-    else:
-        time_str = f"{minutes:02d}:{seconds:02d}"
-    
-    # Mostra o timer com estilo
-    st.markdown(f"""
-    <div style="
+    # Mostra o timer com JavaScript
+    timer_placeholder.markdown(f"""
+    <div id="realtime-timer" style="
         background: linear-gradient(90deg, #ff6b6b, #ffa500);
         color: white;
         padding: 8px 12px;
@@ -410,8 +439,9 @@ def show_case_timer():
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         animation: pulse 2s infinite;
     ">
-        ⏱️ {time_str}
+        ⏱️ 00:00
     </div>
+    {timer_js}
     """, unsafe_allow_html=True)
     
     # Adiciona CSS para animação
@@ -426,7 +456,7 @@ def show_case_timer():
     """, unsafe_allow_html=True)
 
 def show_sidebar_timer():
-    """Mostra o timer na sidebar"""
+    """Mostra o timer na sidebar em tempo real"""
     if not hasattr(st.session_state, 'current_timer_id') or not st.session_state.current_timer_id:
         return
     
@@ -444,25 +474,52 @@ def show_sidebar_timer():
     # Converte start_time para datetime
     from datetime import datetime
     start_time = datetime.fromisoformat(start_time_str)
-    current_time = datetime.now()
-    
-    # Calcula tempo decorrido
-    elapsed_seconds = (current_time - start_time).total_seconds()
-    
-    # Formata o tempo
-    hours = int(elapsed_seconds // 3600)
-    minutes = int((elapsed_seconds % 3600) // 60)
-    seconds = int(elapsed_seconds % 60)
-    
-    if hours > 0:
-        time_str = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
-    else:
-        time_str = f"{minutes:02d}:{seconds:02d}"
     
     # Mostra o timer na sidebar
     st.sidebar.markdown("### ⏱️ Tempo Atual")
+    
+    # Timer em tempo real usando JavaScript na sidebar
+    sidebar_timer_js = f"""
+    <script>
+    (function() {{
+        const startTime = new Date('{start_time.isoformat()}').getTime();
+        
+        function updateSidebarTimer() {{
+            const now = new Date().getTime();
+            const elapsed = now - startTime;
+            
+            const hours = Math.floor(elapsed / (1000 * 60 * 60));
+            const minutes = Math.floor((elapsed % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((elapsed % (1000 * 60)) / 1000);
+            
+            let timeStr;
+            if (hours > 0) {{
+                timeStr = hours.toString().padStart(2, '0') + ':' + 
+                         minutes.toString().padStart(2, '0') + ':' + 
+                         seconds.toString().padStart(2, '0');
+            }} else {{
+                timeStr = minutes.toString().padStart(2, '0') + ':' + 
+                         seconds.toString().padStart(2, '0');
+            }}
+            
+            const timerElement = document.getElementById('sidebar-realtime-timer');
+            if (timerElement) {{
+                timerElement.innerHTML = timeStr;
+            }}
+        }}
+        
+        // Atualiza a cada segundo
+        setInterval(updateSidebarTimer, 1000);
+        updateSidebarTimer(); // Chama imediatamente
+        
+        // Garante que o timer continue funcionando
+        window.sidebarTimerInterval = setInterval(updateSidebarTimer, 1000);
+    }})();
+    </script>
+    """
+    
     st.sidebar.markdown(f"""
-    <div style="
+    <div id="sidebar-realtime-timer" style="
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
         padding: 12px;
@@ -473,8 +530,9 @@ def show_sidebar_timer():
         box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         margin: 10px 0;
     ">
-        {time_str}
+        00:00
     </div>
+    {sidebar_timer_js}
     """, unsafe_allow_html=True)
 
 # Função principal da aplicação
