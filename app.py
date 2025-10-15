@@ -363,6 +363,120 @@ def auto_fill_fields():
     st.session_state.auto_fill_exams = True
     st.rerun()
 
+def show_case_timer():
+    """Mostra o timer do caso atual para o aluno"""
+    if not hasattr(st.session_state, 'current_timer_id') or not st.session_state.current_timer_id:
+        return
+    
+    # Obtém dados do timer
+    timer_id = st.session_state.current_timer_id
+    if "case_timers" not in st.session_state or timer_id not in st.session_state.case_timers:
+        return
+    
+    timer_data = st.session_state.case_timers[timer_id]
+    start_time_str = timer_data.get("start_time")
+    
+    if not start_time_str:
+        return
+    
+    # Converte start_time para datetime
+    from datetime import datetime
+    start_time = datetime.fromisoformat(start_time_str)
+    current_time = datetime.now()
+    
+    # Calcula tempo decorrido
+    elapsed_seconds = (current_time - start_time).total_seconds()
+    
+    # Formata o tempo
+    hours = int(elapsed_seconds // 3600)
+    minutes = int((elapsed_seconds % 3600) // 60)
+    seconds = int(elapsed_seconds % 60)
+    
+    if hours > 0:
+        time_str = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+    else:
+        time_str = f"{minutes:02d}:{seconds:02d}"
+    
+    # Mostra o timer com estilo
+    st.markdown(f"""
+    <div style="
+        background: linear-gradient(90deg, #ff6b6b, #ffa500);
+        color: white;
+        padding: 8px 12px;
+        border-radius: 8px;
+        text-align: center;
+        font-weight: bold;
+        font-size: 16px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        animation: pulse 2s infinite;
+    ">
+        ⏱️ {time_str}
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Adiciona CSS para animação
+    st.markdown("""
+    <style>
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+def show_sidebar_timer():
+    """Mostra o timer na sidebar"""
+    if not hasattr(st.session_state, 'current_timer_id') or not st.session_state.current_timer_id:
+        return
+    
+    # Obtém dados do timer
+    timer_id = st.session_state.current_timer_id
+    if "case_timers" not in st.session_state or timer_id not in st.session_state.case_timers:
+        return
+    
+    timer_data = st.session_state.case_timers[timer_id]
+    start_time_str = timer_data.get("start_time")
+    
+    if not start_time_str:
+        return
+    
+    # Converte start_time para datetime
+    from datetime import datetime
+    start_time = datetime.fromisoformat(start_time_str)
+    current_time = datetime.now()
+    
+    # Calcula tempo decorrido
+    elapsed_seconds = (current_time - start_time).total_seconds()
+    
+    # Formata o tempo
+    hours = int(elapsed_seconds // 3600)
+    minutes = int((elapsed_seconds % 3600) // 60)
+    seconds = int(elapsed_seconds % 60)
+    
+    if hours > 0:
+        time_str = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+    else:
+        time_str = f"{minutes:02d}:{seconds:02d}"
+    
+    # Mostra o timer na sidebar
+    st.sidebar.markdown("### ⏱️ Tempo Atual")
+    st.sidebar.markdown(f"""
+    <div style="
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 12px;
+        border-radius: 10px;
+        text-align: center;
+        font-weight: bold;
+        font-size: 18px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        margin: 10px 0;
+    ">
+        {time_str}
+    </div>
+    """, unsafe_allow_html=True)
+
 # Função principal da aplicação
 def main():
     st.set_page_config(page_title=f"{APP_NAME} – Clínica Geral", page_icon="🧬", layout="wide")
@@ -413,6 +527,10 @@ def main():
     # --- Sidebar (Barra Lateral) ---
     st.sidebar.title("Progresso do Aluno")
     st.sidebar.metric("Score", st.session_state.score)
+    
+    # Timer do caso atual
+    if hasattr(st.session_state, 'current_timer_id') and st.session_state.current_timer_id:
+        show_sidebar_timer()
     
     # Sistema de streak com emoji de foguinho a cada 3 acertos
     streak_display = str(st.session_state.streak)
@@ -507,7 +625,8 @@ def main():
         
         with col3:
             if hasattr(st.session_state, 'current_timer_id') and st.session_state.current_timer_id:
-                st.markdown("**Status:** Ativo")
+                # Mostra timer ativo
+                show_case_timer()
             else:
                 st.markdown("**Status:** Inativo")
     
