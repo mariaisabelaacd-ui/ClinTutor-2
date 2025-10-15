@@ -324,7 +324,7 @@ def get_user_chat_interactions_local(user_id: str, case_id: str = None) -> List[
     return interactions
 
 def get_all_users_analytics() -> Dict[str, Dict]:
-    """Recupera analytics de todos os usuários"""
+    """Recupera analytics de todos os usuários (apenas alunos)"""
     if is_firebase_connected():
         return get_all_users_analytics_firebase()
     else:
@@ -333,9 +333,14 @@ def get_all_users_analytics() -> Dict[str, Dict]:
         return get_all_users_analytics_local()
 
 def get_all_users_analytics_firebase() -> Dict[str, Dict]:
-    """Recupera analytics de todos os usuários do Firebase"""
+    """Recupera analytics de todos os usuários do Firebase (apenas alunos)"""
     try:
         db = get_firestore_db()
+        
+        # Obtém apenas IDs de alunos
+        student_ids = get_students_only()
+        if not student_ids:
+            return {}
         
         # Busca todos os analytics de casos
         case_analytics_ref = db.collection('case_analytics')
@@ -345,28 +350,30 @@ def get_all_users_analytics_firebase() -> Dict[str, Dict]:
         chat_ref = db.collection('chat_interactions')
         chat_docs = chat_ref.get()
         
-        # Organiza por usuário
+        # Organiza por usuário (apenas alunos)
         users_analytics = {}
         
         for doc in case_docs:
             data = doc.to_dict()
             user_id = data.get('user_id')
-            if user_id not in users_analytics:
-                users_analytics[user_id] = {
-                    'case_analytics': [],
-                    'chat_interactions': []
-                }
-            users_analytics[user_id]['case_analytics'].append(data)
+            if user_id in student_ids:  # Filtra apenas alunos
+                if user_id not in users_analytics:
+                    users_analytics[user_id] = {
+                        'case_analytics': [],
+                        'chat_interactions': []
+                    }
+                users_analytics[user_id]['case_analytics'].append(data)
         
         for doc in chat_docs:
             data = doc.to_dict()
             user_id = data.get('user_id')
-            if user_id not in users_analytics:
-                users_analytics[user_id] = {
-                    'case_analytics': [],
-                    'chat_interactions': []
-                }
-            users_analytics[user_id]['chat_interactions'].append(data)
+            if user_id in student_ids:  # Filtra apenas alunos
+                if user_id not in users_analytics:
+                    users_analytics[user_id] = {
+                        'case_analytics': [],
+                        'chat_interactions': []
+                    }
+                users_analytics[user_id]['chat_interactions'].append(data)
         
         return users_analytics
         
@@ -375,28 +382,43 @@ def get_all_users_analytics_firebase() -> Dict[str, Dict]:
         return {}
 
 def get_all_users_analytics_local() -> Dict[str, Dict]:
-    """Recupera analytics de todos os usuários localmente"""
+    """Recupera analytics de todos os usuários localmente (apenas alunos)"""
     analytics = load_analytics_local()
     users_analytics = {}
     
+    # Obtém apenas IDs de alunos
+    student_ids = get_students_only()
+    if not student_ids:
+        return {}
+    
     for data in analytics:
         user_id = data.get('user_id')
-        if user_id not in users_analytics:
-            users_analytics[user_id] = {
-                'case_analytics': [],
-                'chat_interactions': []
-            }
-        
-        if data.get('type') == 'chat_interaction':
-            users_analytics[user_id]['chat_interactions'].append(data)
-        else:
-            users_analytics[user_id]['case_analytics'].append(data)
+        if user_id in student_ids:  # Filtra apenas alunos
+            if user_id not in users_analytics:
+                users_analytics[user_id] = {
+                    'case_analytics': [],
+                    'chat_interactions': []
+                }
+            
+            if data.get('type') == 'chat_interaction':
+                users_analytics[user_id]['chat_interactions'].append(data)
+            else:
+                users_analytics[user_id]['case_analytics'].append(data)
     
     return users_analytics
 
 # =============================
 # Funções Auxiliares
 # =============================
+
+def get_students_only() -> List[str]:
+    """Retorna lista de IDs de usuários que são alunos"""
+    try:
+        from auth_firebase import get_all_users
+        all_users = get_all_users()
+        return [user['id'] for user in all_users if user.get('user_type') == 'aluno']
+    except Exception:
+        return []
 
 def get_timestamp_sort_key(x):
     """Função auxiliar para ordenação de timestamps"""

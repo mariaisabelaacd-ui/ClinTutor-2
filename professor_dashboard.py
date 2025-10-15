@@ -23,8 +23,11 @@ def show_advanced_professor_dashboard():
         all_analytics = get_all_users_analytics()
         global_stats = get_global_stats()
         
-        if not all_users:
-            st.warning("Nenhum usuário encontrado.")
+        # Filtra apenas alunos para exibição
+        student_users = [user for user in all_users if user.get('user_type') == 'aluno']
+        
+        if not student_users:
+            st.warning("Nenhum aluno encontrado.")
             return
             
         if not all_analytics:
@@ -78,16 +81,16 @@ def show_advanced_professor_dashboard():
     ])
     
     with tab1:
-        show_overview_tab(all_users, all_analytics, period)
+        show_overview_tab(student_users, all_analytics, period)
     
     with tab2:
-        show_student_details_tab(all_users, all_analytics, period)
+        show_student_details_tab(student_users, all_analytics, period)
     
     with tab3:
-        show_chat_interactions_tab(all_users, all_analytics, period)
+        show_chat_interactions_tab(student_users, all_analytics, period)
     
     with tab4:
-        show_reports_tab(all_users, all_analytics, period)
+        show_reports_tab(student_users, all_analytics, period)
 
 def show_global_statistics(global_stats: Dict[str, Any]):
     """Mostra estatísticas globais do sistema"""
@@ -125,16 +128,15 @@ def show_global_statistics(global_stats: Dict[str, Any]):
             global_stats.get('active_users_today', 0)
         )
 
-def show_overview_tab(all_users: List[Dict], all_analytics: Dict, period: str):
+def show_overview_tab(student_users: List[Dict], all_analytics: Dict, period: str):
     """Tab de visão geral com gráficos"""
     st.subheader("📈 Visão Geral")
     
     # Prepara dados para gráficos
     users_data = []
-    for user in all_users:
-        if user.get('user_type') == 'aluno':  # Foca em alunos
-            user_stats = get_user_detailed_stats(user['id'])
-            users_data.append({
+    for user in student_users:
+        user_stats = get_user_detailed_stats(user['id'])
+        users_data.append({
                 'Nome': user['name'],
                 'Email': user['email'],
                 'Casos Resolvidos': user_stats['case_stats']['total_cases'],
@@ -224,12 +226,12 @@ def show_overview_tab(all_users: List[Dict], all_analytics: Dict, period: str):
         hide_index=True
     )
 
-def show_student_details_tab(all_users: List[Dict], all_analytics: Dict, period: str):
+def show_student_details_tab(student_users: List[Dict], all_analytics: Dict, period: str):
     """Tab com detalhes por aluno"""
     st.subheader("👥 Detalhes por Aluno")
     
-    # Filtra apenas alunos
-    students = [user for user in all_users if user.get('user_type') == 'aluno']
+    # Usa apenas alunos (já filtrados)
+    students = student_users
     
     if not students:
         st.info("Nenhum aluno encontrado.")
@@ -366,12 +368,12 @@ def show_student_details_tab(all_users: List[Dict], all_analytics: Dict, period:
     else:
         st.info("Nenhum caso resolvido ainda.")
 
-def show_chat_interactions_tab(all_users: List[Dict], all_analytics: Dict, period: str):
+def show_chat_interactions_tab(student_users: List[Dict], all_analytics: Dict, period: str):
     """Tab com interações do chat"""
     st.subheader("💬 Interações com o Chatbot")
     
-    # Filtra apenas alunos
-    students = [user for user in all_users if user.get('user_type') == 'aluno']
+    # Usa apenas alunos (já filtrados)
+    students = student_users
     
     if not students:
         st.info("Nenhum aluno encontrado.")
@@ -444,13 +446,13 @@ def show_chat_interactions_tab(all_users: List[Dict], all_analytics: Dict, perio
             if interaction.get('response_time_seconds'):
                 st.caption(f"⏱️ Tempo de resposta: {format_duration(interaction['response_time_seconds'])}")
 
-def show_reports_tab(all_users: List[Dict], all_analytics: Dict, period: str):
+def show_reports_tab(student_users: List[Dict], all_analytics: Dict, period: str):
     """Tab com relatórios"""
     st.subheader("📊 Relatórios")
     
     # Botão para gerar relatório
     if st.button("📄 Gerar Relatório Completo", type="primary"):
-        generate_complete_report(all_users, all_analytics)
+        generate_complete_report(student_users, all_analytics)
     
     st.markdown("---")
     
@@ -459,10 +461,9 @@ def show_reports_tab(all_users: List[Dict], all_analytics: Dict, period: str):
     
     # Prepara dados para relatório
     performance_data = []
-    for user in all_users:
-        if user.get('user_type') == 'aluno':
-            user_stats = get_user_detailed_stats(user['id'])
-            performance_data.append({
+    for user in student_users:
+        user_stats = get_user_detailed_stats(user['id'])
+        performance_data.append({
                 'Aluno': user['name'],
                 'Email': user['email'],
                 'Casos Resolvidos': user_stats['case_stats']['total_cases'],
@@ -491,7 +492,7 @@ def show_reports_tab(all_users: List[Dict], all_analytics: Dict, period: str):
     else:
         st.info("Nenhum dado de performance encontrado.")
 
-def generate_complete_report(all_users: List[Dict], all_analytics: Dict):
+def generate_complete_report(student_users: List[Dict], all_analytics: Dict):
     """Gera relatório completo"""
     st.success("📄 Relatório gerado com sucesso!")
     
@@ -513,10 +514,9 @@ def generate_complete_report(all_users: List[Dict], all_analytics: Dict):
         
         st.markdown("### 👥 Performance por Aluno")
         
-        for user in all_users:
-            if user.get('user_type') == 'aluno':
-                user_stats = get_user_detailed_stats(user['id'])
-                st.markdown(f"""
+        for user in student_users:
+            user_stats = get_user_detailed_stats(user['id'])
+            st.markdown(f"""
                 **{user['name']}**
                 - Casos resolvidos: {user_stats['case_stats']['total_cases']}
                 - Taxa de acertos: {user_stats['case_stats']['accuracy_rate']:.1f}%
