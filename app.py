@@ -363,178 +363,6 @@ def auto_fill_fields():
     st.session_state.auto_fill_exams = True
     st.rerun()
 
-def show_case_timer():
-    """Mostra o timer do caso atual para o aluno em tempo real"""
-    if not hasattr(st.session_state, 'current_timer_id') or not st.session_state.current_timer_id:
-        return
-    
-    # Obtém dados do timer
-    timer_id = st.session_state.current_timer_id
-    if "case_timers" not in st.session_state or timer_id not in st.session_state.case_timers:
-        return
-    
-    timer_data = st.session_state.case_timers[timer_id]
-    start_time_str = timer_data.get("start_time")
-    
-    if not start_time_str:
-        return
-    
-    # Converte start_time para datetime
-    from datetime import datetime
-    start_time = datetime.fromisoformat(start_time_str)
-    
-    # Cria container para o timer
-    timer_placeholder = st.empty()
-    
-    # Timer em tempo real usando JavaScript
-    timer_js = f"""
-    <script>
-    (function() {{
-        const startTime = new Date('{start_time.isoformat()}').getTime();
-        
-        function updateTimer() {{
-            const now = new Date().getTime();
-            const elapsed = now - startTime;
-            
-            const hours = Math.floor(elapsed / (1000 * 60 * 60));
-            const minutes = Math.floor((elapsed % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((elapsed % (1000 * 60)) / 1000);
-            
-            let timeStr;
-            if (hours > 0) {{
-                timeStr = hours.toString().padStart(2, '0') + ':' + 
-                         minutes.toString().padStart(2, '0') + ':' + 
-                         seconds.toString().padStart(2, '0');
-            }} else {{
-                timeStr = minutes.toString().padStart(2, '0') + ':' + 
-                         seconds.toString().padStart(2, '0');
-            }}
-            
-            const timerElement = document.getElementById('realtime-timer');
-            if (timerElement) {{
-                timerElement.innerHTML = '⏱️ ' + timeStr;
-            }}
-        }}
-        
-        // Atualiza a cada segundo
-        setInterval(updateTimer, 1000);
-        updateTimer(); // Chama imediatamente
-        
-        // Garante que o timer continue funcionando
-        window.timerInterval = setInterval(updateTimer, 1000);
-    }})();
-    </script>
-    """
-    
-    # Mostra o timer com JavaScript
-    timer_placeholder.markdown(f"""
-    <div id="realtime-timer" style="
-        background: linear-gradient(90deg, #ff6b6b, #ffa500);
-        color: white;
-        padding: 8px 12px;
-        border-radius: 8px;
-        text-align: center;
-        font-weight: bold;
-        font-size: 16px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        animation: pulse 2s infinite;
-    ">
-        ⏱️ 00:00
-    </div>
-    {timer_js}
-    """, unsafe_allow_html=True)
-    
-    # Adiciona CSS para animação
-    st.markdown("""
-    <style>
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-        100% { transform: scale(1); }
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-def show_sidebar_timer():
-    """Mostra o timer na sidebar em tempo real"""
-    if not hasattr(st.session_state, 'current_timer_id') or not st.session_state.current_timer_id:
-        return
-    
-    # Obtém dados do timer
-    timer_id = st.session_state.current_timer_id
-    if "case_timers" not in st.session_state or timer_id not in st.session_state.case_timers:
-        return
-    
-    timer_data = st.session_state.case_timers[timer_id]
-    start_time_str = timer_data.get("start_time")
-    
-    if not start_time_str:
-        return
-    
-    # Converte start_time para datetime
-    from datetime import datetime
-    start_time = datetime.fromisoformat(start_time_str)
-    
-    # Mostra o timer na sidebar
-    st.sidebar.markdown("### ⏱️ Tempo Atual")
-    
-    # Timer em tempo real usando JavaScript na sidebar
-    sidebar_timer_js = f"""
-    <script>
-    (function() {{
-        const startTime = new Date('{start_time.isoformat()}').getTime();
-        
-        function updateSidebarTimer() {{
-            const now = new Date().getTime();
-            const elapsed = now - startTime;
-            
-            const hours = Math.floor(elapsed / (1000 * 60 * 60));
-            const minutes = Math.floor((elapsed % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((elapsed % (1000 * 60)) / 1000);
-            
-            let timeStr;
-            if (hours > 0) {{
-                timeStr = hours.toString().padStart(2, '0') + ':' + 
-                         minutes.toString().padStart(2, '0') + ':' + 
-                         seconds.toString().padStart(2, '0');
-            }} else {{
-                timeStr = minutes.toString().padStart(2, '0') + ':' + 
-                         seconds.toString().padStart(2, '0');
-            }}
-            
-            const timerElement = document.getElementById('sidebar-realtime-timer');
-            if (timerElement) {{
-                timerElement.innerHTML = timeStr;
-            }}
-        }}
-        
-        // Atualiza a cada segundo
-        setInterval(updateSidebarTimer, 1000);
-        updateSidebarTimer(); // Chama imediatamente
-        
-        // Garante que o timer continue funcionando
-        window.sidebarTimerInterval = setInterval(updateSidebarTimer, 1000);
-    }})();
-    </script>
-    """
-    
-    st.sidebar.markdown(f"""
-    <div id="sidebar-realtime-timer" style="
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 12px;
-        border-radius: 10px;
-        text-align: center;
-        font-weight: bold;
-        font-size: 18px;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        margin: 10px 0;
-    ">
-        00:00
-    </div>
-    {sidebar_timer_js}
-    """, unsafe_allow_html=True)
-
 # Função principal da aplicação
 def main():
     st.set_page_config(page_title=f"{APP_NAME} – Clínica Geral", page_icon="🧬", layout="wide")
@@ -585,10 +413,6 @@ def main():
     # --- Sidebar (Barra Lateral) ---
     st.sidebar.title("Progresso do Aluno")
     st.sidebar.metric("Score", st.session_state.score)
-    
-    # Timer do caso atual
-    if hasattr(st.session_state, 'current_timer_id') and st.session_state.current_timer_id:
-        show_sidebar_timer()
     
     # Sistema de streak com emoji de foguinho a cada 3 acertos
     streak_display = str(st.session_state.streak)
@@ -683,8 +507,7 @@ def main():
         
         with col3:
             if hasattr(st.session_state, 'current_timer_id') and st.session_state.current_timer_id:
-                # Mostra timer ativo
-                show_case_timer()
+                st.markdown("**Status:** Ativo")
             else:
                 st.markdown("**Status:** Inativo")
     
@@ -799,7 +622,24 @@ def main():
                 try:
                     analytics_data = end_case_timer(st.session_state.current_timer_id, res)
                     if analytics_data:
-                        st.success(f"Caso resolvido em {analytics_data['duration_formatted']}")
+                        # Mensagem destacada com o tempo de resolução
+                        st.markdown(f"""
+                        <div style="
+                            background: linear-gradient(135deg, #4CAF50, #45a049);
+                            color: white;
+                            padding: 20px;
+                            border-radius: 10px;
+                            text-align: center;
+                            font-size: 18px;
+                            font-weight: bold;
+                            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                            margin: 20px 0;
+                        ">
+                            🎉 <strong>Caso Resolvido!</strong><br>
+                            ⏱️ Tempo de resolução: <strong>{analytics_data['duration_formatted']}</strong><br>
+                            📊 Pontos ganhos: <strong>{res['points_gained']}</strong>
+                        </div>
+                        """, unsafe_allow_html=True)
                 except Exception as e:
                     st.error(f"Erro ao salvar analytics: {e}")
                 finally:
