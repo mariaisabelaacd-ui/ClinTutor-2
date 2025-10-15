@@ -20,6 +20,7 @@ from analytics import (
     get_user_detailed_stats, calculate_accuracy_rate
 )
 from admin_dashboard import show_admin_dashboard
+from professor_dashboard import show_advanced_professor_dashboard
 
 def show_login_page():
     """Exibe página de login e cadastro"""
@@ -174,7 +175,7 @@ def show_professor_dashboard():
     st.markdown("---")
     
     # Estatísticas dos usuários
-    from auth import get_all_users
+    from auth_firebase import get_all_users
     users = get_all_users()
     
     col1, col2, col3 = st.columns(3)

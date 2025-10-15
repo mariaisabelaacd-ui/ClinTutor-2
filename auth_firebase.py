@@ -494,6 +494,11 @@ def create_default_admin():
             admin_query = db.collection('users').where('user_type', '==', 'admin').limit(1).get()
             if admin_query:
                 return True, "Administrador já existe"
+        else:
+            # Verifica localmente também
+            users = load_users_local()
+            if any(user.get('user_type') == 'admin' for user in users):
+                return True, "Administrador já existe"
         
         # Cria o admin padrão
         admin_data = {

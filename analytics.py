@@ -264,7 +264,7 @@ def get_user_case_analytics_firebase(user_id: str) -> List[Dict]:
             analytics.append(data)
         
         # Ordena no código por timestamp (mais recente primeiro)
-        analytics.sort(key=lambda x: datetime.fromisoformat(x.get('timestamp', datetime.min().isoformat())) if isinstance(x.get('timestamp'), str) else x.get('timestamp', datetime.min), reverse=True)
+        analytics.sort(key=get_timestamp_sort_key, reverse=True)
         
         print(f"DEBUG: Encontrados {len(analytics)} analytics para usuário {user_id}")
         return analytics
@@ -306,7 +306,7 @@ def get_user_chat_interactions_firebase(user_id: str, case_id: str = None) -> Li
             interactions.append(data)
         
         # Ordena no código por timestamp (mais recente primeiro)
-        interactions.sort(key=lambda x: datetime.fromisoformat(x.get('timestamp', datetime.min().isoformat())) if isinstance(x.get('timestamp'), str) else x.get('timestamp', datetime.min), reverse=True)
+        interactions.sort(key=get_timestamp_sort_key, reverse=True)
         
         return interactions
     except Exception as e:
@@ -395,6 +395,20 @@ def get_all_users_analytics_local() -> Dict[str, Dict]:
     return users_analytics
 
 # =============================
+# Funções Auxiliares
+# =============================
+
+def get_timestamp_sort_key(x):
+    """Função auxiliar para ordenação de timestamps"""
+    timestamp = x.get('timestamp', datetime.min().isoformat())
+    if isinstance(timestamp, str):
+        return datetime.fromisoformat(timestamp)
+    elif hasattr(timestamp, 'timestamp'):
+        return timestamp
+    else:
+        return datetime.min()
+
+# =============================
 # Funções de Estatísticas
 # =============================
 
@@ -442,7 +456,7 @@ def get_user_detailed_stats(user_id: str) -> Dict[str, Any]:
         'avg_chat_response_time_formatted': format_duration(avg_response_time),
         'recent_cases_count': len(recent_cases),
         'cases_by_day': cases_by_day,
-        'last_activity': max([datetime.fromisoformat(c.get('timestamp', datetime.min().isoformat())) if isinstance(c.get('timestamp'), str) else c.get('timestamp', datetime.min) for c in case_analytics + chat_interactions], default=datetime.min)
+        'last_activity': max([get_timestamp_sort_key(c) for c in case_analytics + chat_interactions], default=datetime.min())
     }
 
 def _is_today(timestamp) -> bool:

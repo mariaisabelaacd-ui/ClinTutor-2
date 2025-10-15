@@ -16,10 +16,23 @@ def show_advanced_professor_dashboard():
     st.title("📊 Dashboard Avançado - Analytics dos Alunos")
     st.markdown("---")
     
-    # Carrega dados
-    all_users = get_all_users()
-    all_analytics = get_all_users_analytics()
-    global_stats = get_global_stats()
+    try:
+        # Carrega dados com tratamento de erro
+        all_users = get_all_users()
+        all_analytics = get_all_users_analytics()
+        global_stats = get_global_stats()
+        
+        if not all_users:
+            st.warning("Nenhum usuário encontrado.")
+            return
+            
+        if not all_analytics:
+            st.warning("Nenhum dado de analytics encontrado.")
+            return
+            
+    except Exception as e:
+        st.error(f"Erro ao carregar dados: {e}")
+        return
     
     # Filtros
     col1, col2, col3 = st.columns(3)
