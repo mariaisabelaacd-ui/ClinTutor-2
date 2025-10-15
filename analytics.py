@@ -437,6 +437,77 @@ def get_timestamp_sort_key(x):
     else:
         return datetime.min
 
+def get_case_resolution_times(user_id: str) -> List[Dict[str, Any]]:
+    """Retorna lista de casos com tempos de resolução para um usuário"""
+    case_analytics = get_user_analytics(user_id)
+    resolution_times = []
+    
+    for case_data in case_analytics:
+        case_id = case_data.get('case_id')
+        duration_seconds = case_data.get('duration_seconds', 0)
+        duration_formatted = case_data.get('duration_formatted', 'N/A')
+        case_result = case_data.get('case_result', 'unknown')
+        timestamp = case_data.get('timestamp', datetime.now().isoformat())
+        
+        # Converte timestamp para datetime se necessário
+        if isinstance(timestamp, str):
+            timestamp = datetime.fromisoformat(timestamp)
+        
+        resolution_times.append({
+            'case_id': case_id,
+            'duration_seconds': duration_seconds,
+            'duration_formatted': duration_formatted,
+            'case_result': case_result,
+            'timestamp': timestamp,
+            'is_correct': case_result == 'correct'
+        })
+    
+    # Ordena por timestamp (mais recente primeiro)
+    resolution_times.sort(key=lambda x: x['timestamp'], reverse=True)
+    
+    return resolution_times
+
+def get_resolution_time_stats(user_id: str) -> Dict[str, Any]:
+    """Retorna estatísticas de tempo de resolução para um usuário"""
+    resolution_times = get_case_resolution_times(user_id)
+    
+    if not resolution_times:
+        return {
+            'total_cases': 0,
+            'average_time_seconds': 0,
+            'average_time_formatted': '0s',
+            'fastest_time_seconds': 0,
+            'fastest_time_formatted': '0s',
+            'slowest_time_seconds': 0,
+            'slowest_time_formatted': '0s',
+            'correct_cases_time': [],
+            'incorrect_cases_time': []
+        }
+    
+    # Separa casos corretos e incorretos
+    correct_times = [r['duration_seconds'] for r in resolution_times if r['is_correct']]
+    incorrect_times = [r['duration_seconds'] for r in resolution_times if not r['is_correct']]
+    
+    # Calcula estatísticas gerais
+    all_times = [r['duration_seconds'] for r in resolution_times]
+    avg_time = sum(all_times) / len(all_times) if all_times else 0
+    fastest_time = min(all_times) if all_times else 0
+    slowest_time = max(all_times) if all_times else 0
+    
+    return {
+        'total_cases': len(resolution_times),
+        'average_time_seconds': avg_time,
+        'average_time_formatted': format_duration(avg_time),
+        'fastest_time_seconds': fastest_time,
+        'fastest_time_formatted': format_duration(fastest_time),
+        'slowest_time_seconds': slowest_time,
+        'slowest_time_formatted': format_duration(slowest_time),
+        'correct_cases_time': correct_times,
+        'incorrect_cases_time': incorrect_times,
+        'correct_avg_time': sum(correct_times) / len(correct_times) if correct_times else 0,
+        'incorrect_avg_time': sum(incorrect_times) / len(incorrect_times) if incorrect_times else 0
+    }
+
 # =============================
 # Funções de Estatísticas
 # =============================

@@ -7,7 +7,8 @@ import datetime as dt
 from typing import Dict, List, Any
 from analytics import (
     get_all_users_analytics, get_user_detailed_stats, get_global_stats,
-    get_user_chat_interactions, format_duration
+    get_user_chat_interactions, format_duration, get_case_resolution_times,
+    get_resolution_time_stats
 )
 from auth_firebase import get_all_users, get_user_by_id
 from logic import get_case
@@ -73,9 +74,10 @@ def show_advanced_professor_dashboard():
     st.markdown("---")
     
     # Tabs para diferentes visualizações
-    tab1, tab2, tab3, tab4 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "📈 Visão Geral", 
         "👥 Por Aluno", 
+        "⏱️ Tempos de Resolução",
         "💬 Interações Chat", 
         "📊 Relatórios"
     ])
@@ -87,9 +89,12 @@ def show_advanced_professor_dashboard():
         show_student_details_tab(student_users, all_analytics, period)
     
     with tab3:
-        show_chat_interactions_tab(student_users, all_analytics, period)
+        show_resolution_times_tab(student_users, all_analytics, period)
     
     with tab4:
+        show_chat_interactions_tab(student_users, all_analytics, period)
+    
+    with tab5:
         show_reports_tab(student_users, all_analytics, period)
 
 def show_global_statistics(global_stats: Dict[str, Any]):
@@ -251,7 +256,7 @@ def show_student_details_tab(student_users: List[Dict], all_analytics: Dict, per
     st.markdown(f"### 👤 {selected_student['name']}")
     
     # Métricas do aluno
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4, col5 = st.columns(5)
     
     with col1:
         st.metric(
@@ -275,6 +280,12 @@ def show_student_details_tab(student_users: List[Dict], all_analytics: Dict, per
         st.metric(
             "💬 Interações Chat",
             student_stats['total_chat_interactions']
+        )
+    
+    with col5:
+        st.metric(
+            "📊 Score Total",
+            student_stats['case_stats'].get('total_score', 0)
         )
     
     # Gráficos específicos do aluno
@@ -367,6 +378,107 @@ def show_student_details_tab(student_users: List[Dict], all_analytics: Dict, per
         st.dataframe(df_history, use_container_width=True, hide_index=True)
     else:
         st.info("Nenhum caso resolvido ainda.")
+
+def show_resolution_times_tab(student_users: List[Dict], all_analytics: Dict, period: str):
+    """Tab com tempos de resolução de casos"""
+    st.subheader("⏱️ Tempos de Resolução de Casos")
+    
+    if not student_users:
+        st.info("Nenhum aluno encontrado.")
+        return
+    
+    # Seletor de aluno
+    student_names = [f"{user['name']} ({user['email']})" for user in student_users]
+    selected_student_idx = st.selectbox(
+        "👤 Selecione um aluno:",
+        range(len(student_names)),
+        format_func=lambda x: student_names[x]
+    )
+    
+    if selected_student_idx is not None:
+        selected_student = student_users[selected_student_idx]
+        student_id = selected_student['id']
+        
+        # Obtém dados de tempo de resolução
+        resolution_times = get_case_resolution_times(student_id)
+        time_stats = get_resolution_time_stats(student_id)
+        
+        if not resolution_times:
+            st.info(f"Nenhum caso resolvido por {selected_student['name']} ainda.")
+            return
+        
+        # Estatísticas gerais
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.metric("📊 Total de Casos", time_stats['total_cases'])
+        
+        with col2:
+            st.metric("⏱️ Tempo Médio", time_stats['average_time_formatted'])
+        
+        with col3:
+            st.metric("⚡ Mais Rápido", time_stats['fastest_time_formatted'])
+        
+        with col4:
+            st.metric("🐌 Mais Lento", time_stats['slowest_time_formatted'])
+        
+        st.markdown("---")
+        
+        # Gráfico de distribuição de tempos
+        st.subheader("📈 Distribuição de Tempos")
+        
+        # Prepara dados para o gráfico
+        times_data = []
+        for case_data in resolution_times:
+            case_info = get_case(case_data['case_id'])
+            times_data.append({
+                'Caso': case_info.get('titulo', f"Caso {case_data['case_id']}"),
+                'Tempo (segundos)': case_data['duration_seconds'],
+                'Tempo Formatado': case_data['duration_formatted'],
+                'Resultado': '✅ Correto' if case_data['is_correct'] else '❌ Incorreto',
+                'Data': case_data['timestamp'].strftime('%d/%m/%Y %H:%M')
+            })
+        
+        if times_data:
+            df_times = pd.DataFrame(times_data)
+            
+            # Gráfico de barras
+            fig = px.bar(
+                df_times, 
+                x='Caso', 
+                y='Tempo (segundos)',
+                color='Resultado',
+                title="Tempo de Resolução por Caso",
+                color_discrete_map={'✅ Correto': '#00ff00', '❌ Incorreto': '#ff0000'}
+            )
+            fig.update_layout(xaxis_tickangle=-45)
+            st.plotly_chart(fig, use_container_width=True)
+            
+            # Tabela detalhada
+            st.subheader("📋 Detalhes dos Casos")
+            st.dataframe(
+                df_times[['Caso', 'Tempo Formatado', 'Resultado', 'Data']],
+                use_container_width=True,
+                hide_index=True
+            )
+        
+        # Comparação entre casos corretos e incorretos
+        if time_stats['correct_cases_time'] and time_stats['incorrect_cases_time']:
+            st.subheader("🔍 Análise Comparativa")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.metric(
+                    "✅ Tempo Médio (Corretos)", 
+                    format_duration(time_stats['correct_avg_time'])
+                )
+            
+            with col2:
+                st.metric(
+                    "❌ Tempo Médio (Incorretos)", 
+                    format_duration(time_stats['incorrect_avg_time'])
+                )
 
 def show_chat_interactions_tab(student_users: List[Dict], all_analytics: Dict, period: str):
     """Tab com interações do chat"""
