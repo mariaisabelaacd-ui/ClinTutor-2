@@ -622,24 +622,8 @@ def main():
                 try:
                     analytics_data = end_case_timer(st.session_state.current_timer_id, res)
                     if analytics_data:
-                        # Mensagem destacada com o tempo de resolução
-                        st.markdown(f"""
-                        <div style="
-                            background: linear-gradient(135deg, #4CAF50, #45a049);
-                            color: white;
-                            padding: 20px;
-                            border-radius: 10px;
-                            text-align: center;
-                            font-size: 18px;
-                            font-weight: bold;
-                            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-                            margin: 20px 0;
-                        ">
-                            🎉 <strong>Caso Resolvido!</strong><br>
-                            ⏱️ Tempo de resolução: <strong>{analytics_data['duration_formatted']}</strong><br>
-                            📊 Pontos ganhos: <strong>{res['points_gained']}</strong>
-                        </div>
-                        """, unsafe_allow_html=True)
+                        # Salva dados do timer para exibir depois
+                        st.session_state.timer_result = analytics_data
                 except Exception as e:
                     st.error(f"Erro ao salvar analytics: {e}")
                 finally:
@@ -671,6 +655,28 @@ def main():
             res = st.session_state.last_result
             gained = res["points_gained"]
             bd = res["breakdown"]
+            
+            # Mostra mensagem do timer se disponível
+            if hasattr(st.session_state, 'timer_result') and st.session_state.timer_result:
+                timer_data = st.session_state.timer_result
+                st.markdown(f"""
+                <div style="
+                    background: linear-gradient(135deg, #4CAF50, #45a049);
+                    color: white;
+                    padding: 20px;
+                    border-radius: 10px;
+                    text-align: center;
+                    font-size: 18px;
+                    font-weight: bold;
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                    margin: 20px 0;
+                ">
+                    🎉 <strong>Caso Resolvido!</strong><br>
+                    ⏱️ Tempo de resolução: <strong>{timer_data['duration_formatted']}</strong><br>
+                    📊 Pontos ganhos: <strong>{gained}</strong>
+                </div>
+                """, unsafe_allow_html=True)
+            
             with st.container(border=True):
                 st.success(f"Você ganhou **{gained}** pontos! (Diag: {bd['diagnóstico']}, Exames: {bd['exames']}, Plano: {bd['plano']} + Bônus: {bd['bônus_streak']})")
                 st.info(res["feedback"])
