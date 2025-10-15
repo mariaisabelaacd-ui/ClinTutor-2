@@ -379,51 +379,27 @@ def show_case_timer():
     if not start_time_str:
         return
     
-    # Converte start_time para datetime e calcula timestamp
+    # Converte start_time para datetime
     from datetime import datetime
     start_time = datetime.fromisoformat(start_time_str)
-    start_timestamp = start_time.timestamp()
+    current_time = datetime.now()
     
-    # Cria um container para o timer
-    timer_container = st.empty()
+    # Calcula tempo decorrido
+    elapsed_seconds = (current_time - start_time).total_seconds()
     
-    # JavaScript para timer em tempo real
-    timer_js = f"""
-    <script>
-    function updateTimer() {{
-        const startTime = {start_timestamp};
-        const now = new Date().getTime() / 1000;
-        const elapsed = now - startTime;
-        
-        const hours = Math.floor(elapsed / 3600);
-        const minutes = Math.floor((elapsed % 3600) / 60);
-        const seconds = Math.floor(elapsed % 60);
-        
-        let timeStr;
-        if (hours > 0) {{
-            timeStr = hours.toString().padStart(2, '0') + ':' + 
-                     minutes.toString().padStart(2, '0') + ':' + 
-                     seconds.toString().padStart(2, '0');
-        }} else {{
-            timeStr = minutes.toString().padStart(2, '0') + ':' + 
-                     seconds.toString().padStart(2, '0');
-        }}
-        
-        const timerElement = document.getElementById('case-timer');
-        if (timerElement) {{
-            timerElement.innerHTML = '⏱️ ' + timeStr;
-        }}
-    }}
+    # Formata o tempo
+    hours = int(elapsed_seconds // 3600)
+    minutes = int((elapsed_seconds % 3600) // 60)
+    seconds = int(elapsed_seconds % 60)
     
-    // Atualiza a cada segundo
-    setInterval(updateTimer, 1000);
-    updateTimer(); // Chama imediatamente
-    </script>
-    """
+    if hours > 0:
+        time_str = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+    else:
+        time_str = f"{minutes:02d}:{seconds:02d}"
     
-    # Mostra o timer com JavaScript
-    timer_container.markdown(f"""
-    <div id="case-timer" style="
+    # Mostra o timer com estilo
+    st.markdown(f"""
+    <div style="
         background: linear-gradient(90deg, #ff6b6b, #ffa500);
         color: white;
         padding: 8px 12px;
@@ -434,9 +410,8 @@ def show_case_timer():
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         animation: pulse 2s infinite;
     ">
-        ⏱️ 00:00
+        ⏱️ {time_str}
     </div>
-    {timer_js}
     """, unsafe_allow_html=True)
     
     # Adiciona CSS para animação
@@ -466,50 +441,28 @@ def show_sidebar_timer():
     if not start_time_str:
         return
     
-    # Converte start_time para datetime e calcula timestamp
+    # Converte start_time para datetime
     from datetime import datetime
     start_time = datetime.fromisoformat(start_time_str)
-    start_timestamp = start_time.timestamp()
+    current_time = datetime.now()
+    
+    # Calcula tempo decorrido
+    elapsed_seconds = (current_time - start_time).total_seconds()
+    
+    # Formata o tempo
+    hours = int(elapsed_seconds // 3600)
+    minutes = int((elapsed_seconds % 3600) // 60)
+    seconds = int(elapsed_seconds % 60)
+    
+    if hours > 0:
+        time_str = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+    else:
+        time_str = f"{minutes:02d}:{seconds:02d}"
     
     # Mostra o timer na sidebar
     st.sidebar.markdown("### ⏱️ Tempo Atual")
-    
-    # JavaScript para timer em tempo real na sidebar
-    sidebar_timer_js = f"""
-    <script>
-    function updateSidebarTimer() {{
-        const startTime = {start_timestamp};
-        const now = new Date().getTime() / 1000;
-        const elapsed = now - startTime;
-        
-        const hours = Math.floor(elapsed / 3600);
-        const minutes = Math.floor((elapsed % 3600) / 60);
-        const seconds = Math.floor(elapsed % 60);
-        
-        let timeStr;
-        if (hours > 0) {{
-            timeStr = hours.toString().padStart(2, '0') + ':' + 
-                     minutes.toString().padStart(2, '0') + ':' + 
-                     seconds.toString().padStart(2, '0');
-        }} else {{
-            timeStr = minutes.toString().padStart(2, '0') + ':' + 
-                     seconds.toString().padStart(2, '0');
-        }}
-        
-        const timerElement = document.getElementById('sidebar-timer');
-        if (timerElement) {{
-            timerElement.innerHTML = timeStr;
-        }}
-    }}
-    
-    // Atualiza a cada segundo
-    setInterval(updateSidebarTimer, 1000);
-    updateSidebarTimer(); // Chama imediatamente
-    </script>
-    """
-    
     st.sidebar.markdown(f"""
-    <div id="sidebar-timer" style="
+    <div style="
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
         padding: 12px;
@@ -520,9 +473,8 @@ def show_sidebar_timer():
         box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         margin: 10px 0;
     ">
-        00:00
+        {time_str}
     </div>
-    {sidebar_timer_js}
     """, unsafe_allow_html=True)
 
 # Função principal da aplicação
