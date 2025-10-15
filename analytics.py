@@ -400,13 +400,13 @@ def get_all_users_analytics_local() -> Dict[str, Dict]:
 
 def get_timestamp_sort_key(x):
     """Função auxiliar para ordenação de timestamps"""
-    timestamp = x.get('timestamp', datetime.min().isoformat())
+    timestamp = x.get('timestamp', datetime.min.isoformat())
     if isinstance(timestamp, str):
         return datetime.fromisoformat(timestamp)
     elif hasattr(timestamp, 'timestamp'):
         return timestamp
     else:
-        return datetime.min()
+        return datetime.min
 
 # =============================
 # Funções de Estatísticas
@@ -456,7 +456,7 @@ def get_user_detailed_stats(user_id: str) -> Dict[str, Any]:
         'avg_chat_response_time_formatted': format_duration(avg_response_time),
         'recent_cases_count': len(recent_cases),
         'cases_by_day': cases_by_day,
-        'last_activity': max([get_timestamp_sort_key(c) for c in case_analytics + chat_interactions], default=datetime.min())
+        'last_activity': max([get_timestamp_sort_key(c) for c in case_analytics + chat_interactions], default=datetime.min)
     }
 
 def _is_today(timestamp) -> bool:
@@ -501,6 +501,6 @@ def get_global_stats() -> Dict[str, Any]:
         'total_chat_interactions': total_chat_interactions,
         'average_accuracy_rate': avg_accuracy,
         'active_users_today': len([user_id for user_id, data in all_analytics.items() 
-                                  if any(_is_today(case.get('timestamp', datetime.min().isoformat())) 
+                                  if any(_is_today(case.get('timestamp', datetime.min.isoformat())) 
                                         for case in data['case_analytics'] + data['chat_interactions'])])
     }
