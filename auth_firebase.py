@@ -43,6 +43,29 @@ def validate_email(email: str) -> bool:
     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     return re.match(pattern, email) is not None
 
+def validate_email_domain(email: str) -> Tuple[bool, str]:
+    """
+    Valida se o email pertence aos domínios permitidos da Santa Casa
+    Retorna: (is_valid, user_type)
+    """
+    if not email or '@' not in email:
+        return False, ""
+    
+    domain = email.split('@')[1].lower()
+    
+    # Domínios permitidos
+    allowed_domains = {
+        'professor': 'fcmsantacasasp.edu.br',
+        'aluno': 'aluno.fcmsantacasasp.edu.br'
+    }
+    
+    if domain == allowed_domains['professor']:
+        return True, 'professor'
+    elif domain == allowed_domains['aluno']:
+        return True, 'aluno'
+    else:
+        return False, ""
+
 def email_exists_firebase(email: str) -> bool:
     """Verifica se email já está cadastrado no Firebase"""
     if not is_firebase_connected():
@@ -125,8 +148,8 @@ def register_user_local(name: str, email: str, password: str, user_type: str, ra
     
     return True, "Usuário cadastrado com sucesso localmente!"
 
-def register_user(name: str, email: str, password: str, user_type: str, ra: str = None) -> Tuple[bool, str]:
-    """Registra um novo usuário (Firebase ou local)"""
+def register_user(name: str, email: str, password: str, user_type: str, ra: str = None, verification_code: str = None) -> Tuple[bool, str]:
+    """Registra um novo usuário (Firebase ou local) com verificação de email"""
     # Validações
     if not name.strip():
         return False, "Nome é obrigatório"
@@ -136,6 +159,23 @@ def register_user(name: str, email: str, password: str, user_type: str, ra: str 
     
     if not validate_email(email):
         return False, "Formato de email inválido"
+    
+    # Validação de domínio
+    is_valid_domain, detected_user_type = validate_email_domain(email)
+    if not is_valid_domain:
+        return False, "❌ Email não permitido! Use apenas emails da Santa Casa:\n• Professores: @fcmsantacasasp.edu.br\n• Alunos: @aluno.fcmsantacasasp.edu.br"
+    
+    # Verifica se o tipo de usuário corresponde ao domínio
+    if user_type != detected_user_type:
+        return False, f"❌ Tipo de usuário incorreto! Email {email} deve ser registrado como {detected_user_type}"
+    
+    # Verificação de código (se fornecido)
+    if verification_code:
+        from email_auth_system import get_email_auth_system
+        email_auth = get_email_auth_system()
+        success, message = email_auth.verify_code(email, verification_code)
+        if not success:
+            return False, f"❌ Código de verificação inválido: {message}"
     
     if email_exists(email):
         return False, "Email já está cadastrado"

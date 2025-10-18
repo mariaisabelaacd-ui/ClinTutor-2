@@ -1,0 +1,22 @@
+# Configuração de Email para Sistema de Verificação
+# Adicione estas configurações ao seu .streamlit/secrets.toml
+
+[email_sender]
+email = "seu_email@gmail.com"  # Email que enviará os códigos
+password = "sua_senha_app"      # Senha de app do Gmail (não a senha normal)
+
+# Exemplo de configuração:
+# [email_sender]
+# email = "clintutor.santacasa@gmail.com"
+# password = "abcdefghijklmnop"
+
+# INSTRUÇÕES PARA CONFIGURAR GMAIL:
+# 1. Ative a verificação em 2 etapas na sua conta Google
+# 2. Gere uma "Senha de app" específica para o ClinTutor
+# 3. Use essa senha de app no campo 'password' acima
+# 4. O email deve ser o mesmo que você configurou no Gmail
+
+# ALTERNATIVAS DE SERVIDOR SMTP:
+# Gmail: smtp.gmail.com:587
+# Outlook: smtp-mail.outlook.com:587
+# Yahoo: smtp.mail.yahoo.com:587
