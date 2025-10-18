@@ -424,11 +424,14 @@ def get_timestamp_sort_key(x):
     """Função auxiliar para ordenação de timestamps"""
     timestamp = x.get('timestamp', datetime.min.isoformat())
     if isinstance(timestamp, str):
-        dt = datetime.fromisoformat(timestamp)
-        # Garante que seja timezone-naive para comparação
-        if dt.tzinfo is not None:
-            dt = dt.replace(tzinfo=None)
-        return dt
+        try:
+            dt = datetime.fromisoformat(timestamp)
+            # Garante que seja timezone-naive para comparação
+            if dt.tzinfo is not None:
+                dt = dt.replace(tzinfo=None)
+            return dt
+        except (ValueError, TypeError):
+            return datetime.min
     elif hasattr(timestamp, 'timestamp'):
         # Se for um objeto datetime, garante que seja timezone-naive
         if timestamp.tzinfo is not None:
@@ -462,8 +465,22 @@ def get_case_resolution_times(user_id: str) -> List[Dict[str, Any]]:
             'is_correct': case_result == 'correct'
         })
     
-    # Ordena por timestamp (mais recente primeiro)
-    resolution_times.sort(key=lambda x: x['timestamp'], reverse=True)
+    # Ordena por timestamp (mais recente primeiro) com tratamento de erro
+    def safe_timestamp_sort(x):
+        timestamp = x.get('timestamp')
+        if timestamp is None:
+            return datetime.min
+        if isinstance(timestamp, str):
+            try:
+                return datetime.fromisoformat(timestamp)
+            except:
+                return datetime.min
+        elif isinstance(timestamp, datetime):
+            return timestamp
+        else:
+            return datetime.min
+    
+    resolution_times.sort(key=safe_timestamp_sort, reverse=True)
     
     return resolution_times
 
