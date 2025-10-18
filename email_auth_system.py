@@ -79,11 +79,11 @@ class EmailAuthSystem:
     def send_verification_email(self, email: str, code: str, user_type: str) -> bool:
         """Envia código de verificação por email"""
         try:
-            # Configurações do email (você precisa configurar)
-            smtp_server = "smtp.gmail.com"  # Ou seu servidor SMTP
+            # Configurações do email
+            smtp_server = "smtp.gmail.com"
             smtp_port = 587
-            sender_email = st.secrets.get("email_sender", "seu_email@gmail.com")
-            sender_password = st.secrets.get("email_password", "sua_senha")
+            sender_email = st.secrets['email_sender']['email']
+            sender_password = st.secrets['email_sender']['password']
             
             # Cria mensagem
             msg = MIMEMultipart()
