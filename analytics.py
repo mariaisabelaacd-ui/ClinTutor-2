@@ -439,7 +439,7 @@ def get_timestamp_sort_key(x):
 
 def get_case_resolution_times(user_id: str) -> List[Dict[str, Any]]:
     """Retorna lista de casos com tempos de resolução para um usuário"""
-    case_analytics = get_user_analytics(user_id)
+    case_analytics = get_user_case_analytics(user_id)
     resolution_times = []
     
     for case_data in case_analytics:
