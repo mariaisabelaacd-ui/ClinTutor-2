@@ -104,6 +104,8 @@ def show_login_page():
             - **Alunos:** @aluno.fcmsantacasasp.edu.br
             
             ⚠️ Emails de outros domínios (gmail, hotmail, etc.) não são aceitos!
+            
+            **🎓 Para Alunos:** RA (Registro Acadêmico) é obrigatório
             """)
             
             with st.form("register_form"):
@@ -137,19 +139,7 @@ def show_login_page():
                     else:
                         ra = None
                     
-                    # Código de verificação
-                    verification_code = st.text_input("Código de Verificação", placeholder="Digite o código de 6 dígitos", label_visibility="collapsed", help="Solicite o código clicando no botão abaixo")
-                    
-                    # Botão para solicitar código
-                    if st.form_submit_button("📧 Solicitar Código", help="Envia código de verificação para seu email"):
-                        if email and email.strip():
-                            from email_auth_system import get_email_auth_system
-                            email_auth = get_email_auth_system()
-                            success, message = email_auth.request_verification_code(email.strip())
-                            if success:
-                                st.success(message)
-                            else:
-                                st.error(message)
+                    # Sistema simplificado - apenas validação de domínio e RA
                     
                     # Botão centralizado
                     register_submitted = st.form_submit_button("Cadastrar", type="primary", use_container_width=True)
@@ -158,8 +148,6 @@ def show_login_page():
                 # Validações básicas
                 if not user_type:
                     st.error("❌ Email com domínio não permitido!")
-                elif not verification_code or len(verification_code) != 6:
-                    st.error("❌ Digite o código de verificação de 6 dígitos!")
                 elif password != confirm_password:
                     st.error("❌ As senhas não coincidem")
                 elif len(password) < 6:
@@ -172,7 +160,7 @@ def show_login_page():
                         elif not ra.strip():
                             st.error("❌ O RA é obrigatório para alunos")
                         else:
-                            success, message = register_user(name, email, password, user_type, ra, verification_code)
+                            success, message = register_user(name, email, password, user_type, ra)
                             if success:
                                 st.success("✅ Conta criada com sucesso!")
                                 st.info("Agora você pode fazer login na aba 'Login'")
@@ -183,7 +171,7 @@ def show_login_page():
                         if not all([name, email, password, confirm_password]):
                             st.error("❌ Preencha todos os campos")
                         else:
-                            success, message = register_user(name, email, password, user_type, None, verification_code)
+                            success, message = register_user(name, email, password, user_type)
                             if success:
                                 st.success("✅ Conta criada com sucesso!")
                                 st.info("Agora você pode fazer login na aba 'Login'")
