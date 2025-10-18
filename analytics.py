@@ -264,7 +264,11 @@ def get_user_case_analytics_firebase(user_id: str) -> List[Dict]:
             analytics.append(data)
         
         # Ordena no código por timestamp (mais recente primeiro)
-        analytics.sort(key=get_timestamp_sort_key, reverse=True)
+        try:
+            analytics.sort(key=get_timestamp_sort_key, reverse=True)
+        except Exception as e:
+            st.warning(f"⚠️ Erro ao ordenar analytics: {e}")
+            pass
         
         print(f"DEBUG: Encontrados {len(analytics)} analytics para usuário {user_id}")
         return analytics
@@ -306,7 +310,11 @@ def get_user_chat_interactions_firebase(user_id: str, case_id: str = None) -> Li
             interactions.append(data)
         
         # Ordena no código por timestamp (mais recente primeiro)
-        interactions.sort(key=get_timestamp_sort_key, reverse=True)
+        try:
+            interactions.sort(key=get_timestamp_sort_key, reverse=True)
+        except Exception as e:
+            st.warning(f"⚠️ Erro ao ordenar interações: {e}")
+            pass
         
         return interactions
     except Exception as e:
@@ -421,23 +429,29 @@ def get_students_only() -> List[str]:
         return []
 
 def get_timestamp_sort_key(x):
-    """Função auxiliar para ordenação de timestamps"""
-    timestamp = x.get('timestamp', datetime.min.isoformat())
-    if isinstance(timestamp, str):
-        try:
-            dt = datetime.fromisoformat(timestamp)
-            # Garante que seja timezone-naive para comparação
-            if dt.tzinfo is not None:
-                dt = dt.replace(tzinfo=None)
-            return dt
-        except (ValueError, TypeError):
+    """Função auxiliar para ordenação de timestamps - versão ultra robusta"""
+    try:
+        timestamp = x.get('timestamp', datetime.min.isoformat())
+        if isinstance(timestamp, str):
+            try:
+                dt = datetime.fromisoformat(timestamp)
+                # Garante que seja timezone-naive para comparação
+                if dt.tzinfo is not None:
+                    dt = dt.replace(tzinfo=None)
+                return dt
+            except (ValueError, TypeError, AttributeError):
+                return datetime.min
+        elif hasattr(timestamp, 'timestamp'):
+            # Se for um objeto datetime, garante que seja timezone-naive
+            try:
+                if timestamp.tzinfo is not None:
+                    return timestamp.replace(tzinfo=None)
+                return timestamp
+            except (AttributeError, TypeError):
+                return datetime.min
+        else:
             return datetime.min
-    elif hasattr(timestamp, 'timestamp'):
-        # Se for um objeto datetime, garante que seja timezone-naive
-        if timestamp.tzinfo is not None:
-            return timestamp.replace(tzinfo=None)
-        return timestamp
-    else:
+    except Exception:
         return datetime.min
 
 def get_case_resolution_times(user_id: str) -> List[Dict[str, Any]]:
@@ -465,22 +479,30 @@ def get_case_resolution_times(user_id: str) -> List[Dict[str, Any]]:
             'is_correct': case_result == 'correct'
         })
     
-    # Ordena por timestamp (mais recente primeiro) com tratamento de erro
-    def safe_timestamp_sort(x):
-        timestamp = x.get('timestamp')
-        if timestamp is None:
-            return datetime.min
-        if isinstance(timestamp, str):
+    # Ordena por timestamp (mais recente primeiro) com tratamento robusto de erro
+    try:
+        def safe_timestamp_sort(x):
             try:
-                return datetime.fromisoformat(timestamp)
-            except:
+                timestamp = x.get('timestamp')
+                if timestamp is None:
+                    return datetime.min
+                if isinstance(timestamp, str):
+                    try:
+                        return datetime.fromisoformat(timestamp)
+                    except (ValueError, TypeError):
+                        return datetime.min
+                elif isinstance(timestamp, datetime):
+                    return timestamp
+                else:
+                    return datetime.min
+            except Exception:
                 return datetime.min
-        elif isinstance(timestamp, datetime):
-            return timestamp
-        else:
-            return datetime.min
-    
-    resolution_times.sort(key=safe_timestamp_sort, reverse=True)
+        
+        resolution_times.sort(key=safe_timestamp_sort, reverse=True)
+    except Exception as e:
+        # Se ainda assim der erro, mantém a lista sem ordenar
+        st.warning(f"⚠️ Erro ao ordenar tempos de resolução: {e}")
+        pass
     
     return resolution_times
 
