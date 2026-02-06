@@ -186,6 +186,27 @@ def tutor_reply_com_ia(case: Dict[str, Any], user_msg: str, chat_history: List[D
         return
 
     contexto = _construir_contexto_para_ia(case, chat_history)
+    
+    # --- OTIMIZAÇÃO DE COTA (Filtro Local) ---
+    msg_lower = user_msg.lower().strip()
+    
+    # Saudações simples
+    greetings = ['oi', 'olá', 'ola', 'ei', 'hello', 'bom dia', 'boa tarde', 'boa noite']
+    if msg_lower in greetings or (len(msg_lower) < 10 and any(g in msg_lower for g in greetings)):
+        yield "Olá! Sou seu tutor virtual. Estou aqui para te ajudar a raciocinar sobre este caso clínico. Qual sua principal dúvida ou hipótese no momento?"
+        return
+
+    # Agradecimentos
+    thanks = ['obrigado', 'obrigada', 'valeu', 'grato', 'thanks', 'ok', 'certo', 'entendi', 'beleza']
+    if msg_lower in thanks or (len(msg_lower) < 15 and any(t in msg_lower for t in thanks)):
+        yield "De nada! Se tiver mais dúvidas ou quiser discutir outro aspecto do caso, é só falar."
+        return
+        
+    # Mensagens muito curtas/sem sentido (economia)
+    if len(msg_lower) < 3:
+        yield "Poderia elaborar um pouco mais sua pergunta? Assim consigo te ajudar melhor."
+        return
+    # -----------------------------------------
 
     prompt = f"""
     **PERSONA E OBJETIVO:**
