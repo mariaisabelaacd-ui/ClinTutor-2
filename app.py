@@ -25,7 +25,6 @@ from admin_dashboard import show_admin_dashboard
 from professor_dashboard import show_advanced_professor_dashboard
 
 # --- GERENCIADOR DE COOKIES (SINGLETON) ---
-@st.cache_resource
 def get_cookie_manager():
     return stx.CookieManager()
 
@@ -536,7 +535,7 @@ def main():
                     placeholder = st.empty()
                     
                     # Medir tempo
-                    import time; t0 = time.time()
+                    import time as t_mod; t0 = t_mod.time()
                     
                     try:
                         gen = tutor_reply_com_ia(case, user_msg, st.session_state.chat)
