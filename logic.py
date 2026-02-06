@@ -218,18 +218,41 @@ def tutor_reply_com_ia(case: Dict[str, Any], user_msg: str, chat_history: List[D
     **SUA RESPOSTA:**
     """
     
-    model = genai.GenerativeModel(model_name="gemini-1.0-pro",
-                                  generation_config=GENERATION_CONFIG,
-                                  safety_settings=SAFETY_SETTINGS)
-    
+    # Tenta usar o modelo padrão estável
     try:
+        model = genai.GenerativeModel(model_name="gemini-pro",
+                                      generation_config=GENERATION_CONFIG,
+                                      safety_settings=SAFETY_SETTINGS)
         response_stream = model.generate_content(prompt, stream=True)
         for chunk in response_stream:
             yield chunk.text
+            
     except Exception as e:
-        error_message = f"Ocorreu um erro ao contatar a IA: {e}"
-        st.error(error_message)
-        yield "Desculpe, não consegui processar sua pergunta no momento. Tente novamente."
+        # Fallback: Tenta encontrar qualquer modelo disponível
+        try:
+            print(f"Erro com gemini-pro: {e}. Tentando fallback...")
+            available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+            
+            if available_models:
+                # Pega o primeiro modelo que parece ser do tipo gemini
+                fallback_model = next((m for m in available_models if 'gemini' in m), available_models[0])
+                # Remove o prefixo 'models/' se existir, pois o construtor as vezes prefere sem
+                if fallback_model.startswith('models/'):
+                    fallback_model = fallback_model.replace('models/', '')
+                
+                model = genai.GenerativeModel(model_name=fallback_model,
+                                              generation_config=GENERATION_CONFIG,
+                                              safety_settings=SAFETY_SETTINGS)
+                response_stream = model.generate_content(prompt, stream=True)
+                for chunk in response_stream:
+                    yield chunk.text
+            else:
+                raise e
+                
+        except Exception as e_final:
+            error_message = f"Erro com a IA ({type(e_final).__name__}): {e_final}"
+            st.error(error_message)
+            yield "Desculpe, a IA está indisponível no momento devido a configurações de modelo da API. Tente novamente mais tarde."
 
 # =============================
 # Persistência e Lógica de Jogo
