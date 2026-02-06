@@ -22,302 +22,200 @@ from analytics import (
 from admin_dashboard import show_admin_dashboard
 from professor_dashboard import show_advanced_professor_dashboard
 
+# --- CONFIGURAÇÃO DE ESTILO ---
+def apply_custom_style():
+    st.markdown("""
+        <style>
+        .block-container {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }
+        h1, h2, h3 {
+            font-family: 'Segoe UI', sans-serif;
+            font-weight: 600;
+        }
+        .stButton button {
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        .stTextInput input, .stTextArea textarea {
+            border-radius: 8px;
+        }
+        div[data-testid="stCard"] {
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
 def show_login_page():
-    """Exibe página de login e cadastro"""
+    """Exibe página de login e cadastro com visual modernizado"""
+    apply_custom_style()
     
-    # Título BioTutor na esquerda com cor verde água
-    st.markdown("<h1 style='text-align: left; color: #11B965; font-size: 3em; margin-bottom: 5px;'>BioTutor</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: left; color: #666; font-size: 18px; margin-top: 0px;'>Tutor de Clínica Geral</p>", unsafe_allow_html=True)
+    # Coluna central para o Login
+    col_left, col_center, col_right = st.columns([1, 1.5, 1])
     
-    st.markdown("---")
-    
-    # Status do Firebase com debug
-    st.write("### 🔍 Debug de Conexão Firebase")
-    
-    # Verifica secrets
-    if hasattr(st, 'secrets'):
-        if 'firebase_credentials' in st.secrets:
-            st.success("✅ Credenciais do Streamlit Secrets encontradas")
-            cred = st.secrets['firebase_credentials']
-            st.write(f"**Project ID:** {cred.get('project_id', 'N/A')}")
-        else:
-            st.error("❌ Credenciais do Streamlit Secrets NÃO encontradas")
+    with col_center:
+        st.markdown("<div style='text-align: center; margin-bottom: 2rem;'>", unsafe_allow_html=True)
+        st.markdown(f"<h1 style='color: #11B965; font-size: 3.5em; margin:0;'>BioTutor</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #666; font-size: 1.2em;'>Seu Tutor Inteligente de Clínica Geral</p>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+        
+        # Container estilo "Card"
+        with st.container(border=True):
+            tab1, tab2 = st.tabs(["🔐 Entrar", "📝 Criar Conta"])
             
-        # Verifica Google API
-        if 'google_api' in st.secrets and 'api_key' in st.secrets['google_api']:
-            st.success("✅ Chave do Google API encontrada")
-            api_key = st.secrets['google_api']['api_key']
-            st.write(f"**API Key:** {api_key[:10]}...{api_key[-10:]}")
-        else:
-            st.warning("⚠️ Chave de API do Google não encontrada! Configure-a em .streamlit/secrets.toml")
-    else:
-        st.error("❌ st.secrets não disponível")
-    
-    # Verifica conexão Firebase
-    if is_firebase_connected():
-        st.success("✅ Conectado ao Firebase - Dados na nuvem")
-    else:
-        st.error("❌ Modo local - Dados salvos localmente")
-    
-    st.markdown("---")
-    
-    # Tabs para login e cadastro
-    tab1, tab2 = st.tabs(["Login", "Cadastro"])
-    
-    with tab1:
-        # Formulário de login mais compacto
-        with st.container():
-            st.markdown("<h3 style='text-align: center; margin-bottom: 20px; color: #11B965;'>Fazer Login</h3>", unsafe_allow_html=True)
-            
-            with st.form("login_form"):
-                # Campos mais compactos
-                col1, col2, col3 = st.columns([1, 2, 1])
-                
-                with col2:
-                    email = st.text_input("Email", placeholder="seu@email.com", label_visibility="collapsed")
-                    password = st.text_input("Senha", type="password", placeholder="Sua senha", label_visibility="collapsed")
+            with tab1:
+                st.markdown("##### Bem-vindo de volta!")
+                with st.form("login_form"):
+                    email = st.text_input("Email", placeholder="seu@email.com")
+                    password = st.text_input("Senha", type="password", placeholder="••••••")
                     
-                    # Botão centralizado
-                    login_submitted = st.form_submit_button("Entrar", type="primary", use_container_width=True)
-            
-            if login_submitted:
-                if email and password:
-                    success, message, user_data = authenticate_user(email, password)
-                    if success:
-                        login_user(user_data)
-                        st.success(f"Bem-vindo(a), {user_data['name']}!")
-                        st.rerun()
-                    else:
-                        st.error(message)
-                else:
-                    st.error("Preencha todos os campos")
-    
-    with tab2:
-        # Formulário de cadastro com verificação de email
-        with st.container():
-            st.markdown("<h3 style='text-align: center; margin-bottom: 20px; color: #11B965;'>Criar Conta</h3>", unsafe_allow_html=True)
-            
-            # Informações sobre domínios permitidos
-            st.info("""
-            **📧 Emails Permitidos:**
-            - **Professores:** @fcmsantacasasp.edu.br
-            - **Alunos:** @aluno.fcmsantacasasp.edu.br
-            
-            ⚠️ Emails de outros domínios (gmail, hotmail, etc.) não são aceitos!
-            
-            **🎓 Para Alunos:** RA (Registro Acadêmico) é obrigatório
-            """)
-            
-            with st.form("register_form"):
-                # Campos mais compactos
-                col1, col2, col3 = st.columns([1, 2, 1])
-                
-                with col2:
-                    name = st.text_input("Nome Completo", placeholder="Seu nome completo", label_visibility="collapsed")
-                    email = st.text_input("Email", placeholder="exemplo@fcmsantacasasp.edu.br", label_visibility="collapsed")
-                    password = st.text_input("Senha", type="password", placeholder="Mínimo 6 caracteres", label_visibility="collapsed")
-                    confirm_password = st.text_input("Confirmar Senha", type="password", placeholder="Digite a senha novamente", label_visibility="collapsed")
+                    st.markdown("")
+                    submitted = st.form_submit_button("Acessar Sistema", type="primary", use_container_width=True)
                     
-                    # Tipo de usuário é detectado automaticamente pelo domínio
+                    if submitted:
+                        if email and password:
+                            success, message, user_data = authenticate_user(email, password)
+                            if success:
+                                login_user(user_data)
+                                st.rerun()
+                            else:
+                                st.error(message)
+                        else:
+                            st.warning("Preencha todos os campos.")
+
+            with tab2:
+                st.markdown("##### Novo por aqui?")
+                st.info("Alunos e Professores da **FCM Santa Casa SP** têm acesso exclusivo.")
+                
+                with st.form("register_form"):
+                    name = st.text_input("Nome Completo", placeholder="Seu nome")
+                    email = st.text_input("Email Institucional", placeholder="exemplo@fcmsantacasasp.edu.br")
+                    col_p1, col_p2 = st.columns(2)
+                    with col_p1:
+                        password = st.text_input("Senha", type="password", placeholder="Mínimo 6 dígitos")
+                    with col_p2:
+                        confirm_password = st.text_input("Confirmar", type="password", placeholder="Repita a senha")
+                    
+                    # Lógica de tipo de usuário
+                    user_type = None
+                    ra = None
                     if email and '@' in email:
                         domain = email.split('@')[1].lower()
                         if domain == 'fcmsantacasasp.edu.br':
                             user_type = 'professor'
-                            st.info("👨‍🏫 Tipo detectado: **Professor**")
+                            st.caption("✅ Identificado como Professor")
                         elif domain == 'aluno.fcmsantacasasp.edu.br':
                             user_type = 'aluno'
-                            st.info("👨‍🎓 Tipo detectado: **Aluno**")
+                            st.caption("✅ Identificado como Aluno")
+                            ra = st.text_input("RA (Registro Acadêmico)", placeholder="Seu RA")
                         else:
-                            st.error("❌ Domínio não permitido!")
-                            user_type = None
-                    else:
-                        user_type = None
+                            st.error("Domínio de email não autorizado.")
                     
-                    # Campo RA aparece apenas para alunos
-                    if user_type == "aluno":
-                        ra = st.text_input("RA (Registro Acadêmico)", placeholder="Digite seu RA", label_visibility="collapsed")
-                    else:
-                        ra = None
+                    st.markdown("")
+                    reg_submitted = st.form_submit_button("Criar Minha Conta", type="primary", use_container_width=True)
                     
-                    # Sistema simplificado - apenas validação de domínio e RA
-                    
-                    # Botão centralizado
-                    register_submitted = st.form_submit_button("Cadastrar", type="primary", use_container_width=True)
-            
-            if register_submitted:
-                # Validações básicas
-                if not user_type:
-                    st.error("❌ Email com domínio não permitido!")
-                elif password != confirm_password:
-                    st.error("❌ As senhas não coincidem")
-                elif len(password) < 6:
-                    st.error("❌ A senha deve ter pelo menos 6 caracteres")
-                else:
-                    # Validação específica para alunos (inclui RA)
-                    if user_type == "aluno":
-                        if not all([name, email, password, confirm_password, ra]):
-                            st.error("❌ Preencha todos os campos, incluindo o RA")
-                        elif not ra.strip():
-                            st.error("❌ O RA é obrigatório para alunos")
+                    if reg_submitted:
+                        # Validações mantidas
+                        if not user_type:
+                            st.error("Use um email institucional válido.")
+                        elif password != confirm_password:
+                            st.error("Senhas não conferem.")
+                        elif len(password) < 6:
+                            st.error("Senha muito curta.")
                         else:
-                            success, message = register_user(name, email, password, user_type, ra)
-                            if success:
-                                st.success("✅ Conta criada com sucesso!")
-                                st.info("Agora você pode fazer login na aba 'Login'")
+                            if user_type == 'aluno' and not ra:
+                                st.error("RA é obrigatório para alunos.")
                             else:
-                                st.error(message)
-                    else:
-                        # Validação para professores (sem RA)
-                        if not all([name, email, password, confirm_password]):
-                            st.error("❌ Preencha todos os campos")
-                        else:
-                            success, message = register_user(name, email, password, user_type)
-                            if success:
-                                st.success("✅ Conta criada com sucesso!")
-                                st.info("Agora você pode fazer login na aba 'Login'")
-                            else:
-                                st.error(message)
+                                call_args = [name, email, password, user_type]
+                                if user_type == 'aluno': call_args.append(ra)
+                                
+                                success, msg = register_user(*call_args)
+                                if success:
+                                    st.success("Conta criada! Acesse a aba 'Entrar'.")
+                                else:
+                                    st.error(msg)
+
+    # Footer discreto
+    st.markdown("<div style='text-align: center; margin-top: 3rem; color: #999; font-size: 0.8em;'>BioTutor v2.0 • Desenvolvido para FCMSCSP</div>", unsafe_allow_html=True)
 
 def show_user_profile():
-    """Exibe perfil do usuário e opções de logout"""
+    """Sidebar com perfil simplificado"""
     user = get_current_user()
     
     with st.sidebar:
-        st.markdown("---")
-        st.markdown(f"**👤 {user['name']}**")
-        st.markdown(f"**📧 {user['email']}**")
-        st.markdown(f"**🎓 {user['user_type'].title()}**")
+        st.markdown(f"### 👋 Olá, {user['name'].split()[0]}")
+        st.caption(f"{user['user_type'].title()} • {user['email']}")
         
-        if st.button("🚪 Logout", use_container_width=True):
+        if st.button("Sair", key="logout_btn", use_container_width=True):
             logout_user()
             st.rerun()
+        st.markdown("---")
 
 def show_professor_dashboard():
-    """Dashboard para professores"""
+    """Dashboard para professores mantido"""
     require_professor()
     
-    st.title("Dashboard do Professor")
-    st.markdown("---")
+    st.title("👨‍🏫 Dashboard do Professor")
+    st.info("Aqui você gerencia os usuários do sistema.")
     
     # Estatísticas dos usuários
     from auth_firebase import get_all_users
     users = get_all_users()
     
     col1, col2, col3 = st.columns(3)
+    with col1: st.metric("Total Usuários", len(users))
+    with col2: st.metric("Alunos", len([u for u in users if u["user_type"] == "aluno"]))
+    with col3: st.metric("Professores", len([u for u in users if u["user_type"] == "professor"]))
     
-    with col1:
-        st.metric("Total de Usuários", len(users))
-    
-    with col2:
-        alunos = len([u for u in users if u["user_type"] == "aluno"])
-        st.metric("Alunos", alunos)
-    
-    with col3:
-        professores = len([u for u in users if u["user_type"] == "professor"])
-        st.metric("Professores", professores)
-    
-    # Seção de migração (apenas se Firebase estiver conectado)
     if is_firebase_connected():
-        st.subheader("🔄 Migração de Dados")
-        with st.expander("Migrar dados locais para Firebase", expanded=False):
-            st.info("Esta função migra todos os usuários salvos localmente para o Firebase.")
-            if st.button("🚀 Migrar Dados Locais", type="primary"):
+        with st.expander("🛠️ Ferramentas de Admin", expanded=False):
+            if st.button("Migrar Dados Locais para Nuvem"):
                 success, message = migrate_local_to_firebase()
-                if success:
-                    st.success(message)
-                    st.rerun()
-                else:
-                    st.error(message)
-    
-    # Lista de usuários
+                if success: st.success(message)
+                else: st.error(message)
+
+    st.markdown("### 👥 Usuários Cadastrados")
     if users:
-        st.subheader("Lista de Usuários")
-        
         for user in users:
-            with st.expander(f"{user['name']} ({user['user_type']})"):
-                col1, col2 = st.columns([2, 1])
-                
-                with col1:
-                    st.write(f"**Email:** {user['email']}")
-                    st.write(f"**Tipo:** {user['user_type'].title()}")
-                    # Formatação de data baseada no tipo de armazenamento
-                    created_at = user.get('created_at')
-                    if isinstance(created_at, str):
-                        st.write(f"**Cadastrado em:** {created_at[:10]}")
-                    else:
-                        st.write(f"**Cadastrado em:** {created_at.strftime('%Y-%m-%d') if created_at else 'N/A'}")
-                    
-                    last_login = user.get('last_login')
-                    if last_login:
-                        if isinstance(last_login, str):
-                            st.write(f"**Último login:** {last_login[:10]}")
-                        else:
-                            st.write(f"**Último login:** {last_login.strftime('%Y-%m-%d')}")
-                
-                with col2:
-                    if user['id'] != st.session_state.user_id:  # Não pode deletar a si mesmo
-                        if st.button(f"Remover", key=f"delete_{user['id']}"):
-                            success, message = delete_user(user['id'])
-                            if success:
-                                st.success(message)
-                                st.rerun()
-                            else:
-                                st.error(message)
+            with st.container(border=True):
+                c1, c2 = st.columns([3, 1])
+                c1.markdown(f"**{user['name']}** ({user['user_type']})")
+                c1.caption(user['email'])
+                if user['id'] != st.session_state.user_id:
+                    if c2.button("Remover", key=f"del_{user['id']}"):
+                        delete_user(user['id'])
+                        st.rerun()
     else:
-        st.info("Nenhum usuário cadastrado ainda.")
+        st.info("Nenhum usuário encontrado.")
 
 def init_state():
-    if "session_id" not in st.session_state:
-        st.session_state.session_id = str(uuid.uuid4())
+    """Inicialização de estado"""
+    if "session_id" not in st.session_state: st.session_state.session_id = str(uuid.uuid4())
     
-    # Carrega o progresso salvo ANTES de inicializar o resto
     user = get_current_user()
     saved = load_progress()
     
-    # Filtra progresso do usuário atual
     user_progress = {}
-    if isinstance(saved, dict) and saved.get("user_id") == user["id"]:
-        user_progress = saved
+    if isinstance(saved, dict) and saved.get("user_id") == user["id"]: user_progress = saved
     elif isinstance(saved, list):
-        # Se for uma lista, busca o progresso do usuário atual
-        for progress in saved:
-            if progress.get("user_id") == user["id"]:
-                user_progress = progress
-                break
+        for p in saved:
+            if p.get("user_id") == user["id"]: 
+                user_progress = p; break
     
-    # Inicializa o estado com valores salvos ou padrões
-    if "score" not in st.session_state:
-        st.session_state.score = user_progress.get("score", 0)
-    if "streak" not in st.session_state:
-        st.session_state.streak = user_progress.get("streak", 0)
-    if "unlocked_level" not in st.session_state:
-        st.session_state.unlocked_level = user_progress.get("unlocked_level", 1)
-        
-    # Estado da sessão que não é salvo entre execuções do navegador
-    if "current_case_id" not in st.session_state:
-        st.session_state.current_case_id = None
-    if "revealed_exams" not in st.session_state:
-        st.session_state.revealed_exams = []
-    if "chat" not in st.session_state:
-        st.session_state.chat = []
-    if "case_scored" not in st.session_state:
-        st.session_state.case_scored = False
-    if "last_result" not in st.session_state:
-        st.session_state.last_result = None
-    if "show_next_case_btn" not in st.session_state:
-        st.session_state.show_next_case_btn = False
-    if "used_cases" not in st.session_state:
-        st.session_state.used_cases = []
-    if "case_history" not in st.session_state:
-        st.session_state.case_history = []
-    if "reset_fields" not in st.session_state:
-        st.session_state.reset_fields = False
-    if "auto_fill" not in st.session_state:
-        st.session_state.auto_fill = False
-    if "auto_fill_exams" not in st.session_state:
-        st.session_state.auto_fill_exams = False
+    defaults = {
+        "score": 0, "streak": 0, "unlocked_level": 1,
+        "current_case_id": None, "revealed_exams": [], "chat": [],
+        "case_scored": False, "last_result": None, "show_next_case_btn": False,
+        "used_cases": [], "case_history": [], "reset_fields": False,
+        "auto_fill": False, "auto_fill_exams": False, "current_timer_id": None
+    }
+    
+    for key, val in defaults.items():
+        if key not in st.session_state:
+            st.session_state[key] = user_progress.get(key, val) if key in ["score", "streak", "unlocked_level"] else val
 
-# Função para salvar o progresso atual
 def persist_now():
     user = get_current_user()
     save_progress({
@@ -328,37 +226,28 @@ def persist_now():
         "when": datetime.now().isoformat(timespec="seconds"),
     })
 
-# Função para resetar e ir para um novo caso
 def start_new_case():
-    # Salva o caso atual no histórico apenas se foi acertado (conseguiu prosseguir)
+    """Inicia novo caso e limpa estados temporários"""
+    # Salva histórico se necessário
     if st.session_state.current_case_id and st.session_state.show_next_case_btn:
-        current_case = get_case(st.session_state.current_case_id)
-        case_entry = {
-            "id": current_case["id"],
-            "titulo": current_case["titulo"],
-            "nivel": current_case["nivel"]
-        }
-        if case_entry not in st.session_state.case_history:
-            st.session_state.case_history.append(case_entry)
-    
+        curr = get_case(st.session_state.current_case_id)
+        entry = {"id": curr["id"], "titulo": curr["titulo"], "nivel": curr["nivel"]}
+        if entry not in st.session_state.case_history:
+            st.session_state.case_history.append(entry)
+            
     new_case = pick_new_case(st.session_state.unlocked_level, st.session_state.used_cases)
     st.session_state.current_case_id = new_case["id"]
-    
-    # Adiciona o caso atual à lista de casos utilizados
     if new_case["id"] not in st.session_state.used_cases:
         st.session_state.used_cases.append(new_case["id"])
-    
-    # Inicia timer para o novo caso
+        
+    # Timer
     user = get_current_user()
     if user:
         try:
-            timer_id = start_case_timer(user["id"], new_case["id"])
-            st.session_state.current_timer_id = timer_id
-            st.info(f"Timer iniciado para o caso: {new_case['titulo']}")
-        except Exception as e:
-            st.error(f"Erro ao iniciar timer: {e}")
-            st.session_state.current_timer_id = None
-    
+            st.session_state.current_timer_id = start_case_timer(user["id"], new_case["id"])
+        except: pass
+        
+    # Reset
     st.session_state.revealed_exams = []
     st.session_state.chat = []
     st.session_state.case_scored = False
@@ -369,7 +258,6 @@ def start_new_case():
     st.session_state.auto_fill_exams = False
     st.rerun()
 
-# Função para voltar a um caso específico
 def return_to_case(case_id: str):
     st.session_state.current_case_id = case_id
     st.session_state.revealed_exams = []
@@ -382,378 +270,199 @@ def return_to_case(case_id: str):
     st.session_state.auto_fill_exams = False
     st.rerun()
 
-# Função para preencher automaticamente os campos com as respostas corretas
 def auto_fill_fields():
     st.session_state.auto_fill = True
     st.session_state.auto_fill_exams = True
     st.rerun()
 
-# Função principal da aplicação
+# --- FUNÇÃO PRINCIPAL ---
 def main():
-    st.set_page_config(page_title=f"{APP_NAME} – Clínica Geral", page_icon="🧬", layout="wide")
-    
-    # Inicializa sistema de autenticação
+    st.set_page_config(page_title=f"{APP_NAME}", page_icon="🧬", layout="wide")
+    apply_custom_style()
     init_session()
     
-    # Cria administrador padrão se não existir
-    try:
-        create_default_admin()
-    except Exception as e:
-        pass  # Ignora erros na criação do admin
+    try: create_default_admin()
+    except: pass
     
-    # Se não estiver logado, mostra página de login
     if not is_logged_in():
         show_login_page()
         return
-    
-    # Se estiver logado, inicializa o estado da aplicação
+        
     init_state()
-    
-    # Mostra informações do usuário na sidebar
     show_user_profile()
-
-    # --- Navegação Principal ---
+    
     user = get_current_user()
     
-    # Navegação para administradores
+    # Roteamento Admin/Professor
     if user["user_type"] == "admin":
         show_admin_dashboard()
         return
-    
-    # Navegação para professores
     if user["user_type"] == "professor":
-        nav_option = st.sidebar.selectbox(
-            "Navegação",
-            ["Casos Clínicos", "Dashboard Professor", "Analytics Avançado"],
-            key="nav_select"
-        )
-        
-        if nav_option == "Dashboard Professor":
-            show_professor_dashboard()
-            return
-        elif nav_option == "Analytics Avançado":
-            show_advanced_professor_dashboard()
-            return
-    
-    # --- Sidebar (Barra Lateral) ---
-    st.sidebar.title("Progresso do Aluno")
-    st.sidebar.metric("Score", st.session_state.score)
-    
-    # Sistema de streak com emoji de foguinho a cada 3 acertos
-    streak_display = str(st.session_state.streak)
-    if st.session_state.streak > 0 and st.session_state.streak % 3 == 0:
-        streak_display = f"{st.session_state.streak} 🔥"
-    elif st.session_state.streak > 0:
-        streak_display = f"{st.session_state.streak}"
-    
-    st.sidebar.metric("Streak", streak_display)
-    st.sidebar.metric("Casos Utilizados", len(st.session_state.used_cases))
-    
-    # Estatísticas detalhadas para alunos
-    if user["user_type"] == "aluno":
-        user_stats = get_user_detailed_stats(user["id"])
-        
-        with st.sidebar.expander("Minhas Estatísticas", expanded=False):
-            st.metric("Taxa de Acertos", f"{user_stats['case_stats']['accuracy_rate']:.1f}%")
-            st.metric("Tempo Médio", user_stats['case_stats']['average_time_formatted'])
-            st.metric("Interações Chat", user_stats['total_chat_interactions'])
-            st.metric("Casos Resolvidos", user_stats['case_stats']['total_cases'])
-            
-            if user_stats['case_stats']['total_cases'] > 0:
-                st.progress(user_stats['case_stats']['accuracy_rate'] / 100)
-                st.caption(f"Progresso: {user_stats['case_stats']['correct_cases']}/{user_stats['case_stats']['total_cases']} casos acertados")
-    
-    # Lista de casos acertados
-    if st.session_state.case_history:
-        with st.sidebar.expander("Casos Acertados", expanded=False):
-            for case in reversed(st.session_state.case_history[-10:]):  # Mostra os últimos 10
-                if st.button(f"{case['titulo']} (Nível {case['nivel']})", 
-                           key=f"return_to_{case['id']}", 
-                           help="Clique para voltar a este caso"):
-                    return_to_case(case['id'])
-    
-    next_progress = progress_to_next_level(st.session_state.score)
-    st.sidebar.markdown(f"**Nível desbloqueado:** {st.session_state.unlocked_level} / 3")
-    st.sidebar.progress(next_progress)
+        nav = st.sidebar.radio("Navegação", ["Casos Clínicos", "Dashboard", "Analytics"], label_visibility="collapsed")
+        if nav == "Dashboard": show_professor_dashboard(); return
+        if nav == "Analytics": show_advanced_professor_dashboard(); return
 
-    with st.sidebar.expander("Configurações", expanded=True):
-        if st.button("🔄 Novo Caso"):
-            start_new_case()
-
-        if st.button("🔄 Resetar Lista de Casos"):
-            st.session_state.used_cases = []
-            st.session_state.case_history = []
-            st.success("Lista de casos acertados foi resetada!")
-            st.rerun()
-
-        if st.button("🔁 Resetar Progresso Total"):
-            st.session_state.score = 0
-            st.session_state.streak = 0
-            st.session_state.unlocked_level = 1
-            st.session_state.used_cases = []
-            st.session_state.case_history = []
-            persist_now()
-            start_new_case()
-
-    # Botão de desenvolvimento para demonstrações
-    with st.sidebar.expander("Dev Tools", expanded=False):
-        if st.button("Preencher Campos Automaticamente", help="Preenche diagnóstico, plano e exames com as respostas corretas do caso atual"):
-            auto_fill_fields()
-
-    # --- Lógica do Caso Atual ---
-    if st.session_state.current_case_id is None:
-        start_new_case()
+    # --- Sidebar do Aluno ---
+    st.sidebar.markdown("### 🏆 Seu Progresso")
+    c1, c2 = st.sidebar.columns(2)
+    c1.metric("Pontos", st.session_state.score)
+    streak_icon = "🔥" if st.session_state.streak >= 3 else "⚡"
+    c2.metric("Streak", f"{st.session_state.streak} {streak_icon}")
     
+    lvl_prog = progress_to_next_level(st.session_state.score)
+    st.sidebar.caption(f"Nível {st.session_state.unlocked_level} desbloqueado")
+    st.sidebar.progress(lvl_prog)
+    
+    with st.sidebar.expander("⚙️ Opções"):
+        if st.button("Pular para Próximo Caso", use_container_width=True): start_new_case()
+        if st.button("Resetar Histórico", use_container_width=True):
+             st.session_state.used_cases = []
+             st.session_state.case_history = []
+             st.rerun()
+    
+    # --- ÁREA DE TRABALHO (Main) ---
+    if st.session_state.current_case_id is None: start_new_case()
     case = get_case(st.session_state.current_case_id)
     
-    # Inicia timer se não existe
-    if not hasattr(st.session_state, 'current_timer_id') or not st.session_state.current_timer_id:
-        user = get_current_user()
-        if user:
-            try:
-                timer_id = start_case_timer(user["id"], case["id"])
-                st.session_state.current_timer_id = timer_id
-            except Exception as e:
-                st.error(f"Erro ao iniciar timer: {e}")
-                st.session_state.current_timer_id = None
+    # Header do Caso
+    st.markdown(f"## 🧬 {case['titulo']}")
+    st.markdown(f"<span style='background-color:#e6f4ea; color:#1e8e3e; padding:4px 8px; border-radius:4px; font-size:0.8em; font-weight:bold'>NÍVEL {case['nivel']}</span>", unsafe_allow_html=True)
+    st.markdown("")
 
-    st.title(f"BioTutor – Tutor de Clínica Geral")
-    st.caption(f"Bem-vindo(a), {user['name']}! Simulador com IA para treinar raciocínio clínico.")
+    # Layout Principal: Esquerda (Dados + Trabalho) | Direita (Chat)
+    main_col, chat_col = st.columns([1.8, 1])
     
-    # Card com informações do caso atual
-    with st.container():
-        col1, col2, col3 = st.columns([2, 1, 1])
-        
-        with col1:
-            st.markdown(f"**Caso Atual:** {case['titulo']}")
-        
-        with col2:
-            st.markdown(f"**Nível:** {case['nivel']}")
-        
-        with col3:
-            if hasattr(st.session_state, 'current_timer_id') and st.session_state.current_timer_id:
-                st.markdown("**Status:** Ativo")
-            else:
-                st.markdown("**Status:** Inativo")
-    
-    st.markdown("---")
-
-    col_quiz, col_chat = st.columns([2, 1])
-
-    # --- Coluna da Esquerda (Caso Clínico e Ações) ---
-    with col_quiz:
-        st.subheader("1) Caso Clínico")
+    with main_col:
+        # Cartão do Paciente
         with st.container(border=True):
-            st.markdown(f"#### {case['titulo']}")
-            st.write(f"**Queixa principal:** {case['queixa']}")
-            with st.expander("História e dados iniciais", expanded=True):
-                st.write("**HMA:**", case["hma"])
-                st.write("**Antecedentes:**", case["antecedentes"])
-                st.write("**Exame físico:**", case["exame_fisico"])
-                st.write("**Sinais vitais:**", case["sinais_vitais"])
-
-        st.subheader("2) Solicitar Exames")
-        
-        # Usa chave dinâmica para resetar o campo de exames
-        exam_key_suffix = f"_{st.session_state.current_case_id}_{st.session_state.reset_fields}_{st.session_state.auto_fill_exams}"
-        
-        # Preenchimento automático dos exames
-        if st.session_state.auto_fill_exams:
-            # Pega os exames relevantes do caso
-            relevant_exams = list(case.get("exames_relevantes", {}).keys())
-            default_exams = ", ".join(relevant_exams)
-        else:
-            default_exams = ""
+            st.markdown("#### 📋 Prontuário do Paciente")
+            st.info(f"**Queixa Principal:** {case['queixa']}")
             
-        exam_req = st.text_input(
-            "Digite o(s) nome(s) do(s) exame(s), separados por vírgula (ex.: hemograma, ecg)",
-            value=default_exams,
-            key=f"exam_request_input{exam_key_suffix}"
-        )
-        if st.button("Pedir exame(s)"):
-            if exam_req.strip():
-                exames = [e.strip().lower() for e in exam_req.split(",") if e.strip()]
-                for ex in exames:
-                    # Aplica correção automática
-                    corrected_exam, was_corrected = correct_exam_name(ex)
-                    if corrected_exam not in st.session_state.revealed_exams:
-                        st.session_state.revealed_exams.append(corrected_exam)
-                        # Mostra mensagem de correção se aplicável
-                        if was_corrected:
-                            st.info(f"Corrigido automaticamente: '{ex}' → '{corrected_exam}'")
-                st.rerun()
+            with st.expander("Ver História Completa e Exame Físico", expanded=False):
+                st.markdown(f"**HMA:** {case['hma']}")
+                st.markdown(f"**Antecedentes:** {case['antecedentes']}")
+                st.markdown("---")
+                c1, c2 = st.columns(2)
+                c1.markdown(f"**Exame Físico:**\n{case['exame_fisico']}")
+                c2.markdown(f"**Sinais Vitais:**\n{str(case['sinais_vitais']).replace('{','').replace('}','').replace(\"'\",'')}")
+
+        st.markdown("")
         
-        if st.session_state.revealed_exams:
-            with st.container(border=True):
-                st.markdown("**Resultados dos exames:**")
-                rel_keys = {k.lower(): v for k, v in case.get("exames_relevantes", {}).items()}
-                opt_keys = {k.lower(): v for k, v in case.get("exames_opcionais", {}).items()}
-                all_available_exams = {**rel_keys, **opt_keys}
+        # Área de Trabalho (Abas para Exames e Diagnóstico)
+        work_tab1, work_tab2 = st.tabs(["🔬 Solicitar Exames", "🩺 Diagnóstico & Conduta"])
+        
+        with work_tab1:
+            st.caption("Quais exames complementares você solicitaria?")
+            
+            exam_key_suffix = f"_{st.session_state.current_case_id}_{st.session_state.reset_fields}"
+            default_exams = ", ".join(case.get("exames_relevantes", {}).keys()) if st.session_state.auto_fill_exams else ""
+            
+            e_col1, e_col2 = st.columns([3, 1])
+            exam_req = e_col1.text_input("Exames (separados por vírgula)", placeholder="Ex: Hemograma, Raio-X...", value=default_exams, key=f"ex_in{exam_key_suffix}", label_visibility="collapsed")
+            if e_col2.button("Solicitar", use_container_width=True):
+                if exam_req.strip():
+                    for ex in exam_req.split(","):
+                        if ex.strip():
+                            corr, was_corr = correct_exam_name(ex)
+                            if corr not in st.session_state.revealed_exams: 
+                                st.session_state.revealed_exams.append(corr)
+                                if was_corr: st.toast(f"Corrigido: {ex} -> {corr}")
+                    st.rerun()
+
+            # Mostra Resultados
+            if st.session_state.revealed_exams:
+                st.markdown("---")
+                st.markdown("##### 📄 Resultados")
+                rel = {k.lower(): v for k,v in case.get("exames_relevantes",{}).items()}
+                opt = {k.lower(): v for k,v in case.get("exames_opcionais",{}).items()}
                 
                 for ex in st.session_state.revealed_exams:
-                    # Normaliza o exame para comparação
-                    ex_normalized = normalize_exam_name(ex)
+                    norm = normalize_exam_name(ex)
                     found = False
-                    
-                    # Busca em exames relevantes
-                    for rel_key, rel_value in rel_keys.items():
-                        if normalize_exam_name(rel_key) == ex_normalized:
-                            st.success(f"**{ex.upper()}:** {rel_value}")
-                            found = True
-                            break
-                    
-                    # Se não encontrou em relevantes, busca em opcionais
+                    # Procura relevante
+                    for k,v in rel.items():
+                        if normalize_exam_name(k) == norm:
+                            st.success(f"**{ex.upper()}**: {v}")
+                            found = True; break
                     if not found:
-                        for opt_key, opt_value in opt_keys.items():
-                            if normalize_exam_name(opt_key) == ex_normalized:
-                                st.info(f"**{ex.upper()}:** {opt_value}")
-                                found = True
-                                break
-                    
-                    # Se não encontrou em nenhum, sugere correções
+                        for k,v in opt.items():
+                            if normalize_exam_name(k) == norm:
+                                st.info(f"**{ex.upper()}**: {v}")
+                                found = True; break
                     if not found:
-                        suggestion = suggest_exam_corrections(ex, all_available_exams)
-                        st.error(f"**{ex.upper()}:** {suggestion}")
+                        sug = suggest_exam_corrections(ex, {**rel, **opt})
+                        st.warning(f"**{ex.upper()}**: {sug}")
 
-        st.subheader("3) Sua hipótese e plano")
-        # Usa chaves dinâmicas para resetar os campos
-        field_key_suffix = f"_{st.session_state.current_case_id}_{st.session_state.reset_fields}_{st.session_state.auto_fill}"
-        
-        # Valores padrão para preenchimento automático
-        default_diag = case["gabarito"] if st.session_state.auto_fill else ""
-        default_plan = ", ".join(CONDUTA_HINTS.get(case["id"], [])) if st.session_state.auto_fill else ""
-        
-        user_diag = st.text_input("Hipótese diagnóstica principal", 
-                                 value=default_diag, 
-                                 key=f"user_diag_input{field_key_suffix}")
-        user_plan = st.text_area("Plano inicial (condutas)", 
-                                value=default_plan, 
-                                height=100, 
-                                key=f"user_plan_input{field_key_suffix}")
-
-        # Validação dos campos obrigatórios
-        campos_preenchidos = bool(user_diag.strip() and user_plan.strip())
-        botao_disabled = st.session_state.case_scored or not campos_preenchidos
-        
-        # Mensagem de orientação se campos não estão preenchidos
-        if not campos_preenchidos and not st.session_state.case_scored:
-            st.warning("Preencha todos os campos acima antes de enviar para análise.")
-
-        if st.button("Enviar para avaliação e pontuar", disabled=botao_disabled):
-            res = finalize_case(case, user_diag, st.session_state.revealed_exams, user_plan, st.session_state)
+        with work_tab2:
+            st.caption("Formule sua hipótese e plano terapêutico.")
             
-            # Finaliza o timer do caso ANTES de atualizar o estado
-            if hasattr(st.session_state, 'current_timer_id') and st.session_state.current_timer_id:
-                try:
-                    analytics_data = end_case_timer(st.session_state.current_timer_id, res)
-                    if analytics_data:
-                        # Salva dados do timer para exibir depois
-                        st.session_state.timer_result = analytics_data
-                except Exception as e:
-                    st.error(f"Erro ao salvar analytics: {e}")
-                finally:
-                    st.session_state.current_timer_id = None
+            fk = f"_{st.session_state.current_case_id}_{st.session_state.reset_fields}"
+            def_diag = case["gabarito"] if st.session_state.auto_fill else ""
+            def_plan = ", ".join(CONDUTA_HINTS.get(case["id"], [])) if st.session_state.auto_fill else ""
             
-            # Atualiza score e streak
-            st.session_state.score += res["points_gained"]
-            if res["breakdown"]["diagnóstico"] >= 10: # Acerto total
-                st.session_state.streak += 1
-            else:
-                st.session_state.streak = 0
+            u_diag = st.text_input("Hipótese Diagnóstica", value=def_diag, key=f"diag{fk}", placeholder="Qual a doença?")
+            u_plan = st.text_area("Conduta / Tratamento", value=def_plan, key=f"plan{fk}", height=100, placeholder="O que fazer com o paciente?")
             
-            # Atualiza nível se necessário
-            new_level = level_from_score(st.session_state.score)
-            if new_level > st.session_state.unlocked_level:
-                st.session_state.unlocked_level = new_level
-                st.balloons()
+            valid = bool(u_diag.strip() and u_plan.strip())
             
-            persist_now()
-            st.session_state.case_scored = True
-            st.session_state.last_result = res
-            st.session_state.show_next_case_btn = res["breakdown"]["diagnóstico"] >= 10
-            st.session_state.auto_fill = False  # Reset do auto_fill após envio
-            st.session_state.auto_fill_exams = False  # Reset do auto_fill_exams após envio
-            st.rerun()
-
-        # Mostra o resultado da avaliação se o caso já foi pontuado
-        if st.session_state.last_result:
-            res = st.session_state.last_result
-            gained = res["points_gained"]
-            bd = res["breakdown"]
-            
-            # Mostra mensagem do timer se disponível
-            if hasattr(st.session_state, 'timer_result') and st.session_state.timer_result:
-                timer_data = st.session_state.timer_result
-                st.markdown(f"""
-                <div style="
-                    background: linear-gradient(135deg, #4CAF50, #45a049);
-                    color: white;
-                    padding: 20px;
-                    border-radius: 10px;
-                    text-align: center;
-                    font-size: 18px;
-                    font-weight: bold;
-                    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-                    margin: 20px 0;
-                ">
-                    🎉 <strong>Caso Resolvido!</strong><br>
-                    ⏱️ Tempo de resolução: <strong>{timer_data['duration_formatted']}</strong><br>
-                    📊 Pontos ganhos: <strong>{gained}</strong>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            with st.container(border=True):
-                st.success(f"Você ganhou **{gained}** pontos! (Diag: {bd['diagnóstico']}, Exames: {bd['exames']}, Plano: {bd['plano']} + Bônus: {bd['bônus_streak']})")
-                st.info(res["feedback"])
-
-        # Mostra o botão de próximo caso se aplicável
-        if st.session_state.show_next_case_btn:
-            if st.button("Próximo Caso", type="primary"):
-                start_new_case()
-
-    # --- Coluna da Direita (Chat com IA) ---
-    with col_chat:
-        st.subheader("Chat com a IA Tutora")
-        
-        with st.container(height=500):
-            for turn in st.session_state.chat:
-                with st.chat_message(turn["role"]):
-                    st.markdown(turn["content"])
-
-        chat_in = st.chat_input("Pergunte sobre hipóteses, exames, conduta...")
-        if chat_in:
-            st.session_state.chat.append({"role": "user", "content": chat_in})
-            
-            # Inicia timer para resposta da IA
-            start_time = datetime.now()
-            
-            with st.spinner("Tutor está digitando..."):
-                response_generator = tutor_reply_com_ia(case, chat_in, st.session_state.chat)
+            if st.button("✅ Enviar Análise", type="primary", disabled=not valid or st.session_state.case_scored, use_container_width=True):
+                res = finalize_case(case, u_diag, st.session_state.revealed_exams, u_plan, st.session_state)
+                st.session_state.score += res["points_gained"]
+                if res["breakdown"]["diagnóstico"] >= 10: st.session_state.streak += 1
+                else: st.session_state.streak = 0
                 
-                # Coleta a resposta completa para salvar no estado
-                full_response_chunks = []
-                for chunk in response_generator:
-                    full_response_chunks.append(chunk)
+                nl = level_from_score(st.session_state.score)
+                if nl > st.session_state.unlocked_level: st.session_state.unlocked_level = nl; st.balloons()
                 
-                full_response = "".join(full_response_chunks)
+                persist_now()
+                st.session_state.case_scored = True
+                st.session_state.last_result = res
+                st.session_state.show_next_case_btn = res["breakdown"]["diagnóstico"] >= 10
+                st.session_state.auto_fill = False
+                st.session_state.auto_fill_exams = False
+                
+                # Fim timer
+                try: end_case_timer(st.session_state.current_timer_id, res); st.session_state.current_timer_id = None
+                except: pass
+                st.rerun()
+
+            if st.session_state.last_result:
+                r = st.session_state.last_result
+                st.markdown("---")
+                if r["points_gained"] > 0:
+                    st.success(f"🎉 **Muito bem! +{r['points_gained']} pontos**")
+                else:
+                    st.warning(f"⚠️ **Atenção! +{r['points_gained']} pontos**")
+                st.write(r["feedback"])
+                
+                if st.session_state.show_next_case_btn:
+                    if st.button("Próximo Caso ➡️", type="primary", use_container_width=True):
+                        start_new_case()
+
+    with chat_col:
+        with st.container(border=True):
+            st.markdown("#### 💬 Tutor IA")
+            st.caption("Tire dúvidas sobre o caso aqui.")
             
-            # Calcula tempo de resposta
-            response_time = (datetime.now() - start_time).total_seconds()
+            chat_container = st.container(height=450)
+            for msg in st.session_state.chat:
+                chat_container.chat_message(msg["role"]).write(msg["content"])
             
-            st.session_state.chat.append({"role": "assistant", "content": full_response})
-            
-            # Registra interação com o chatbot
-            user = get_current_user()
-            if user:
-                log_chat_interaction(
-                    user["id"], 
-                    case["id"], 
-                    chat_in, 
-                    full_response, 
-                    response_time
-                )
-            
-            st.rerun()
+            # Input de chat
+            if prompt := st.chat_input("Digite sua dúvida..."):
+                st.session_state.chat.append({"role": "user", "content": prompt})
+                chat_container.chat_message("user").write(prompt)
+                
+                with chat_container.chat_message("assistant"):
+                    with st.spinner("Pensando..."):
+                        response_gen = tutor_reply_com_ia(case, prompt, st.session_state.chat)
+                        full_response = st.write_stream(response_gen)
+                
+                st.session_state.chat.append({"role": "assistant", "content": full_response})
+                # Log async se der
+                try: log_chat_interaction(user["id"], case["id"], prompt, full_response, 0)
+                except: pass
+                st.rerun()
 
 if __name__ == "__main__":
     main()
