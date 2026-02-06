@@ -220,78 +220,98 @@ def show_overview_tab(student_users: List[Dict], all_analytics: Dict, period: st
     
     df = pd.DataFrame(users_data)
     
-    # Gráfico de taxa de acertos
+    # KPIs do Período
+    kpi1, kpi2, kpi3, kpi4 = st.columns(4)
+    
+    total_active_period = sum(1 for u in users_data if u['Casos Resolvidos'] > 0 or u['Interações Chat'] > 0)
+    total_cases_period = sum(u['Casos Resolvidos'] for u in users_data)
+    avg_score_period = df[df['Casos Resolvidos'] > 0]['Taxa de Acertos'].mean() if not df.empty else 0
+    total_chat_period = sum(u['Interações Chat'] for u in users_data)
+    
+    with kpi1: st.metric("Alunos Ativos", total_active_period, help="Alunos com alguma atividade neste período")
+    with kpi2: st.metric("Casos Resolvidos", total_cases_period)
+    with kpi3: st.metric("Média Geral de Acertos", f"{avg_score_period:.1f}%")
+    with kpi4: st.metric("Interações Totais", total_chat_period)
+    
+    st.markdown("---")
+
+    # Gráfico de Dispersão: Tempo x Desempenho (Mais visual que barra simples)
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("🎯 Taxa de Acertos por Aluno")
-        fig_accuracy = px.bar(
-            df, 
-            x='Nome', 
-            y='Taxa de Acertos',
-            title="Taxa de Acertos (%)",
-            color='Taxa de Acertos',
-            color_continuous_scale='RdYlGn'
-        )
-        fig_accuracy.update_layout(xaxis_tickangle=-45)
-        st.plotly_chart(fig_accuracy, use_container_width=True)
-    
+        st.subheader("🎯 Desempenho vs Tempo")
+        if not df[df['Casos Resolvidos'] > 0].empty:
+            fig_scatter = px.scatter(
+                df[df['Casos Resolvidos'] > 0],
+                x='Tempo Médio',
+                y='Taxa de Acertos',
+                size='Casos Resolvidos',
+                color='Taxa de Acertos',
+                hover_name='Nome',
+                color_continuous_scale='RdYlGn',
+                title="Relação: Tempo Gasto x Taxa de Acerto (Tamanho = Volume de Casos)",
+                labels={'Tempo Médio': 'Tempo Médio (s)', 'Taxa de Acertos': 'Acerto (%)'}
+            )
+            # Adiciona linhas médias
+            fig_scatter.add_hline(y=avg_score_period, line_dash="dash", line_color="gray", annotation_text="Média Acertos")
+            st.plotly_chart(fig_scatter, use_container_width=True)
+        else:
+            st.info("Sem dados de atividade para cruzar.")
+
     with col2:
-        st.subheader("⏱️ Tempo Médio por Caso")
-        fig_time = px.bar(
-            df, 
-            x='Nome', 
-            y='Tempo Médio',
-            title="Tempo Médio (segundos)",
-            color='Tempo Médio',
-            color_continuous_scale='Blues'
-        )
-        fig_time.update_layout(xaxis_tickangle=-45)
-        st.plotly_chart(fig_time, use_container_width=True)
-    
-    # Gráfico de atividade
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.subheader("📚 Casos Resolvidos")
-        fig_cases = px.pie(
-            df, 
-            values='Casos Resolvidos', 
-            names='Nome',
-            title="Distribuição de Casos Resolvidos"
-        )
-        st.plotly_chart(fig_cases, use_container_width=True)
-    
-    with col2:
-        st.subheader("💬 Interações com Chat")
-        fig_chat = px.scatter(
-            df,
+        st.subheader("📊 Distribuição de Atividade")
+        # Gráfico de Barras melhorado (Top Alunos por volume)
+        fig_vol = px.bar(
+            df.sort_values('Casos Resolvidos', ascending=True).tail(10), # Top 10
             x='Casos Resolvidos',
-            y='Interações Chat',
-            size='Taxa de Acertos',
-            hover_name='Nome',
-            title="Casos vs Interações Chat (tamanho = taxa de acertos)"
+            y='Nome',
+            orientation='h',
+            title="Top Alunos Mais Ativos (Casos)",
+            color='Casos Resolvidos',
+            color_continuous_scale='Viridis'
         )
-        st.plotly_chart(fig_chat, use_container_width=True)
+        st.plotly_chart(fig_vol, use_container_width=True)
     
-    # Tabela resumo
-    st.subheader("📋 Resumo dos Alunos")
+    # Tabela resumo melhorada
+    st.subheader("📋 Detalhamento dos Alunos")
     
-    # Formata dados para exibição
+    # Ajuste de Fuso Horário (-3h) e formatação
     display_df = df.copy()
+    
+    def format_brt(x):
+        if hasattr(x, 'replace') and isinstance(x, datetime):
+            # Tira 3 horas simples
+            return (x - timedelta(hours=3)).strftime('%d/%m/%Y %H:%M')
+        return 'N/A'
+
     display_df['Tempo Médio'] = display_df['Tempo Médio'].apply(lambda x: format_duration(x))
-    display_df['Taxa de Acertos'] = display_df['Taxa de Acertos'].apply(lambda x: f"{x:.1f}%")
-    display_df['Última Atividade'] = display_df['Última Atividade'].apply(
-        lambda x: x.strftime('%d/%m/%Y %H:%M') if isinstance(x, datetime) else 'N/A'
-    )
+    display_df['Última Atividade'] = display_df['Última Atividade'].apply(format_brt)
     
     # Remove coluna Email para economizar espaço
     display_df = display_df.drop('Email', axis=1)
     
+    # Configuração visual das colunas
     st.dataframe(
         display_df,
         use_container_width=True,
-        hide_index=True
+        hide_index=True,
+        column_config={
+            "Taxa de Acertos": st.column_config.ProgressColumn(
+                "Taxa de Acertos",
+                help="Percentual de diagnósticos corretos",
+                format="%.1f%%",
+                min_value=0,
+                max_value=100,
+            ),
+            "Casos Resolvidos": st.column_config.NumberColumn(
+                "Casos",
+                help="Total de casos finalizados"
+            ),
+            "Interações Chat": st.column_config.NumberColumn(
+                "Chat",
+                format="%d 💬"
+            )
+        }
     )
 
 def show_student_details_tab(student_users: List[Dict], all_analytics: Dict, period: str):
