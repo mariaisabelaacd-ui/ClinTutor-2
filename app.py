@@ -113,6 +113,7 @@ def show_login_page():
                                             expires_at=datetime.now() + timedelta(days=7),
                                             key='set_auth'
                                         )
+                                        time.sleep(2) # Aguarda propagação do cookie
                                     
                                     st.rerun()
                                 else:
