@@ -133,22 +133,85 @@ def show_global_statistics(global_stats: Dict[str, Any]):
             global_stats.get('active_users_today', 0)
         )
 
+def filter_data_by_period(data_list: List[Dict], period: str) -> List[Dict]:
+    """Filtra lista de dados baseada no período selecionado"""
+    if not data_list: return []
+    
+    now = datetime.now()
+    days_map = {
+        "Últimos 7 dias": 7,
+        "Últimos 30 dias": 30,
+        "Últimos 90 dias": 90
+    }
+    
+    if period == "Todo o período":
+        return data_list
+        
+    days = days_map.get(period, 7)
+    cutoff = now - timedelta(days=days)
+    
+    filtered = []
+    for item in data_list:
+        ts = item.get('timestamp')
+        if isinstance(ts, str):
+            try:
+                ts = datetime.fromisoformat(ts)
+            except: continue
+        
+        # Garante timezone correction
+        if isinstance(ts, datetime): 
+             if ts.tzinfo is not None: ts = ts.replace(tzinfo=None)
+             if now.tzinfo is not None: now = now.replace(tzinfo=None)
+             
+             if ts >= cutoff:
+                 filtered.append(item)
+                 
+    return filtered
+
 def show_overview_tab(student_users: List[Dict], all_analytics: Dict, period: str):
-    """Tab de visão geral com gráficos"""
-    st.subheader("📈 Visão Geral")
+    """Tab de visão geral com gráficos (Dados Filtrados)"""
+    st.subheader(f"📈 Visão Geral ({period})")
     
     # Prepara dados para gráficos
     users_data = []
     for user in student_users:
-        user_stats = get_user_detailed_stats(user['id'])
+        uid = user['id']
+        u_data = all_analytics.get(uid, {})
+        
+        # Filtra dados brutos
+        raw_cases = u_data.get('case_analytics', [])
+        raw_chat = u_data.get('chat_interactions', [])
+        
+        filtered_cases = filter_data_by_period(raw_cases, period)
+        filtered_chat = filter_data_by_period(raw_chat, period)
+        
+        # Recalcula estatísticas com dados filtrados
+        total_cases = len(filtered_cases)
+        correct_cases = sum(1 for c in filtered_cases 
+                           if c.get("case_result", {}).get("breakdown", {}).get("diagnóstico", 0) >= 10)
+        acc_rate = (correct_cases / total_cases * 100) if total_cases > 0 else 0.0
+        
+        durations = [c.get('duration_seconds', 0) for c in filtered_cases if c.get('duration_seconds', 0) > 0]
+        avg_time = sum(durations) / len(durations) if durations else 0
+        
+        # Pega última atividade do período
+        last_act = "N/A"
+        all_acts = filtered_cases + filtered_chat
+        if all_acts:
+            # Ordena seguro
+            all_acts.sort(key=lambda x: datetime.fromisoformat(x['timestamp']) if isinstance(x.get('timestamp'), str) else datetime.min, reverse=True)
+            last_ts = all_acts[0].get('timestamp')
+            if isinstance(last_ts, str): last_ts = datetime.fromisoformat(last_ts)
+            last_act = last_ts
+
         users_data.append({
                 'Nome': user['name'],
                 'Email': user['email'],
-                'Casos Resolvidos': user_stats['case_stats']['total_cases'],
-                'Taxa de Acertos': user_stats['case_stats']['accuracy_rate'],
-                'Tempo Médio': user_stats['case_stats']['average_time'],
-                'Interações Chat': user_stats['total_chat_interactions'],
-                'Última Atividade': user_stats['last_activity']
+                'Casos Resolvidos': total_cases,
+                'Taxa de Acertos': acc_rate,
+                'Tempo Médio': avg_time,
+                'Interações Chat': len(filtered_chat),
+                'Última Atividade': last_act
             })
     
     if not users_data:
@@ -315,8 +378,18 @@ def show_student_details_tab(student_users: List[Dict], all_analytics: Dict, per
         # Simula dados de progresso (casos resolvidos ao longo do tempo)
         case_analytics = all_analytics.get(selected_student['id'], {}).get('case_analytics', [])
         if case_analytics:
+            # Função auxiliar segura para obter timestamp
+            def get_safe_timestamp(x):
+                ts = x.get('timestamp', datetime.min)
+                if isinstance(ts, str):
+                    try:
+                        return datetime.fromisoformat(ts)
+                    except:
+                        return datetime.min
+                return ts if isinstance(ts, datetime) else datetime.min
+
             # Ordena por data
-            case_analytics.sort(key=lambda x: x.get('timestamp', datetime.min))
+            case_analytics.sort(key=get_safe_timestamp)
             
             # Calcula acertos acumulados
             cumulative_correct = 0
