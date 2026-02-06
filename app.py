@@ -25,7 +25,7 @@ from admin_dashboard import show_admin_dashboard
 from professor_dashboard import show_advanced_professor_dashboard
 
 # --- GERENCIADOR DE COOKIES (SINGLETON) ---
-@st.cache_resource(experimental_allow_widgets=True)
+@st.cache_resource
 def get_cookie_manager():
     return stx.CookieManager()
 
