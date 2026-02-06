@@ -235,84 +235,46 @@ def show_overview_tab(student_users: List[Dict], all_analytics: Dict, period: st
     
     st.markdown("---")
 
-    # Gráfico de Dispersão: Tempo x Desempenho (Mais visual que barra simples)
+    # Gráficos Simples e Diretos
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("🎯 Desempenho vs Tempo")
+        st.subheader("🏆 Melhores Notas (Taxa de Acerto)")
         if not df[df['Casos Resolvidos'] > 0].empty:
-            fig_scatter = px.scatter(
-                df[df['Casos Resolvidos'] > 0],
-                x='Tempo Médio',
-                y='Taxa de Acertos',
-                size='Casos Resolvidos',
+            # Filtra apenas quem tem casos e ordena
+            df_acc = df[df['Casos Resolvidos'] > 0].sort_values('Taxa de Acertos', ascending=True).tail(10)
+            
+            fig_acc = px.bar(
+                df_acc,
+                x='Taxa de Acertos',
+                y='Nome',
+                orientation='h',
+                text_auto='.1f',
+                title="Top 10 Alunos por Desempenho",
                 color='Taxa de Acertos',
-                hover_name='Nome',
-                color_continuous_scale='RdYlGn',
-                title="Relação: Tempo Gasto x Taxa de Acerto (Tamanho = Volume de Casos)",
-                labels={'Tempo Médio': 'Tempo Médio (s)', 'Taxa de Acertos': 'Acerto (%)'}
+                color_continuous_scale='Greens'
             )
-            # Adiciona linhas médias
-            fig_scatter.add_hline(y=avg_score_period, line_dash="dash", line_color="gray", annotation_text="Média Acertos")
-            st.plotly_chart(fig_scatter, use_container_width=True)
+            fig_acc.update_layout(xaxis_title="Acertos (%)", yaxis_title=None, showlegend=False)
+            st.plotly_chart(fig_acc, use_container_width=True)
         else:
-            st.info("Sem dados de atividade para cruzar.")
+            st.info("Sem dados suficientes.")
 
     with col2:
-        st.subheader("📊 Distribuição de Atividade")
-        # Gráfico de Barras melhorado (Top Alunos por volume)
+        st.subheader("📚 Alunos Mais Engajados")
+        # Gráfico de Barras simples para volume
+        df_vol = df.sort_values('Casos Resolvidos', ascending=True).tail(10)
         fig_vol = px.bar(
-            df.sort_values('Casos Resolvidos', ascending=True).tail(10), # Top 10
+            df_vol,
             x='Casos Resolvidos',
             y='Nome',
             orientation='h',
-            title="Top Alunos Mais Ativos (Casos)",
+            text_auto=True,
+            title="Top 10 Alunos por Volume de Casos",
             color='Casos Resolvidos',
-            color_continuous_scale='Viridis'
+            color_continuous_scale='Blues'
         )
+        fig_vol.update_layout(xaxis_title="Casos Completos", yaxis_title=None, showlegend=False)
         st.plotly_chart(fig_vol, use_container_width=True)
-    
-    # Tabela resumo melhorada
-    st.subheader("📋 Detalhamento dos Alunos")
-    
-    # Ajuste de Fuso Horário (-3h) e formatação
-    display_df = df.copy()
-    
-    def format_brt(x):
-        if hasattr(x, 'replace') and isinstance(x, datetime):
-            # Tira 3 horas simples
-            return (x - timedelta(hours=3)).strftime('%d/%m/%Y %H:%M')
-        return 'N/A'
-
-    display_df['Tempo Médio'] = display_df['Tempo Médio'].apply(lambda x: format_duration(x))
-    display_df['Última Atividade'] = display_df['Última Atividade'].apply(format_brt)
-    
-    # Remove coluna Email para economizar espaço
-    display_df = display_df.drop('Email', axis=1)
-    
-    # Configuração visual das colunas
-    st.dataframe(
-        display_df,
-        use_container_width=True,
-        hide_index=True,
-        column_config={
-            "Taxa de Acertos": st.column_config.ProgressColumn(
-                "Taxa de Acertos",
-                help="Percentual de diagnósticos corretos",
-                format="%.1f%%",
-                min_value=0,
-                max_value=100,
-            ),
-            "Casos Resolvidos": st.column_config.NumberColumn(
-                "Casos",
-                help="Total de casos finalizados"
-            ),
-            "Interações Chat": st.column_config.NumberColumn(
-                "Chat",
-                format="%d 💬"
-            )
-        }
-    )
 
 def show_student_details_tab(student_users: List[Dict], all_analytics: Dict, period: str):
     """Tab com detalhes por aluno"""
@@ -398,18 +360,24 @@ def show_student_details_tab(student_users: List[Dict], all_analytics: Dict, per
         # Simula dados de progresso (casos resolvidos ao longo do tempo)
         case_analytics = all_analytics.get(selected_student['id'], {}).get('case_analytics', [])
         if case_analytics:
-            # Função auxiliar segura para obter timestamp
+            # Função auxiliar segura para obter timestamp (Naive)
             def get_safe_timestamp(x):
                 ts = x.get('timestamp', datetime.min)
-                if isinstance(ts, str):
-                    try:
-                        return datetime.fromisoformat(ts)
-                    except:
-                        return datetime.min
-                return ts if isinstance(ts, datetime) else datetime.min
+                try:
+                    if isinstance(ts, str):
+                        dt_obj = datetime.fromisoformat(ts)
+                        return dt_obj.replace(tzinfo=None) # Remove timezone for safety
+                    if isinstance(ts, datetime):
+                        return ts.replace(tzinfo=None)
+                except:
+                    pass
+                return datetime.min
 
-            # Ordena por data
-            case_analytics.sort(key=get_safe_timestamp)
+            # Ordena por data com segurança
+            try:
+                case_analytics.sort(key=get_safe_timestamp)
+            except Exception as e:
+                st.error(f"Erro ao ordenar histórico: {e}")
             
             # Calcula acertos acumulados
             cumulative_correct = 0
