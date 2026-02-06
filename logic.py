@@ -218,7 +218,7 @@ def tutor_reply_com_ia(case: Dict[str, Any], user_msg: str, chat_history: List[D
     **SUA RESPOSTA:**
     """
     
-    model = genai.GenerativeModel(model_name="gemini-2.0-flash",
+    model = genai.GenerativeModel(model_name="gemini-1.0-pro",
                                   generation_config=GENERATION_CONFIG,
                                   safety_settings=SAFETY_SETTINGS)
     
