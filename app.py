@@ -344,7 +344,7 @@ def main():
                 st.markdown("---")
                 c1, c2 = st.columns(2)
                 c1.markdown(f"**Exame Físico:**\n{case['exame_fisico']}")
-                c2.markdown(f"**Sinais Vitais:**\n{str(case['sinais_vitais']).replace('{','').replace('}','').replace(\"'\",'')}")
+                c2.markdown(f"**Sinais Vitais:**\n{str(case['sinais_vitais']).replace('{','').replace('}','').replace(chr(39),'')}")
 
         st.markdown("")
         
