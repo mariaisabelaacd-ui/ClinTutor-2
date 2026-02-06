@@ -24,7 +24,9 @@ from professor_dashboard import show_advanced_professor_dashboard
 
 # --- CONFIGURAÇÃO DE ESTILO ---
 def apply_custom_style():
+    # Importa Google Material Icons e define estilos
     st.markdown("""
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Round|Material+Icons+Sharp|Material+Icons+Two+Tone" rel="stylesheet">
         <style>
         .block-container {
             padding-top: 2rem;
@@ -34,9 +36,20 @@ def apply_custom_style():
             font-family: 'Segoe UI', sans-serif;
             font-weight: 600;
         }
+        /* Ajuste fino para alinhar ícones material com texto */
+        .material-icons-outlined {
+            vertical-align: middle;
+            font-size: 1.2em;
+            position: relative;
+            top: -2px;
+            margin-right: 4px;
+        }
         .stButton button {
             border-radius: 8px;
             font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify_content: center;
         }
         .stTextInput input, .stTextArea textarea {
             border-radius: 8px;
@@ -63,30 +76,35 @@ def show_login_page():
         
         # Container estilo "Card"
         with st.container(border=True):
-            tab1, tab2 = st.tabs(["🔐 Entrar", "📝 Criar Conta"])
+            # Usando markdown com ícones reais no lugar de emojis nas abas não é possível nativamente, 
+            # mas podemos remover os emojis para um visual mais limpo ou usar Simple Line Icons se suportado.
+            # Vou manter texto limpo nas abas e usar ícones no corpo.
+            tab1, tab2 = st.tabs(["Entrar", "Criar Conta"])
             
             with tab1:
-                st.markdown("##### Bem-vindo de volta!")
+                st.markdown("##### <span class='material-icons-outlined'>login</span> Bem-vindo de volta!", unsafe_allow_html=True)
                 with st.form("login_form"):
                     email = st.text_input("Email", placeholder="seu@email.com")
                     password = st.text_input("Senha", type="password", placeholder="••••••")
                     
                     st.markdown("")
+                    # Botão primário
                     submitted = st.form_submit_button("Acessar Sistema", type="primary", use_container_width=True)
                     
                     if submitted:
                         if email and password:
-                            success, message, user_data = authenticate_user(email, password)
-                            if success:
-                                login_user(user_data)
-                                st.rerun()
-                            else:
-                                st.error(message)
+                            with st.spinner("Autenticando..."):
+                                success, message, user_data = authenticate_user(email, password)
+                                if success:
+                                    login_user(user_data)
+                                    st.rerun()
+                                else:
+                                    st.error(message, icon="🚫")
                         else:
-                            st.warning("Preencha todos os campos.")
+                            st.warning("Preencha todos os campos.", icon="⚠️")
 
             with tab2:
-                st.markdown("##### Novo por aqui?")
+                st.markdown("##### <span class='material-icons-outlined'>person_add</span> Novo por aqui?", unsafe_allow_html=True)
                 st.info("""
                 **Instruções de Acesso:**
                 *   **Alunos:** Use seu email `@aluno.fcmsantacasasp.edu.br`.
@@ -117,7 +135,7 @@ def show_login_page():
                             st.caption("✅ Identificado como Aluno")
                             ra = st.text_input("RA (Registro Acadêmico)", placeholder="Seu RA")
                         else:
-                            st.error("Domínio de email não autorizado.")
+                            st.error("Domínio de email não autorizado.", icon="🚫")
                     
                     st.markdown("")
                     reg_submitted = st.form_submit_button("Criar Minha Conta", type="primary", use_container_width=True)
@@ -125,23 +143,24 @@ def show_login_page():
                     if reg_submitted:
                         # Validações mantidas
                         if not user_type:
-                            st.error("Use um email institucional válido.")
+                            st.error("Use um email institucional válido.", icon="🚫")
                         elif password != confirm_password:
-                            st.error("Senhas não conferem.")
+                            st.error("Senhas não conferem.", icon="🚫")
                         elif len(password) < 6:
-                            st.error("Senha muito curta.")
+                            st.error("Senha muito curta.", icon="🚫")
                         else:
                             if user_type == 'aluno' and not ra:
-                                st.error("RA é obrigatório para alunos.")
+                                st.error("RA é obrigatório para alunos.", icon="🚫")
                             else:
                                 call_args = [name, email, password, user_type]
                                 if user_type == 'aluno': call_args.append(ra)
                                 
-                                success, msg = register_user(*call_args)
-                                if success:
-                                    st.success("Conta criada! Acesse a aba 'Entrar'.")
-                                else:
-                                    st.error(msg)
+                                with st.spinner("Criando conta..."):
+                                    success, msg = register_user(*call_args)
+                                    if success:
+                                        st.success("Conta criada! Acesse a aba 'Entrar'.", icon="✅")
+                                    else:
+                                        st.error(msg, icon="🚫")
 
     # Footer discreto
     st.markdown("<div style='text-align: center; margin-top: 3rem; color: #999; font-size: 0.8em;'>BioTutor v2.0 • Desenvolvido para FCMSCSP</div>", unsafe_allow_html=True)
@@ -151,7 +170,7 @@ def show_user_profile():
     user = get_current_user()
     
     with st.sidebar:
-        st.markdown(f"### 👋 Olá, {user['name'].split()[0]}")
+        st.markdown(f"### <span class='material-icons-outlined'>account_circle</span> Olá, {user['name'].split()[0]}", unsafe_allow_html=True)
         st.caption(f"{user['user_type'].title()} • {user['email']}")
         
         if st.button("Sair", key="logout_btn", use_container_width=True):
@@ -163,7 +182,7 @@ def show_professor_dashboard():
     """Dashboard para professores mantido"""
     require_professor()
     
-    st.title("👨‍🏫 Dashboard do Professor")
+    st.title("Dashboard do Professor")
     st.info("Aqui você gerencia os usuários do sistema.")
     
     # Estatísticas dos usuários
@@ -176,13 +195,14 @@ def show_professor_dashboard():
     with col3: st.metric("Professores", len([u for u in users if u["user_type"] == "professor"]))
     
     if is_firebase_connected():
-        with st.expander("🛠️ Ferramentas de Admin", expanded=False):
+        with st.expander("Ferramentas de Admin", expanded=False):
             if st.button("Migrar Dados Locais para Nuvem"):
-                success, message = migrate_local_to_firebase()
-                if success: st.success(message)
-                else: st.error(message)
+                with st.spinner("Migrando..."):
+                    success, message = migrate_local_to_firebase()
+                    if success: st.success(message)
+                    else: st.error(message)
 
-    st.markdown("### 👥 Usuários Cadastrados")
+    st.markdown("### Usuários Cadastrados")
     if users:
         for user in users:
             with st.container(border=True):
@@ -191,8 +211,9 @@ def show_professor_dashboard():
                 c1.caption(user['email'])
                 if user['id'] != st.session_state.user_id:
                     if c2.button("Remover", key=f"del_{user['id']}"):
-                        delete_user(user['id'])
-                        st.rerun()
+                        with st.spinner("Removendo..."):
+                            delete_user(user['id'])
+                            st.rerun()
     else:
         st.info("Nenhum usuário encontrado.")
 
@@ -308,19 +329,25 @@ def main():
         if nav == "Dashboard": show_professor_dashboard(); return
         if nav == "Analytics": show_advanced_professor_dashboard(); return
 
-    # --- Sidebar do Aluno ---
-    st.sidebar.markdown("### 🏆 Seu Progresso")
+    # --- Sidebar (Barra Lateral) ---
+    st.sidebar.markdown("### <span class='material-icons-outlined'>emoji_events</span> Seu Progresso", unsafe_allow_html=True)
     c1, c2 = st.sidebar.columns(2)
     c1.metric("Pontos", st.session_state.score)
-    streak_icon = "🔥" if st.session_state.streak >= 3 else "⚡"
+    
+    # Sistema de streak
+    streak_icon = "🔥" 
+    if st.session_state.streak >= 3: streak_icon = "🔥" # Mantendo emoji aqui pois é parte da gamificação visual
+    
     c2.metric("Streak", f"{st.session_state.streak} {streak_icon}")
     
     lvl_prog = progress_to_next_level(st.session_state.score)
     st.sidebar.caption(f"Nível {st.session_state.unlocked_level} desbloqueado")
     st.sidebar.progress(lvl_prog)
     
-    with st.sidebar.expander("⚙️ Opções"):
-        if st.button("Pular para Próximo Caso", use_container_width=True): start_new_case()
+    with st.sidebar.expander("Opções", expanded=True):
+        if st.button("Pular para Próximo Caso", use_container_width=True): 
+             with st.spinner("Carregando caso..."):
+                 start_new_case()
         if st.button("Resetar Histórico", use_container_width=True):
              st.session_state.used_cases = []
              st.session_state.case_history = []
@@ -331,7 +358,7 @@ def main():
     case = get_case(st.session_state.current_case_id)
     
     # Header do Caso
-    st.markdown(f"## 🧬 {case['titulo']}")
+    st.markdown(f"## <span class='material-icons-outlined'>medical_services</span> {case['titulo']}", unsafe_allow_html=True)
     st.markdown(f"<span style='background-color:#e6f4ea; color:#1e8e3e; padding:4px 8px; border-radius:4px; font-size:0.8em; font-weight:bold'>NÍVEL {case['nivel']}</span>", unsafe_allow_html=True)
     st.markdown("")
 
@@ -341,7 +368,7 @@ def main():
     with main_col:
         # Cartão do Paciente
         with st.container(border=True):
-            st.markdown("#### 📋 Prontuário do Paciente")
+            st.markdown("#### <span class='material-icons-outlined'>assignment</span> Prontuário do Paciente", unsafe_allow_html=True)
             st.info(f"**Queixa Principal:** {case['queixa']}")
             
             with st.expander("Ver História Completa e Exame Físico", expanded=False):
@@ -355,9 +382,11 @@ def main():
         st.markdown("")
         
         # Área de Trabalho (Abas para Exames e Diagnóstico)
-        work_tab1, work_tab2 = st.tabs(["🔬 Solicitar Exames", "🩺 Diagnóstico & Conduta"])
+        # Tabs como texto limpo, ícones no conteúdo
+        work_tab1, work_tab2 = st.tabs(["Solicitar Exames", "Diagnóstico & Conduta"])
         
         with work_tab1:
+            st.markdown("##### <span class='material-icons-outlined'>biotech</span> Exames Complementares", unsafe_allow_html=True)
             st.caption("Quais exames complementares você solicitaria?")
             
             exam_key_suffix = f"_{st.session_state.current_case_id}_{st.session_state.reset_fields}"
@@ -366,13 +395,14 @@ def main():
             e_col1, e_col2 = st.columns([3, 1])
             exam_req = e_col1.text_input("Exames (separados por vírgula)", placeholder="Ex: Hemograma, Raio-X...", value=default_exams, key=f"ex_in{exam_key_suffix}", label_visibility="collapsed")
             if e_col2.button("Solicitar", use_container_width=True):
-                if exam_req.strip():
-                    for ex in exam_req.split(","):
-                        if ex.strip():
-                            corr, was_corr = correct_exam_name(ex)
-                            if corr not in st.session_state.revealed_exams: 
-                                st.session_state.revealed_exams.append(corr)
-                                if was_corr: st.toast(f"Corrigido: {ex} -> {corr}")
+                with st.spinner("Analisando pedido..."):
+                    if exam_req.strip():
+                        for ex in exam_req.split(","):
+                            if ex.strip():
+                                corr, was_corr = correct_exam_name(ex)
+                                if corr not in st.session_state.revealed_exams: 
+                                    st.session_state.revealed_exams.append(corr)
+                                    if was_corr: st.toast(f"Corrigido: {ex} -> {corr}")
                     st.rerun()
 
             # Mostra Resultados
@@ -400,6 +430,7 @@ def main():
                         st.warning(f"**{ex.upper()}**: {sug}")
 
         with work_tab2:
+            st.markdown("##### <span class='material-icons-outlined'>healing</span> Diagnóstico & Conduta", unsafe_allow_html=True)
             st.caption("Formule sua hipótese e plano terapêutico.")
             
             fk = f"_{st.session_state.current_case_id}_{st.session_state.reset_fields}"
@@ -411,65 +442,90 @@ def main():
             
             valid = bool(u_diag.strip() and u_plan.strip())
             
-            if st.button("✅ Enviar Análise", type="primary", disabled=not valid or st.session_state.case_scored, use_container_width=True):
-                res = finalize_case(case, u_diag, st.session_state.revealed_exams, u_plan, st.session_state)
-                st.session_state.score += res["points_gained"]
-                if res["breakdown"]["diagnóstico"] >= 10: st.session_state.streak += 1
-                else: st.session_state.streak = 0
-                
-                nl = level_from_score(st.session_state.score)
-                if nl > st.session_state.unlocked_level: st.session_state.unlocked_level = nl; st.balloons()
-                
-                persist_now()
-                st.session_state.case_scored = True
-                st.session_state.last_result = res
-                st.session_state.show_next_case_btn = res["breakdown"]["diagnóstico"] >= 10
-                st.session_state.auto_fill = False
-                st.session_state.auto_fill_exams = False
-                
-                # Fim timer
-                try: end_case_timer(st.session_state.current_timer_id, res); st.session_state.current_timer_id = None
-                except: pass
-                st.rerun()
+            # Botão de envio com spinner
+            if st.button("Enviar Análise", type="primary", disabled=not valid or st.session_state.case_scored, use_container_width=True, icon="✅"):
+                with st.spinner("Analisando resposta..."):
+                    res = finalize_case(case, u_diag, st.session_state.revealed_exams, u_plan, st.session_state)
+                    st.session_state.score += res["points_gained"]
+                    if res["breakdown"]["diagnóstico"] >= 10: st.session_state.streak += 1
+                    else: st.session_state.streak = 0
+                    
+                    nl = level_from_score(st.session_state.score)
+                    if nl > st.session_state.unlocked_level: st.session_state.unlocked_level = nl; st.balloons()
+                    
+                    persist_now()
+                    st.session_state.case_scored = True
+                    st.session_state.last_result = res
+                    st.session_state.show_next_case_btn = res["breakdown"]["diagnóstico"] >= 10
+                    st.session_state.auto_fill = False
+                    st.session_state.auto_fill_exams = False
+                    
+                    # Fim timer
+                    try: end_case_timer(st.session_state.current_timer_id, res); st.session_state.current_timer_id = None
+                    except: pass
+                    st.rerun()
 
             if st.session_state.last_result:
                 r = st.session_state.last_result
                 st.markdown("---")
                 if r["points_gained"] > 0:
-                    st.success(f"🎉 **Muito bem! +{r['points_gained']} pontos**")
+                    st.success(f"**Muito bem! +{r['points_gained']} pontos**", icon="🎉")
                 else:
-                    st.warning(f"⚠️ **Atenção! +{r['points_gained']} pontos**")
+                    st.warning(f"**Atenção! +{r['points_gained']} pontos**", icon="⚠️")
                 st.write(r["feedback"])
                 
                 if st.session_state.show_next_case_btn:
-                    if st.button("Próximo Caso ➡️", type="primary", use_container_width=True):
-                        start_new_case()
+                    if st.button("Próximo Caso", type="primary", use_container_width=True, icon="➡️"):
+                        with st.spinner("Carregando próximo caso..."):
+                            start_new_case()
 
     with chat_col:
         with st.container(border=True):
-            st.markdown("#### 💬 Tutor IA")
-            st.caption("Tire dúvidas sobre o caso aqui.")
+            st.markdown("#### <span class='material-icons-outlined'>psychology</span> Tutor IA", unsafe_allow_html=True)
             
-            chat_container = st.container(height=450)
-            for msg in st.session_state.chat:
-                chat_container.chat_message(msg["role"]).write(msg["content"])
-            
-            # Input de chat
-            if prompt := st.chat_input("Digite sua dúvida..."):
-                st.session_state.chat.append({"role": "user", "content": prompt})
-                chat_container.chat_message("user").write(prompt)
+            h_cont = st.container(height=400)
+            with h_cont:
+                if not st.session_state.chat:
+                    st.info("Olá! Sou seu tutor virtual. Analise o caso e tire dúvidas comigo.", icon="👋")
                 
-                with chat_container.chat_message("assistant"):
-                    with st.spinner("Pensando..."):
-                        response_gen = tutor_reply_com_ia(case, prompt, st.session_state.chat)
-                        full_response = st.write_stream(response_gen)
+                for msg in st.session_state.chat:
+                    with st.chat_message(msg["role"]):
+                        st.markdown(msg["content"])
+
+            if user_msg := st.chat_input("Tire sua dúvida..."):
+                st.session_state.chat.append({"role": "user", "content": user_msg})
+                with h_cont:
+                    with st.chat_message("user"): st.markdown(user_msg)
                 
-                st.session_state.chat.append({"role": "assistant", "content": full_response})
-                # Log async se der
-                try: log_chat_interaction(user["id"], case["id"], prompt, full_response, 0)
-                except: pass
-                st.rerun()
+                # Resposta da IA com spinner
+                # Nota: st.spinner não funciona bem dentro de containers em loops, mas aqui é acionado pelo input
+                # Vamos usar um placeholder ou spinner na coluna
+                with st.spinner("Pensando..."):
+                    full_resp = ""
+                    placeholder = st.empty()
+                    
+                    # Medir tempo
+                    import time; t0 = time.time()
+                    
+                    try:
+                        gen = tutor_reply_com_ia(case, user_msg, st.session_state.chat)
+                        with h_cont:
+                            with st.chat_message("assistant"):
+                                resp_container = st.empty()
+                                for chunk in gen:
+                                    full_resp += chunk
+                                    resp_container.markdown(full_resp + " ▌")
+                                resp_container.markdown(full_resp)
+                    except Exception as e:
+                        full_resp = f"Erro na IA: {e}"
+                        st.error(full_resp)
+                        
+                    t1 = time.time()
+                    log_chat_interaction(user["id"], case['id'], user_msg, full_resp, t1-t0)
+                    
+                    st.session_state.chat.append({"role": "assistant", "content": full_resp})
+                    # O rerun recarrega o chat bonito
+                    st.rerun()
 
 if __name__ == "__main__":
     main()
-
