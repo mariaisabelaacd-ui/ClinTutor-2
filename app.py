@@ -331,7 +331,7 @@ def main():
     
     # --- AUTO LOGIN VIA COOKIE ---
     if not is_logged_in():
-        time.sleep(0.1)
+        time.sleep(0.5) # Aumentado para garantir sincronia do cookie no frontend
         token = cookie_manager.get('auth_token')
         if token:
             user_id = validate_auth_token(token)
