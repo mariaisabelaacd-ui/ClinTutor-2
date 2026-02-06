@@ -486,15 +486,21 @@ def get_case_resolution_times(user_id: str) -> List[Dict[str, Any]]:
                 timestamp = x.get('timestamp')
                 if timestamp is None:
                     return datetime.min
+                
+                dt_val = datetime.min
                 if isinstance(timestamp, str):
                     try:
-                        return datetime.fromisoformat(timestamp)
+                        dt_val = datetime.fromisoformat(timestamp)
                     except (ValueError, TypeError):
-                        return datetime.min
+                        pass
                 elif isinstance(timestamp, datetime):
-                    return timestamp
-                else:
-                    return datetime.min
+                    dt_val = timestamp
+                
+                # Garante que seja sempre timezone-naive para comparação segura
+                if dt_val.tzinfo is not None:
+                    dt_val = dt_val.replace(tzinfo=None)
+                
+                return dt_val
             except Exception:
                 return datetime.min
         
