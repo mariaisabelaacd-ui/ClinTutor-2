@@ -1,4 +1,5 @@
 import streamlit as st
+import extra_streamlit_components as stx
 from logic import (
     APP_NAME, pick_new_case, get_case,
     finalize_case, level_from_score, progress_to_next_level,
@@ -7,12 +8,13 @@ from logic import (
     CONDUTA_HINTS
 )
 import uuid
-from datetime import datetime
+import time
+from datetime import datetime, timedelta
 from auth_firebase import (
     init_session, login_user, logout_user, is_logged_in, get_current_user,
     register_user, authenticate_user, require_login, require_professor,
     get_all_users, delete_user, migrate_local_to_firebase, is_firebase_connected,
-    create_default_admin
+    create_default_admin, create_auth_token, validate_auth_token, get_user_by_id
 )
 from firebase_config import test_firebase_connection
 from analytics import (
@@ -21,6 +23,13 @@ from analytics import (
 )
 from admin_dashboard import show_admin_dashboard
 from professor_dashboard import show_advanced_professor_dashboard
+
+# --- GERENCIADOR DE COOKIES (SINGLETON) ---
+@st.cache_resource(experimental_allow_widgets=True)
+def get_cookie_manager():
+    return stx.CookieManager()
+
+cookie_manager = get_cookie_manager()
 
 # --- CONFIGURAÇÃO DE ESTILO ---
 def apply_custom_style():
@@ -76,9 +85,6 @@ def show_login_page():
         
         # Container estilo "Card"
         with st.container(border=True):
-            # Usando markdown com ícones reais no lugar de emojis nas abas não é possível nativamente, 
-            # mas podemos remover os emojis para um visual mais limpo ou usar Simple Line Icons se suportado.
-            # Vou manter texto limpo nas abas e usar ícones no corpo.
             tab1, tab2 = st.tabs(["Entrar", "Criar Conta"])
             
             with tab1:
@@ -86,6 +92,7 @@ def show_login_page():
                 with st.form("login_form"):
                     email = st.text_input("Email", placeholder="seu@email.com")
                     password = st.text_input("Senha", type="password", placeholder="••••••")
+                    remember_me = st.checkbox("Manter conectado por 7 dias")
                     
                     st.markdown("")
                     # Botão primário
@@ -97,6 +104,17 @@ def show_login_page():
                                 success, message, user_data = authenticate_user(email, password)
                                 if success:
                                     login_user(user_data)
+                                    
+                                    # Lógica de persistência
+                                    if remember_me:
+                                        token = create_auth_token(user_data['id'])
+                                        cookie_manager.set(
+                                            'auth_token', 
+                                            token, 
+                                            expires_at=datetime.now() + timedelta(days=7),
+                                            key='set_auth'
+                                        )
+                                    
                                     st.rerun()
                                 else:
                                     st.error(message, icon="🚫")
@@ -175,6 +193,7 @@ def show_user_profile():
         
         if st.button("Sair", key="logout_btn", use_container_width=True):
             logout_user()
+            cookie_manager.delete('auth_token')
             st.rerun()
         st.markdown("---")
 
@@ -311,6 +330,18 @@ def main():
     try: create_default_admin()
     except: pass
     
+    # --- AUTO LOGIN VIA COOKIE ---
+    if not is_logged_in():
+        time.sleep(0.1)
+        token = cookie_manager.get('auth_token')
+        if token:
+            user_id = validate_auth_token(token)
+            if user_id:
+                user_data = get_user_by_id(user_id)
+                if user_data:
+                    login_user(user_data)
+                    st.rerun()
+
     if not is_logged_in():
         show_login_page()
         return

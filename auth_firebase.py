@@ -1,13 +1,39 @@
 import hashlib
 import streamlit as st
+import hmac
+import base64
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 from firebase_config import get_firestore_db, is_firebase_connected
 import json
 import os
 
+# Segredo para assinatura de cookies (em produção, usar env var)
+SECRET_KEY = "clintutor-secure-key-2026"
+
 # Configurações do banco de dados local (fallback)
 USERS_DB_PATH = os.path.join(os.path.expanduser("~"), ".clintutor", "users.json")
+
+def create_auth_token(user_id: str) -> str:
+    """Gera um token assinado para persistência de login"""
+    msg = str(user_id).encode()
+    signature = hmac.new(SECRET_KEY.encode(), msg, hashlib.sha256).hexdigest()
+    return f"{user_id}.{signature}"
+
+def validate_auth_token(token: str) -> Optional[str]:
+    """Valida um token assinado e retorna o user_id se válido"""
+    try:
+        if not token or '.' not in token: return None
+        user_id, received_sig = token.split('.', 1)
+        
+        msg = str(user_id).encode()
+        expected_sig = hmac.new(SECRET_KEY.encode(), msg, hashlib.sha256).hexdigest()
+        
+        if hmac.compare_digest(expected_sig, received_sig):
+            return user_id
+        return None
+    except:
+        return None
 
 def init_users_db():
     """Inicializa o banco de dados local se não existir (fallback)"""
