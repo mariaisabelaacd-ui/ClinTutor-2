@@ -191,10 +191,18 @@ def tutor_reply_com_ia(case: Dict[str, Any], user_msg: str, chat_history: List[D
     msg_lower = user_msg.lower().strip()
     
     # Saudações simples
+    # Saudações simples (lógica mais estrita para evitar falso positivo)
     greetings = ['oi', 'olá', 'ola', 'ei', 'hello', 'bom dia', 'boa tarde', 'boa noite']
-    if msg_lower in greetings or (len(msg_lower) < 10 and any(g in msg_lower for g in greetings)):
+    if msg_lower in greetings or (len(msg_lower) < 10 and msg_lower.split()[0] in greetings):
         yield "Olá! Sou seu tutor virtual. Estou aqui para te ajudar a raciocinar sobre este caso clínico. Qual sua principal dúvida ou hipótese no momento?"
         return
+
+    # Tratamento específico para "não sei" / pedido de ajuda
+    help_requests = ['não sei', 'nao sei', 'n sei', 'não faço ideia', 'estou perdido', 'me ajuda', 'socorro']
+    if any(h in msg_lower for h in help_requests):
+        # Deixa passar para a IA, pois ela saberá guiar melhor com base no contexto do caso
+        pass 
+
 
     # Agradecimentos
     thanks = ['obrigado', 'obrigada', 'valeu', 'grato', 'thanks', 'ok', 'certo', 'entendi', 'beleza']
