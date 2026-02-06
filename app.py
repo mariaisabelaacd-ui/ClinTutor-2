@@ -87,7 +87,13 @@ def show_login_page():
 
             with tab2:
                 st.markdown("##### Novo por aqui?")
-                st.info("Alunos e Professores da **FCM Santa Casa SP** têm acesso exclusivo.")
+                st.info("""
+                **Instruções de Acesso:**
+                *   **Alunos:** Use seu email `@aluno.fcmsantacasasp.edu.br`.
+                *   **Professores:** Use seu email `@fcmsantacasasp.edu.br`.
+                
+                O sistema identificará seu perfil automaticamente.
+                """)
                 
                 with st.form("register_form"):
                     name = st.text_input("Nome Completo", placeholder="Seu nome")
