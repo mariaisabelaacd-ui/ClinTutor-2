@@ -2,27 +2,32 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 /* ==========================================================================
-   1. GLOBAL RESET & TYPOGRAPHY
+   1. GLOBAL RESET & TYPOGRAPHY (DARK MODE)
    ========================================================================== */
 html,
 body,
 [class*="css"] {
     font-family: 'Inter', sans-serif;
-    color: #1a1a1a;
-    background-color: #f0f2f6;
+    color: #e2e8f0;
+    /* Slate-200 */
+    background-color: #0f172a;
+    /* Slate-900 */
 }
 
-/* Force Light Theme variables internally */
 :root {
-    --primary-color: #11B965;
-    --background-color: #f0f2f6;
-    --secondary-background-color: #ffffff;
-    --text-color: #1a1a1a;
-    --font: 'Inter', sans-serif;
+    --primary-color: #10b981;
+    /* Emerald-500 */
+    --background-color: #0f172a;
+    --card-background: #1e293b;
+    /* Slate-800 */
+    --hover-background: #334155;
+    /* Slate-700 */
+    --text-color: #f8fafc;
+    --muted-text: #94a3b8;
 }
 
 /* ==========================================================================
-   2. HIDE STREAMLIT BRANDING & CHROME
+   2. HIDE STREAMLIT BRANDING
    ========================================================================== */
 #MainMenu,
 header,
@@ -33,190 +38,153 @@ footer,
 }
 
 /* ==========================================================================
-   3. LAYOUT & SPACING (AGGRESSIVE REDUCTION)
+   3. LAYOUT & SPACING
    ========================================================================== */
 .block-container {
-    padding-top: 1rem !important;
+    padding-top: 2rem !important;
     padding-bottom: 3rem !important;
-    padding-left: 2rem !important;
-    /* Slightly more breathing room on sides */
-    padding-right: 2rem !important;
-    max-width: 100% !important;
-    /* Utilize full width */
+    max-width: 1200px !important;
 }
 
-/* Reduce gap between Streamlit elements */
 [data-testid="stVerticalBlock"]>div {
-    gap: 0.8rem !important;
-    /* Default is usually 1rem+ */
-}
-
-/* Compact Sidebar */
-[data-testid="stSidebar"] .block-container {
-    padding-top: 1rem !important;
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
+    gap: 1rem !important;
 }
 
 /* ==========================================================================
-   4. COMPONENT STYLING
+   4. COMPONENT STYLING - DARK THEME
    ========================================================================== */
 
-/* CARDS: Main Containers */
+/* CARDS: Premium Dark Look */
 [data-testid="stForm"],
 [data-testid="stContainer"],
 div[data-testid="stCard"] {
-    background-color: white;
+    background-color: var(--card-background);
     padding: 1.5rem;
-    /* Reduced padding */
     border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-    /* Softer shadow */
-    border: 1px solid #e5e7eb;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.15);
+    border: 1px solid #334155;
+    /* Slate-700 */
 }
 
-/* INPUTS: Consistent Light Theme */
+/* INPUTS: Dark Fields */
 .stTextInput input,
 .stSelectbox div[data-baseweb="select"],
 .stNumberInput input,
 .stTextArea textarea {
-    background-color: #ffffff !important;
-    color: #1a1a1a !important;
-    border: 1px solid #d1d5db !important;
+    background-color: #0f172a !important;
+    /* Darker than card */
+    color: #f8fafc !important;
+    border: 1px solid #334155 !important;
     border-radius: 8px !important;
-    padding: 0.5rem 0.75rem !important;
-    box-shadow: none !important;
-    caret-color: #1a1a1a !important;
+    padding-left: 10px !important;
 }
 
 .stTextInput input:focus,
-.stTextArea textarea:focus,
-.stSelectbox div[data-baseweb="select"]:focus-within {
-    border-color: #11B965 !important;
-    box-shadow: 0 0 0 2px rgba(17, 185, 101, 0.2) !important;
+.stTextArea textarea:focus {
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2) !important;
 }
 
-/* CHAT INPUT FIX (The "Black Bar") */
+/* CHAT INPUT */
 [data-testid="stChatInput"] {
-    background-color: white !important;
+    background-color: var(--card-background) !important;
     border-radius: 12px !important;
-    border: 1px solid #e5e7eb !important;
-    color: #1a1a1a !important;
-    padding: 5px !important;
-}
-
-[data-testid="stChatInput"] textarea {
-    background-color: transparent !important;
-    color: #1a1a1a !important;
-    caret-color: #1a1a1a !important;
-}
-
-[data-testid="stChatInput"] button {
-    background-color: transparent !important;
-    color: #11B965 !important;
+    border: 1px solid #334155 !important;
 }
 
 /* ==========================================================================
-   5. BUTTONS (MODERN SYSTEM)
+   5. BUTTONS (GLOWING DARK THEME)
    ========================================================================== */
 
-/* Base Button (Secondary/Outline style by default) */
+/* Secondary Button (Ghost/Outline) */
 .stButton button {
-    background-color: #ffffff !important;
-    color: #374151 !important;
-    /* Neutral dark gray */
-    border: 1px solid #d1d5db !important;
+    background-color: transparent !important;
+    color: #e2e8f0 !important;
+    border: 1px solid #475569 !important;
     border-radius: 8px !important;
-    font-weight: 600 !important;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
-    transition: all 0.2s ease-in-out !important;
-    padding: 0.5rem 1rem !important;
+    transition: all 0.2s ease !important;
 }
 
 .stButton button:hover {
-    border-color: #11B965 !important;
-    color: #11B965 !important;
-    background-color: #f0fdf4 !important;
-    /* Light green tint */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    border-color: var(--primary-color) !important;
+    color: var(--primary-color) !important;
+    background-color: rgba(16, 185, 129, 0.1) !important;
 }
 
-/* Primary Button (Solid Green) */
+/* Primary Button (Neon Green) */
 div[data-testid="stFormSubmitButton"] button,
 button[kind="primary"] {
-    background: linear-gradient(135deg, #11B965 0%, #0e9652 100%) !important;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
     color: white !important;
     border: none !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
 }
 
 div[data-testid="stFormSubmitButton"] button:hover,
 button[kind="primary"]:hover {
-    background: linear-gradient(135deg, #0e9652 0%, #0b7a40 100%) !important;
-    box-shadow: 0 4px 6px rgba(17, 185, 101, 0.3) !important;
-    color: white !important;
-    transform: translateY(-1px);
-}
-
-/* Remove button fill on focus to stop blue outline */
-.stButton button:focus {
-    box-shadow: 0 0 0 2px rgba(17, 185, 101, 0.2) !important;
-    outline: none !important;
-}
-
-/* Icon alignment in buttons */
-.stButton button p {
-    color: inherit !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.5) !important;
 }
 
 /* ==========================================================================
-   6. SIDEBAR & TEXT
+   6. SIDEBAR & TEXT ELEMENTS
    ========================================================================== */
 [data-testid="stSidebar"] {
-    background-color: #ffffff;
-    border-right: 1px solid #e5e7eb;
+    background-color: #0f172a;
+    /* Match body bg for seamless look */
+    border-right: 1px solid #1e293b;
 }
 
-/* Metric Value */
-[data-testid="stMetricValue"] {
-    color: #11B965 !important;
-    font-weight: 700 !important;
-}
-
-/* Headings */
+/* Headings & Text */
 h1,
 h2,
 h3,
 h4,
 h5,
 h6 {
-    color: #111827 !important;
-    /* Nearly black */
-    font-weight: 600 !important;
-    margin-bottom: 0.5rem !important;
+    color: #f8fafc !important;
 }
 
 p,
 span,
-div,
-label {
-    color: #374151;
-    /* Readable gray */
+label,
+div {
+    color: #cbd5e1;
+    /* Slate-300 */
 }
 
-/* User Message Bubble */
+/* Metric Value */
+[data-testid="stMetricValue"] {
+    color: var(--primary-color) !important;
+}
+
+/* Expander/Accordion */
+.streamlit-expanderHeader {
+    background-color: var(--card-background) !important;
+    color: #e2e8f0 !important;
+    border-radius: 8px !important;
+}
+
+/* Tabs */
+.stTabs [aria-selected="true"] {
+    background-color: rgba(16, 185, 129, 0.1) !important;
+    border-top-color: var(--primary-color) !important;
+}
+
+/* Messages */
 [data-testid="stChatMessage"][data-testid="user"] {
-    background-color: #dcfce7 !important;
-    /* Tailwind green-100 */
-    border: 1px solid #bbf7d0;
+    background-color: rgba(16, 185, 129, 0.1) !important;
+    border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
-/* Assistant Message Bubble */
 [data-testid="stChatMessage"] {
-    background-color: #ffffff !important;
-    border: 1px solid #e5e7eb;
+    background-color: var(--card-background) !important;
+    border: 1px solid #334155;
 }
 
-/* Login Page Title */
+/* Login Page Title Gradient */
 .login-title {
-    color: #11B965 !important;
+    background: linear-gradient(to right, #10b981, #3b82f6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
