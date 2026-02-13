@@ -1,204 +1,222 @@
 /* Font Imports */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* Global Reset & Typography */
+/* ==========================================================================
+   1. GLOBAL RESET & TYPOGRAPHY
+   ========================================================================== */
 html,
 body,
 [class*="css"] {
     font-family: 'Inter', sans-serif;
     color: #1a1a1a;
-}
-
-/* Main App Background */
-.stApp {
     background-color: #f0f2f6;
 }
 
-/* Hide Streamlit Branding */
-#MainMenu {
-    visibility: hidden;
+/* Force Light Theme variables internally */
+:root {
+    --primary-color: #11B965;
+    --background-color: #f0f2f6;
+    --secondary-background-color: #ffffff;
+    --text-color: #1a1a1a;
+    --font: 'Inter', sans-serif;
 }
 
-header {
-    visibility: hidden;
-}
-
-footer {
-    visibility: hidden;
-}
-
+/* ==========================================================================
+   2. HIDE STREAMLIT BRANDING & CHROME
+   ========================================================================== */
+#MainMenu,
+header,
+footer,
 .stDeployButton {
-    display: none;
+    visibility: hidden;
+    display: none !important;
 }
 
-/* Main Container Adjustments */
+/* ==========================================================================
+   3. LAYOUT & SPACING (AGGRESSIVE REDUCTION)
+   ========================================================================== */
 .block-container {
     padding-top: 1rem !important;
-    padding-bottom: 2rem !important;
-    max-width: 1200px !important;
+    padding-bottom: 3rem !important;
+    padding-left: 2rem !important;
+    /* Slightly more breathing room on sides */
+    padding-right: 2rem !important;
+    max-width: 100% !important;
+    /* Utilize full width */
 }
 
-/* Card Style for Containers */
+/* Reduce gap between Streamlit elements */
+[data-testid="stVerticalBlock"]>div {
+    gap: 0.8rem !important;
+    /* Default is usually 1rem+ */
+}
+
+/* Compact Sidebar */
+[data-testid="stSidebar"] .block-container {
+    padding-top: 1rem !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+}
+
+/* ==========================================================================
+   4. COMPONENT STYLING
+   ========================================================================== */
+
+/* CARDS: Main Containers */
 [data-testid="stForm"],
-[data-testid="stContainer"] {
+[data-testid="stContainer"],
+div[data-testid="stCard"] {
     background-color: white;
-    padding: 2rem;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-    border: 1px solid #f0f0f0;
+    padding: 1.5rem;
+    /* Reduced padding */
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    /* Softer shadow */
+    border: 1px solid #e5e7eb;
 }
 
-/* Input Fields Styling */
+/* INPUTS: Consistent Light Theme */
 .stTextInput input,
-.stSelectbox,
+.stSelectbox div[data-baseweb="select"],
 .stNumberInput input,
 .stTextArea textarea {
-    border-radius: 10px !important;
-    border: 1px solid #e0e0e0 !important;
-    padding: 0.5rem 1rem !important;
-    transition: all 0.3s ease;
     background-color: #ffffff !important;
     color: #1a1a1a !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 8px !important;
+    padding: 0.5rem 0.75rem !important;
+    box-shadow: none !important;
     caret-color: #1a1a1a !important;
 }
 
 .stTextInput input:focus,
-.stTextArea textarea:focus {
+.stTextArea textarea:focus,
+.stSelectbox div[data-baseweb="select"]:focus-within {
     border-color: #11B965 !important;
     box-shadow: 0 0 0 2px rgba(17, 185, 101, 0.2) !important;
-    background-color: #ffffff !important;
+}
+
+/* CHAT INPUT FIX (The "Black Bar") */
+[data-testid="stChatInput"] {
+    background-color: white !important;
+    border-radius: 12px !important;
+    border: 1px solid #e5e7eb !important;
     color: #1a1a1a !important;
+    padding: 5px !important;
 }
 
-/* Force text color on all generic text elements to avoid white-on-white */
-p,
-span,
-label,
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-div {
-    color: #1a1a1a;
-}
-
-/* Specific overrides for Streamlit components that might resist */
-[data-testid="stMarkdownContainer"] p {
+[data-testid="stChatInput"] textarea {
+    background-color: transparent !important;
     color: #1a1a1a !important;
+    caret-color: #1a1a1a !important;
 }
 
-/* Input Labels */
-label[data-testid="stWidgetLabel"] p {
-    font-weight: 500;
-    font-size: 0.95rem;
-    color: #4a4a4a !important;
-}
-
-/* Button Styling */
-/* Button Styling - Base */
-.stButton button {
-    border-radius: 10px !important;
-    padding: 0.6rem 1.5rem !important;
-    font-weight: 600 !important;
-    transition: all 0.2s ease !important;
-    border: 1px solid #e0e0e0 !important;
-    background-color: #ffffff !important;
-    color: #1a1a1a !important;
-    /* Secondary buttons text dark */
-}
-
-.stButton button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    border-color: #11B965 !important;
+[data-testid="stChatInput"] button {
+    background-color: transparent !important;
     color: #11B965 !important;
 }
 
-/* Primary Button Override */
+/* ==========================================================================
+   5. BUTTONS (MODERN SYSTEM)
+   ========================================================================== */
+
+/* Base Button (Secondary/Outline style by default) */
+.stButton button {
+    background-color: #ffffff !important;
+    color: #374151 !important;
+    /* Neutral dark gray */
+    border: 1px solid #d1d5db !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+    transition: all 0.2s ease-in-out !important;
+    padding: 0.5rem 1rem !important;
+}
+
+.stButton button:hover {
+    border-color: #11B965 !important;
+    color: #11B965 !important;
+    background-color: #f0fdf4 !important;
+    /* Light green tint */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Primary Button (Solid Green) */
 div[data-testid="stFormSubmitButton"] button,
 button[kind="primary"] {
     background: linear-gradient(135deg, #11B965 0%, #0e9652 100%) !important;
-    color: #ffffff !important;
-    /* Force white text on primary */
+    color: white !important;
     border: none !important;
 }
 
 div[data-testid="stFormSubmitButton"] button:hover,
 button[kind="primary"]:hover {
-    box-shadow: 0 4px 15px rgba(17, 185, 101, 0.4) !important;
-    color: #ffffff !important;
+    background: linear-gradient(135deg, #0e9652 0%, #0b7a40 100%) !important;
+    box-shadow: 0 4px 6px rgba(17, 185, 101, 0.3) !important;
+    color: white !important;
+    transform: translateY(-1px);
+}
+
+/* Remove button fill on focus to stop blue outline */
+.stButton button:focus {
+    box-shadow: 0 0 0 2px rgba(17, 185, 101, 0.2) !important;
+    outline: none !important;
 }
 
 /* Icon alignment in buttons */
 .stButton button p {
     color: inherit !important;
-    /* Inherit from button color */
 }
 
-/* Sidebar Customization */
+/* ==========================================================================
+   6. SIDEBAR & TEXT
+   ========================================================================== */
 [data-testid="stSidebar"] {
-    background-color: #f8f9fa;
-    border-right: 1px solid #eee;
+    background-color: #ffffff;
+    border-right: 1px solid #e5e7eb;
 }
 
-/* Tabs Customization */
-.stTabs [data-baseweb="tab-list"] {
-    gap: 8px;
-    background-color: transparent;
-}
-
-.stTabs [data-baseweb="tab"] {
-    height: 40px;
-    border-radius: 8px;
-    background-color: white;
-    border: 1px solid #eee;
-    padding: 0 16px;
-    font-weight: 500;
-}
-
-.stTabs [aria-selected="true"] {
-    background-color: #e6f4ea !important;
-    color: #11B965 !important;
-    border-color: #11B965 !important;
-}
-
-/* Metric Cards */
+/* Metric Value */
 [data-testid="stMetricValue"] {
-    font-size: 1.8rem !important;
-    color: #11B965;
-    font-weight: 700;
+    color: #11B965 !important;
+    font-weight: 700 !important;
 }
 
-/* Chat Interface Styling */
-[data-testid="stChatMessage"] {
-    background-color: #f8f9fa;
-    border-radius: 12px;
-    padding: 1rem;
-    margin-bottom: 0.5rem;
+/* Headings */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: #111827 !important;
+    /* Nearly black */
+    font-weight: 600 !important;
+    margin-bottom: 0.5rem !important;
 }
 
+p,
+span,
+div,
+label {
+    color: #374151;
+    /* Readable gray */
+}
+
+/* User Message Bubble */
 [data-testid="stChatMessage"][data-testid="user"] {
-    background-color: #e6f4ea;
-    flex-direction: row-reverse;
+    background-color: #dcfce7 !important;
+    /* Tailwind green-100 */
+    border: 1px solid #bbf7d0;
 }
 
-/* Login Page Specifics */
-.login-header {
-    text-align: center;
-    margin-bottom: 2rem;
+/* Assistant Message Bubble */
+[data-testid="stChatMessage"] {
+    background-color: #ffffff !important;
+    border: 1px solid #e5e7eb;
 }
 
+/* Login Page Title */
 .login-title {
-    font-size: 3rem;
-    font-weight: 800;
-    color: #11B965;
-    letter-spacing: -1px;
-    margin-bottom: 0.5rem;
-}
-
-.login-subtitle {
-    color: #666;
-    font-size: 1.1rem;
+    color: #11B965 !important;
 }
