@@ -33,41 +33,12 @@ cookie_manager = get_cookie_manager()
 # --- CONFIGURAÇÃO DE ESTILO ---
 def apply_custom_style():
     # Importa Google Material Icons e define estilos
-    st.markdown("""
-        <link href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Round|Material+Icons+Sharp|Material+Icons+Two+Tone" rel="stylesheet">
-        <style>
-        .block-container {
-            padding-top: 2rem;
-            padding-bottom: 2rem;
-        }
-        h1, h2, h3 {
-            font-family: 'Segoe UI', sans-serif;
-            font-weight: 600;
-        }
-        /* Ajuste fino para alinhar ícones material com texto */
-        .material-icons-outlined {
-            vertical-align: middle;
-            font-size: 1.2em;
-            position: relative;
-            top: -2px;
-            margin-right: 4px;
-        }
-        .stButton button {
-            border-radius: 8px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify_content: center;
-        }
-        .stTextInput input, .stTextArea textarea {
-            border-radius: 8px;
-        }
-        div[data-testid="stCard"] {
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        </style>
-    """, unsafe_allow_html=True)
+    # Carrega CSS externo
+    with open( "assets/style.css" ) as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
+    # Importa ícones
+    st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Round|Material+Icons+Sharp|Material+Icons+Two+Tone" rel="stylesheet">', unsafe_allow_html=True)
 
 def show_login_page():
     """Exibe página de login e cadastro com visual modernizado"""
