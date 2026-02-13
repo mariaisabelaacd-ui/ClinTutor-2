@@ -57,12 +57,43 @@ footer {
     border: 1px solid #e0e0e0 !important;
     padding: 0.5rem 1rem !important;
     transition: all 0.3s ease;
+    background-color: #ffffff !important;
+    color: #1a1a1a !important;
+    caret-color: #1a1a1a !important;
 }
 
 .stTextInput input:focus,
 .stTextArea textarea:focus {
     border-color: #11B965 !important;
     box-shadow: 0 0 0 2px rgba(17, 185, 101, 0.2) !important;
+    background-color: #ffffff !important;
+    color: #1a1a1a !important;
+}
+
+/* Force text color on all generic text elements to avoid white-on-white */
+p,
+span,
+label,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+div {
+    color: #1a1a1a;
+}
+
+/* Specific overrides for Streamlit components that might resist */
+[data-testid="stMarkdownContainer"] p {
+    color: #1a1a1a !important;
+}
+
+/* Input Labels */
+label[data-testid="stWidgetLabel"] p {
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: #4a4a4a !important;
 }
 
 /* Button Styling */
