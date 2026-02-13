@@ -666,3 +666,83 @@ def get_global_stats() -> Dict[str, Any]:
                                   if any(_is_today(case.get('timestamp', datetime.min.isoformat())) 
                                         for case in data['case_analytics'] + data['chat_interactions'])])
     }
+def get_student_advanced_stats(user_id: str) -> Dict[str, Any]:
+    """
+    Gera estatísticas avançadas para o aluno:
+    - Desempenho por Componente de Conhecimento
+    - Desempenho por Dificuldade
+    - Tempo médio por Dificuldade
+    """
+    case_analytics = get_user_case_analytics(user_id)
+    
+    # Importa aqui para evitar circularidade no topo, se houver
+    from logic import QUESTIONS
+    
+    # Mapeamentos
+    q_map = {q['id']: q for q in QUESTIONS}
+    
+    stats = {
+        "componentes": {},
+        "dificuldade": {},
+        "tempo_por_dificuldade": {}
+    }
+    
+    for entry in case_analytics:
+        cid = entry.get('case_id')
+        result = entry.get('case_result', {})
+        duration = entry.get('duration_seconds', 0)
+        
+        # Garante fallback se mudar estrutura
+        if not isinstance(result, dict): continue
+        
+        q_data = q_map.get(cid)
+        if not q_data: continue
+        
+        is_correct = result.get('is_correct', False)
+        
+        # 1. Componentes
+        comps = q_data.get('componentes_conhecimento', ['Geral'])
+        for comp in comps:
+            if comp not in stats['componentes']:
+                stats['componentes'][comp] = {'total': 0, 'correct': 0}
+            stats['componentes'][comp]['total'] += 1
+            if is_correct: stats['componentes'][comp]['correct'] += 1
+            
+        # 2. Dificuldade
+        diff = q_data.get('dificuldade', 'Não Classificado')
+        if diff not in stats['dificuldade']:
+            stats['dificuldade'][diff] = {'total': 0, 'correct': 0}
+            stats['tempo_por_dificuldade'][diff] = []
+            
+        stats['dificuldade'][diff]['total'] += 1
+        if is_correct: stats['dificuldade'][diff]['correct'] += 1
+        stats['tempo_por_dificuldade'][diff].append(duration)
+        
+    # Processa médias
+    final_stats = {
+        "componentes": [],
+        "dificuldade": []
+    }
+    
+    for comp, data in stats['componentes'].items():
+        acc = (data['correct'] / data['total'] * 100) if data['total'] > 0 else 0
+        final_stats['componentes'].append({
+            "nome": comp,
+            "acuracia": acc,
+            "total": data['total'],
+            "acertos": data['correct']
+        })
+        
+    for diff, data in stats['dificuldade'].items():
+        acc = (data['correct'] / data['total'] * 100) if data['total'] > 0 else 0
+        times = stats['tempo_por_dificuldade'].get(diff, [])
+        avg_time = sum(times) / len(times) if times else 0
+        
+        final_stats['dificuldade'].append({
+            "nivel": diff,
+            "acuracia": acc,
+            "tempo_medio": avg_time,
+            "total": data['total']
+        })
+        
+    return final_stats

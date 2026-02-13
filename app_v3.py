@@ -23,6 +23,9 @@ from analytics import (
 from admin_dashboard import show_admin_dashboard
 from professor_dashboard import show_advanced_professor_dashboard
 
+# --- DEBUG MARKER ---
+st.toast("Versão V3 Carregada Corretamente!", icon="✅")
+
 # --- GERENCIADOR DE COOKIES (SINGLETON) ---
 def get_cookie_manager():
     return stx.CookieManager()
@@ -31,8 +34,12 @@ cookie_manager = get_cookie_manager()
 
 # --- CONFIGURAÇÃO DE ESTILO ---
 def apply_custom_style():
-    with open( "assets/style.css" ) as f:
-        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+    # Tenta carregar estilo, se falhar usa básico
+    try:
+        with open( "assets/style.css" ) as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+    except:
+        pass
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Round|Material+Icons+Sharp|Material+Icons+Two+Tone" rel="stylesheet">', unsafe_allow_html=True)
 
 def show_login_page():
@@ -41,8 +48,8 @@ def show_login_page():
     col_left, col_center, col_right = st.columns([1, 1.5, 1])
     with col_center:
         st.markdown("<div style='text-align: center; margin-bottom: 2rem;'>", unsafe_allow_html=True)
-        st.markdown(f"<h1 style='color: #11B965; font-size: 3.5em; margin:0;'>BioTutor</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #666; font-size: 1.2em;'>Tutor de Biologia Molecular</p>", unsafe_allow_html=True)
+        st.markdown(f"<h1 style='color: #11B965; font-size: 3.5em; margin:0;'>BioTutor v3</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #666; font-size: 1.2em;'>Tutor de Biologia Molecular (Nova Versão)</p>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
         with st.container(border=True):
             tab1, tab2 = st.tabs(["Entrar", "Criar Conta"])
@@ -90,7 +97,7 @@ def show_login_page():
                             success, msg = register_user(name, email, password, user_type or 'aluno', ra)
                             if success: st.success("Conta criada! Acesse a aba 'Entrar'.")
                             else: st.error(msg)
-    st.markdown("<div style='text-align: center; margin-top: 3rem; color: #999; font-size: 0.8em;'>BioTutor v2.0</div>", unsafe_allow_html=True)
+    st.markdown("<div style='text-align: center; margin-top: 3rem; color: #999; font-size: 0.8em;'>BioTutor v3.0</div>", unsafe_allow_html=True)
 
 def show_user_profile():
     user = get_current_user()
@@ -149,7 +156,7 @@ def start_new_case():
     st.rerun()
 
 def main():
-    st.set_page_config(page_title="BioTutor", page_icon="🧬", layout="wide")
+    st.set_page_config(page_title="BioTutor v3", page_icon="🧬", layout="wide")
     apply_custom_style()
     init_session()
     create_default_admin()
@@ -174,7 +181,7 @@ def main():
     if user["user_type"] == "admin": show_admin_dashboard(); return
     if user["user_type"] == "professor":
          nav = st.sidebar.radio("Navegação", ["Questões", "Dashboard", "Analytics"], label_visibility="collapsed")
-         if nav == "Dashboard": show_advanced_professor_dashboard(); return # Assuming professor_dashboard has this
+         if nav == "Dashboard": show_advanced_professor_dashboard(); return 
          if nav == "Analytics": show_advanced_professor_dashboard(); return
     
     # --- SIDEBAR ---
@@ -190,6 +197,12 @@ def main():
     if st.session_state.current_case_id is None: start_new_case()
     case = get_case(st.session_state.current_case_id)
     
+    # OLD CODE MARKER CHECK
+    if 'queixa' in case:
+        st.error("ERRO: Carregando dados antigos! Verifique logic.py")
+        st.write(case)
+        return
+
     st.markdown(f"## <span class='material-icons-outlined'>help_outline</span> {case['pergunta']}", unsafe_allow_html=True)
     
     # Tags de conhecimento
@@ -264,20 +277,14 @@ def main():
                 with st.spinner("Pensando..."):
                     full_resp = ""
                     try:
-                        # Adaptação para o novo contexto (Questão em vez de Caso Clínico)
-                        # tutor_reply_com_ia espera 'case' dict. O formato mudou mas as chaves usadas lá 
-                        # (titulo, queixa, etc) não existem mais. Preciso checar tutor_reply_com_ia.
-                        # Vou assumir que ela precisa ser atualizada ou o prompt vai quebrar.
-                        # ATUALIZAR LOGIC.PY PREVIAMENTE SERIA MELHOR, mas vou deixar quebrar e arrumar ou passar fake keys.
-                        # Melhor: Passar o 'case' adaptado.
-                        
-                        # Fake adaptation for safe calling if logic not updated
+                        # Fake adaptation for safe calling
                         case_adapted = case.copy()
+                        # Campos fake para garantir que não quebre se logic.py estiver antigo
                         case_adapted['titulo'] = case['pergunta']
                         case_adapted['queixa'] = case['pergunta']
                         case_adapted['hma'] = "Questão de Biologia Molecular"
                         case_adapted['sintomas'] = case.get('componentes_conhecimento', [])
-                        case_adapted['gabarito'] = case['resposta_esperada']
+                        case_adapted['gabarito'] = case.get('resposta_esperada', "")
                         
                         gen = tutor_reply_com_ia(case_adapted, q_msg, st.session_state.chat)
                         with h_cont:

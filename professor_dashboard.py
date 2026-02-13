@@ -408,8 +408,80 @@ def show_student_details_tab(student_users: List[Dict], all_analytics: Dict, per
         else:
             st.info("Nenhum caso resolvido ainda.")
     
+    # --- ANALYTICS AVANÇADOS ---
+    from analytics import get_student_advanced_stats
+    adv_stats = get_student_advanced_stats(selected_student['id'])
+    
+    st.markdown("### 🧠 Análise de Proficiência")
+    
+    a_col1, a_col2 = st.columns(2)
+    
+    with a_col1:
+        st.subheader("Por Componente de Conhecimento")
+        if adv_stats['componentes']:
+            df_comp = pd.DataFrame(adv_stats['componentes'])
+            fig_comp = px.bar(
+                df_comp,
+                x='acuracia',
+                y='nome',
+                orientation='h',
+                title="Acurácia por Tópico (%)",
+                text_auto='.1f',
+                range_x=[0, 100],
+                color='acuracia',
+                color_continuous_scale='RdYlGn'
+            )
+            fig_comp.update_layout(yaxis_title=None, xaxis_title="Acurácia (%)")
+            st.plotly_chart(fig_comp, use_container_width=True)
+            
+            # Tabela detalhada
+            st.dataframe(
+                df_comp[['nome', 'acuracia', 'total', 'acertos']].rename(columns={'nome': 'Tópico', 'acuracia': '% Acurácia', 'total': 'Questões', 'acertos': 'Acertos'}),
+                use_container_width=True,
+                hide_index=True
+            )
+        else:
+            st.info("Dados insuficientes para análise de componentes.")
+
+    with a_col2:
+        st.subheader("Por Nível de Dificuldade")
+        if adv_stats['dificuldade']:
+            df_diff = pd.DataFrame(adv_stats['dificuldade'])
+            
+            # Ordem customizada se possível
+            difficulty_order = ['básico', 'intermediário', 'avançado']
+            df_diff['nivel'] = pd.Categorical(df_diff['nivel'], categories=difficulty_order, ordered=True)
+            df_diff = df_diff.sort_values('nivel')
+            
+            fig_diff = px.bar(
+                df_diff,
+                x='nivel',
+                y='acuracia',
+                title="Acurácia por Dificuldade (%)",
+                text_auto='.1f',
+                range_y=[0, 100],
+                color='nivel',
+                color_discrete_map={'básico': '#22c55e', 'intermediário': '#eab308', 'avançado': '#ef4444'}
+            )
+            st.plotly_chart(fig_diff, use_container_width=True)
+            
+            # Tempo médio por dificuldade
+            fig_time = px.bar(
+                df_diff,
+                x='nivel',
+                y='tempo_medio',
+                title="Tempo Médio por Dificuldade (s)",
+                text_auto='.1f',
+                color='nivel'
+            )
+            st.plotly_chart(fig_time, use_container_width=True)
+        else:
+            st.info("Dados insuficientes para análise de dificuldade.")
+
+    st.markdown("---")
+
     # Histórico de casos
-    st.subheader("📋 Histórico de Casos")
+    st.subheader("📋 Histórico de Respostas")
     
     case_analytics = all_analytics.get(selected_student['id'], {}).get('case_analytics', [])
     if case_analytics:
@@ -420,14 +492,21 @@ def show_student_details_tab(student_users: List[Dict], all_analytics: Dict, per
             case_info = get_case(case_id)
             
             case_result = case_data.get('case_result', {})
-            breakdown = case_result.get('breakdown', {})
-            is_correct = breakdown.get('diagnóstico', 0) >= 10
+            # Is Correct agora vem direto do result para questões novas
+            is_correct = case_result.get('is_correct', False)
+            
+            # Fallback para legado (se houver mix de dados antigos)
+            if 'breakdown' in case_result:
+                 is_correct = case_result.get('breakdown', {}).get('diagnóstico', 0) >= 10
+            
+            # Tenta pegar pergunta ou titulo
+            titulo = case_info.get('pergunta') or case_info.get('titulo', 'Questão')
             
             case_history.append({
-                'Caso': case_info.get('titulo', 'N/A'),
-                'Nível': case_info.get('nivel', 'N/A'),
+                'Questão': titulo,
+                'Dificuldade': case_info.get('dificuldade', 'N/A'),
                 'Tempo': format_duration(case_data.get('duration_seconds', 0)),
-                'Acertou': '✅' if is_correct else '❌',
+                'Status': '✅ Correto' if is_correct else '❌ Incorreto',
                 'Pontos': case_result.get('points_gained', 0),
                 'Data': (datetime.fromisoformat(case_data.get('timestamp', datetime.now().isoformat())) if isinstance(case_data.get('timestamp'), str) else case_data.get('timestamp', datetime.now())).strftime('%d/%m/%Y %H:%M')
             })
@@ -438,7 +517,7 @@ def show_student_details_tab(student_users: List[Dict], all_analytics: Dict, per
         df_history = pd.DataFrame(case_history)
         st.dataframe(df_history, use_container_width=True, hide_index=True)
     else:
-        st.info("Nenhum caso resolvido ainda.")
+        st.info("Nenhuma questão respondida ainda.")
 
 def show_resolution_times_tab(student_users: List[Dict], all_analytics: Dict, period: str):
     """Tab com tempos de resolução de casos"""
