@@ -97,24 +97,44 @@ label[data-testid="stWidgetLabel"] p {
 }
 
 /* Button Styling */
+/* Button Styling - Base */
 .stButton button {
     border-radius: 10px !important;
     padding: 0.6rem 1.5rem !important;
     font-weight: 600 !important;
-    transition: transform 0.1s ease, box-shadow 0.2s ease !important;
-    border: none !important;
+    transition: all 0.2s ease !important;
+    border: 1px solid #e0e0e0 !important;
+    background-color: #ffffff !important;
+    color: #1a1a1a !important;
+    /* Secondary buttons text dark */
 }
 
 .stButton button:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: #11B965 !important;
+    color: #11B965 !important;
 }
 
 /* Primary Button Override */
 div[data-testid="stFormSubmitButton"] button,
 button[kind="primary"] {
     background: linear-gradient(135deg, #11B965 0%, #0e9652 100%) !important;
-    color: white !important;
+    color: #ffffff !important;
+    /* Force white text on primary */
+    border: none !important;
+}
+
+div[data-testid="stFormSubmitButton"] button:hover,
+button[kind="primary"]:hover {
+    box-shadow: 0 4px 15px rgba(17, 185, 101, 0.4) !important;
+    color: #ffffff !important;
+}
+
+/* Icon alignment in buttons */
+.stButton button p {
+    color: inherit !important;
+    /* Inherit from button color */
 }
 
 /* Sidebar Customization */
