@@ -24,7 +24,7 @@ from admin_dashboard import show_admin_dashboard
 from professor_dashboard import show_advanced_professor_dashboard
 
 # --- DEBUG MARKER ---
-st.toast("Versão V3 Carregada Corretamente!", icon="✅")
+# st.toast("Versão V3 Carregada Corretamente!", icon="✅")
 
 # --- GERENCIADOR DE COOKIES (SINGLETON) ---
 def get_cookie_manager():
@@ -157,6 +157,7 @@ def start_new_case():
 
 def main():
     st.set_page_config(page_title="BioTutor v3", page_icon="🧬", layout="wide")
+    # st.toast("Versão V3 Carregada!", icon="✅")
     apply_custom_style()
     init_session()
     create_default_admin()
@@ -245,12 +246,13 @@ def main():
             if st.session_state.last_result:
                 res = st.session_state.last_result
                 st.markdown("---")
-                if res.get("outcome") == "partial":
-                    st.warning(f"**Parcialmente Correta. +{res['points_gained']} pontos**")
-                elif res["is_correct"]:
-                    st.success(f"**Correto! +{res['points_gained']} pontos**")
+                outcome = res.get("outcome", "").lower()
+                if outcome == "partial":
+                    st.warning(f"**⚠️ Parcialmente Correta. +{res['points_gained']} pontos**")
+                elif res["is_correct"] and outcome != "partial":
+                    st.success(f"**✅ Correto! +{res['points_gained']} pontos**")
                 else:
-                    st.error(f"**Incorreto. +{res['points_gained']} pontos**")
+                    st.error(f"**❌ Incorreto. +{res['points_gained']} pontos**")
                 
                 st.markdown(f"**Feedback da IA:** {res['feedback']}")
                 
