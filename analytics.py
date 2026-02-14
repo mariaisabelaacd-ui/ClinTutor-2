@@ -746,3 +746,348 @@ def get_student_advanced_stats(user_id: str) -> Dict[str, Any]:
         })
         
     return final_stats
+
+# =============================
+# Novas Funções para Dashboard Redesenhado
+# =============================
+
+def get_global_knowledge_component_stats() -> List[Dict[str, Any]]:
+    """
+    Calcula estatísticas agregadas por componente de conhecimento para todos os alunos.
+    Retorna lista de componentes com total de questões, acertos, taxa de acerto e tempo médio.
+    """
+    from logic import QUESTIONS
+    
+    all_analytics = get_all_users_analytics()
+    q_map = {q['id']: q for q in QUESTIONS}
+    
+    # Estrutura para agregar dados por componente
+    component_stats = {}
+    
+    for user_id, user_data in all_analytics.items():
+        case_analytics = user_data.get('case_analytics', [])
+        
+        for entry in case_analytics:
+            cid = entry.get('case_id')
+            result = entry.get('case_result', {})
+            duration = entry.get('duration_seconds', 0)
+            
+            q_data = q_map.get(cid)
+            if not q_data:
+                continue
+            
+            is_correct = result.get('is_correct', False)
+            components = q_data.get('componentes_conhecimento', ['Geral'])
+            
+            for comp in components:
+                if comp not in component_stats:
+                    component_stats[comp] = {
+                        'total': 0,
+                        'correct': 0,
+                        'times': []
+                    }
+                
+                component_stats[comp]['total'] += 1
+                if is_correct:
+                    component_stats[comp]['correct'] += 1
+                if duration > 0:
+                    component_stats[comp]['times'].append(duration)
+    
+    # Processa resultados finais
+    results = []
+    for comp, data in component_stats.items():
+        accuracy = (data['correct'] / data['total'] * 100) if data['total'] > 0 else 0
+        avg_time = sum(data['times']) / len(data['times']) if data['times'] else 0
+        
+        results.append({
+            'componente': comp,
+            'total_questoes': data['total'],
+            'acertos': data['correct'],
+            'taxa_acerto': accuracy,
+            'tempo_medio': avg_time,
+            'tempo_medio_formatado': format_duration(avg_time)
+        })
+    
+    # Ordena por taxa de acerto (menor para maior = mais difícil primeiro)
+    results.sort(key=lambda x: x['taxa_acerto'])
+    
+    return results
+
+def get_average_user_level() -> Dict[str, Any]:
+    """
+    Calcula o nível médio de todos os alunos baseado em pontuação.
+    Retorna distribuição de alunos por nível (básico, intermediário, avançado).
+    """
+    from logic import level_from_score
+    
+    all_analytics = get_all_users_analytics()
+    
+    level_distribution = {
+        1: 0,  # básico
+        2: 0,  # intermediário
+        3: 0   # avançado
+    }
+    
+    total_score = 0
+    total_students = 0
+    
+    for user_id, user_data in all_analytics.items():
+        case_analytics = user_data.get('case_analytics', [])
+        
+        # Calcula pontuação total do aluno
+        user_score = 0
+        for entry in case_analytics:
+            result = entry.get('case_result', {})
+            points = result.get('points_gained', 0)
+            user_score += points
+        
+        # Determina nível do aluno
+        user_level = level_from_score(int(user_score))
+        level_distribution[user_level] += 1
+        
+        total_score += user_score
+        total_students += 1
+    
+    avg_score = total_score / total_students if total_students > 0 else 0
+    avg_level = level_from_score(int(avg_score))
+    
+    return {
+        'nivel_medio': avg_level,
+        'pontuacao_media': avg_score,
+        'distribuicao': {
+            'basico': level_distribution[1],
+            'intermediario': level_distribution[2],
+            'avancado': level_distribution[3]
+        },
+        'total_alunos': total_students
+    }
+
+def get_hardest_categories(top_n: int = 5) -> List[Dict[str, Any]]:
+    """
+    Identifica as categorias/componentes com menor taxa de acerto.
+    Retorna top N categorias mais difíceis com estatísticas.
+    """
+    component_stats = get_global_knowledge_component_stats()
+    
+    # Já está ordenado por taxa de acerto (menor primeiro)
+    hardest = component_stats[:top_n]
+    
+    return hardest
+
+def get_student_weakness_analysis(user_id: str) -> Dict[str, Any]:
+    """
+    Análise detalhada das fraquezas de um aluno específico.
+    Retorna:
+    - Componente com maior dificuldade
+    - Nível de questão com menor acerto
+    - Tags/componentes problemáticos
+    - Padrões de erro
+    """
+    from logic import QUESTIONS
+    
+    case_analytics = get_user_case_analytics(user_id)
+    q_map = {q['id']: q for q in QUESTIONS}
+    
+    if not case_analytics:
+        return {
+            'componente_mais_dificil': None,
+            'nivel_mais_dificil': None,
+            'componentes_problematicos': [],
+            'padroes_erro': []
+        }
+    
+    # Análise por componente
+    component_performance = {}
+    difficulty_performance = {
+        'básico': {'total': 0, 'correct': 0},
+        'intermediário': {'total': 0, 'correct': 0},
+        'avançado': {'total': 0, 'correct': 0}
+    }
+    
+    for entry in case_analytics:
+        cid = entry.get('case_id')
+        result = entry.get('case_result', {})
+        
+        q_data = q_map.get(cid)
+        if not q_data:
+            continue
+        
+        is_correct = result.get('is_correct', False)
+        components = q_data.get('componentes_conhecimento', ['Geral'])
+        difficulty = q_data.get('dificuldade', 'básico')
+        
+        # Análise por componente
+        for comp in components:
+            if comp not in component_performance:
+                component_performance[comp] = {'total': 0, 'correct': 0}
+            component_performance[comp]['total'] += 1
+            if is_correct:
+                component_performance[comp]['correct'] += 1
+        
+        # Análise por dificuldade
+        if difficulty in difficulty_performance:
+            difficulty_performance[difficulty]['total'] += 1
+            if is_correct:
+                difficulty_performance[difficulty]['correct'] += 1
+    
+    # Identifica componente mais difícil
+    worst_component = None
+    worst_accuracy = 100
+    
+    for comp, data in component_performance.items():
+        if data['total'] >= 2:  # Mínimo de 2 questões para considerar
+            accuracy = (data['correct'] / data['total'] * 100) if data['total'] > 0 else 0
+            if accuracy < worst_accuracy:
+                worst_accuracy = accuracy
+                worst_component = {
+                    'nome': comp,
+                    'acuracia': accuracy,
+                    'total': data['total'],
+                    'acertos': data['correct']
+                }
+    
+    # Identifica nível mais difícil
+    worst_difficulty = None
+    worst_diff_accuracy = 100
+    
+    for diff, data in difficulty_performance.items():
+        if data['total'] > 0:
+            accuracy = (data['correct'] / data['total'] * 100)
+            if accuracy < worst_diff_accuracy:
+                worst_diff_accuracy = accuracy
+                worst_difficulty = {
+                    'nivel': diff,
+                    'acuracia': accuracy,
+                    'total': data['total'],
+                    'acertos': data['correct']
+                }
+    
+    # Identifica componentes problemáticos (acurácia < 50%)
+    problematic_components = []
+    for comp, data in component_performance.items():
+        if data['total'] >= 2:
+            accuracy = (data['correct'] / data['total'] * 100)
+            if accuracy < 50:
+                problematic_components.append({
+                    'nome': comp,
+                    'acuracia': accuracy,
+                    'total': data['total'],
+                    'acertos': data['correct']
+                })
+    
+    # Ordena por acurácia (pior primeiro)
+    problematic_components.sort(key=lambda x: x['acuracia'])
+    
+    # Identifica padrões de erro
+    error_patterns = []
+    
+    # Padrão 1: Sempre erra questões avançadas
+    if difficulty_performance['avançado']['total'] >= 2:
+        adv_accuracy = (difficulty_performance['avançado']['correct'] / 
+                       difficulty_performance['avançado']['total'] * 100)
+        if adv_accuracy < 30:
+            error_patterns.append({
+                'padrao': 'Dificuldade com questões avançadas',
+                'descricao': f'Taxa de acerto em questões avançadas: {adv_accuracy:.1f}%'
+            })
+    
+    # Padrão 2: Componente específico sempre problemático
+    if worst_component and worst_component['acuracia'] < 30:
+        error_patterns.append({
+            'padrao': f'Dificuldade consistente em {worst_component["nome"]}',
+            'descricao': f'Taxa de acerto: {worst_component["acuracia"]:.1f}%'
+        })
+    
+    return {
+        'componente_mais_dificil': worst_component,
+        'nivel_mais_dificil': worst_difficulty,
+        'componentes_problematicos': problematic_components,
+        'padroes_erro': error_patterns
+    }
+
+def get_student_complete_profile(user_id: str) -> Dict[str, Any]:
+    """
+    Perfil completo do aluno incluindo:
+    - Todas as estatísticas existentes
+    - Análise de fraquezas
+    - Histórico temporal de evolução
+    - Comparação com a média da turma
+    """
+    # Estatísticas básicas
+    detailed_stats = get_user_detailed_stats(user_id)
+    advanced_stats = get_student_advanced_stats(user_id)
+    weakness_analysis = get_student_weakness_analysis(user_id)
+    
+    # Estatísticas globais para comparação
+    global_stats = get_global_stats()
+    
+    # Calcula comparação com média da turma
+    user_accuracy = detailed_stats['case_stats']['accuracy_rate']
+    class_avg_accuracy = global_stats['average_accuracy_rate']
+    
+    performance_vs_class = 'acima' if user_accuracy > class_avg_accuracy else 'abaixo' if user_accuracy < class_avg_accuracy else 'igual'
+    difference = abs(user_accuracy - class_avg_accuracy)
+    
+    # Evolução temporal (últimos 30 dias)
+    case_analytics = get_user_case_analytics(user_id)
+    
+    # Agrupa por semana
+    weekly_performance = {}
+    now = datetime.now()
+    
+    for entry in case_analytics:
+        timestamp = entry.get('timestamp')
+        if isinstance(timestamp, str):
+            timestamp = datetime.fromisoformat(timestamp)
+        
+        # Garante timezone-naive
+        if hasattr(timestamp, 'tzinfo') and timestamp.tzinfo is not None:
+            timestamp = timestamp.replace(tzinfo=None)
+        if hasattr(now, 'tzinfo') and now.tzinfo is not None:
+            now = now.replace(tzinfo=None)
+        
+        # Verifica se é dos últimos 30 dias
+        try:
+            days_ago = (now - timestamp).days
+            if days_ago <= 30:
+                week = f'Semana {days_ago // 7 + 1}'
+                if week not in weekly_performance:
+                    weekly_performance[week] = {'total': 0, 'correct': 0}
+                
+                weekly_performance[week]['total'] += 1
+                result = entry.get('case_result', {})
+                if result.get('is_correct', False):
+                    weekly_performance[week]['correct'] += 1
+        except (TypeError, ValueError):
+            continue
+    
+    # Calcula tendência (melhorando/piorando/estável)
+    trend = 'estável'
+    if len(weekly_performance) >= 2:
+        weeks = sorted(weekly_performance.keys())
+        first_week_acc = (weekly_performance[weeks[0]]['correct'] / 
+                         weekly_performance[weeks[0]]['total'] * 100) if weekly_performance[weeks[0]]['total'] > 0 else 0
+        last_week_acc = (weekly_performance[weeks[-1]]['correct'] / 
+                        weekly_performance[weeks[-1]]['total'] * 100) if weekly_performance[weeks[-1]]['total'] > 0 else 0
+        
+        if last_week_acc > first_week_acc + 10:
+            trend = 'melhorando'
+        elif last_week_acc < first_week_acc - 10:
+            trend = 'piorando'
+    
+    return {
+        'estatisticas_basicas': detailed_stats,
+        'estatisticas_avancadas': advanced_stats,
+        'analise_fraquezas': weakness_analysis,
+        'comparacao_turma': {
+            'acuracia_aluno': user_accuracy,
+            'acuracia_turma': class_avg_accuracy,
+            'performance': performance_vs_class,
+            'diferenca': difference
+        },
+        'evolucao_temporal': {
+            'desempenho_semanal': weekly_performance,
+            'tendencia': trend
+        }
+    }
+

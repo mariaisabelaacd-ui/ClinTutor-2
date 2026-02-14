@@ -3,28 +3,27 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
-import datetime as dt
 from typing import Dict, List, Any
 from analytics import (
-    get_all_users_analytics, get_user_detailed_stats, get_global_stats,
-    get_user_chat_interactions, format_duration, get_case_resolution_times,
-    get_resolution_time_stats
+    get_all_users_analytics, get_global_stats,
+    get_global_knowledge_component_stats, get_average_user_level,
+    get_hardest_categories, get_student_complete_profile,
+    get_student_weakness_analysis, format_duration
 )
 from auth_firebase import get_all_users, get_user_by_id
 from logic import get_case
 
 def show_advanced_professor_dashboard():
-    """Dashboard avançado para professores com analytics detalhados"""
-    st.title("📊 Dashboard Avançado - Analytics dos Alunos")
+    """Dashboard redesenhado para professores com foco em insights acionáveis"""
+    st.title("📊 Dashboard do Professor")
     st.markdown("---")
     
     try:
-        # Carrega dados com tratamento de erro
+        # Carrega dados
         all_users = get_all_users()
         all_analytics = get_all_users_analytics()
-        global_stats = get_global_stats()
         
-        # Filtra apenas alunos para exibição
+        # Filtra apenas alunos
         student_users = [user for user in all_users if user.get('user_type') == 'aluno']
         
         if not student_users:
@@ -32,746 +31,587 @@ def show_advanced_professor_dashboard():
             return
             
         if not all_analytics:
-            st.warning("Nenhum dado de analytics encontrado.")
+            st.info("Nenhum dado de analytics encontrado ainda. Os alunos precisam responder questões primeiro.")
             return
             
     except Exception as e:
         st.error(f"Erro ao carregar dados: {e}")
         return
     
-    # Filtros
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        # Filtro por período
-        period = st.selectbox(
-            "📅 Período",
-            ["Últimos 7 dias", "Últimos 30 dias", "Últimos 90 dias", "Todo o período"],
-            key="analytics_period"
-        )
-    
-    with col2:
-        # Filtro por tipo de usuário
-        user_type_filter = st.selectbox(
-            "👥 Tipo de Usuário",
-            ["Todos", "Alunos", "Professores"],
-            key="user_type_filter"
-        )
-    
-    with col3:
-        # Filtro por atividade
-        activity_filter = st.selectbox(
-            "⚡ Atividade",
-            ["Todos", "Ativos hoje", "Ativos esta semana", "Inativos"],
-            key="activity_filter"
-        )
-    
-    st.markdown("---")
-    
-    # Estatísticas globais
-    show_global_statistics(global_stats)
-    
-    st.markdown("---")
-    
-    # Tabs para diferentes visualizações
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "📈 Visão Geral", 
-        "👥 Por Aluno", 
-        "⏱️ Tempos de Resolução",
-        "💬 Interações Chat", 
-        "📊 Relatórios"
+    # Sistema de tabs redesenhado: 2 tabs principais
+    tab1, tab2 = st.tabs([
+        "📊 Visão Geral", 
+        "👤 Análise Individual"
     ])
     
     with tab1:
-        show_overview_tab(student_users, all_analytics, period)
+        show_general_overview_tab(student_users, all_analytics)
     
     with tab2:
-        show_student_details_tab(student_users, all_analytics, period)
-    
-    with tab3:
-        show_resolution_times_tab(student_users, all_analytics, period)
-    
-    with tab4:
-        show_chat_interactions_tab(student_users, all_analytics, period)
-    
-    with tab5:
-        show_reports_tab(student_users, all_analytics, period)
+        show_individual_analysis_tab(student_users, all_analytics)
 
-def show_global_statistics(global_stats: Dict[str, Any]):
-    """Mostra estatísticas globais do sistema"""
-    st.subheader("🌍 Estatísticas Globais")
+def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
+    """Tab de visão geral com estatísticas gerais de todos os alunos"""
+    st.subheader("📈 Visão Geral da Turma")
     
+    # Carrega estatísticas globais
+    global_stats = get_global_stats()
+    component_stats = get_global_knowledge_component_stats()
+    level_stats = get_average_user_level()
+    hardest_categories = get_hardest_categories(top_n=5)
+    
+    # ===== KPIs PRINCIPAIS =====
+    st.markdown("### 📌 Métricas Principais")
     col1, col2, col3, col4, col5 = st.columns(5)
     
     with col1:
         st.metric(
-            "👥 Total de Usuários",
-            global_stats.get('total_users', 0)
+            "👥 Total de Alunos",
+            len(student_users),
+            help="Número total de alunos cadastrados"
         )
     
     with col2:
         st.metric(
-            "📚 Total de Casos",
-            global_stats.get('total_cases', 0)
+            "🎯 Média Geral",
+            f"{global_stats.get('average_accuracy_rate', 0):.1f}%",
+            help="Taxa média de acertos de todos os alunos"
         )
     
     with col3:
+        # Categoria com maior dificuldade
+        hardest_cat = hardest_categories[0]['componente'] if hardest_categories else "N/A"
+        hardest_acc = f"{hardest_categories[0]['taxa_acerto']:.1f}%" if hardest_categories else "N/A"
         st.metric(
-            "💬 Interações Chat",
-            global_stats.get('total_chat_interactions', 0)
+            "⚠️ Categoria Mais Difícil",
+            hardest_cat,
+            delta=f"{hardest_acc}",
+            delta_color="inverse",
+            help="Componente com menor taxa de acerto geral"
         )
     
     with col4:
+        # Nível médio
+        nivel_map = {1: "Básico", 2: "Intermediário", 3: "Avançado"}
+        nivel_medio = nivel_map.get(level_stats.get('nivel_medio', 1), "Básico")
         st.metric(
-            "🎯 Taxa Média de Acertos",
-            f"{global_stats.get('average_accuracy_rate', 0):.1f}%"
+            "📊 Nível Médio",
+            nivel_medio,
+            help="Nível médio dos alunos baseado em pontuação"
         )
     
     with col5:
         st.metric(
-            "⚡ Usuários Ativos Hoje",
-            global_stats.get('active_users_today', 0)
+            "📚 Questões Respondidas",
+            global_stats.get('total_cases', 0),
+            help="Total de questões respondidas por todos os alunos"
         )
-
-def filter_data_by_period(data_list: List[Dict], period: str) -> List[Dict]:
-    """Filtra lista de dados baseada no período selecionado"""
-    if not data_list: return []
-    
-    now = datetime.now()
-    days_map = {
-        "Últimos 7 dias": 7,
-        "Últimos 30 dias": 30,
-        "Últimos 90 dias": 90
-    }
-    
-    if period == "Todo o período":
-        return data_list
-        
-    days = days_map.get(period, 7)
-    cutoff = now - timedelta(days=days)
-    
-    filtered = []
-    for item in data_list:
-        ts = item.get('timestamp')
-        if isinstance(ts, str):
-            try:
-                ts = datetime.fromisoformat(ts)
-            except: continue
-        
-        # Garante timezone correction
-        if isinstance(ts, datetime): 
-             if ts.tzinfo is not None: ts = ts.replace(tzinfo=None)
-             if now.tzinfo is not None: now = now.replace(tzinfo=None)
-             
-             if ts >= cutoff:
-                 filtered.append(item)
-                 
-    return filtered
-
-def show_overview_tab(student_users: List[Dict], all_analytics: Dict, period: str):
-    """Tab de visão geral com gráficos (Dados Filtrados)"""
-    st.subheader(f"📈 Visão Geral ({period})")
-    
-    # Prepara dados para gráficos
-    users_data = []
-    for user in student_users:
-        uid = user['id']
-        u_data = all_analytics.get(uid, {})
-        
-        # Filtra dados brutos
-        raw_cases = u_data.get('case_analytics', [])
-        raw_chat = u_data.get('chat_interactions', [])
-        
-        filtered_cases = filter_data_by_period(raw_cases, period)
-        filtered_chat = filter_data_by_period(raw_chat, period)
-        
-        # Recalcula estatísticas com dados filtrados
-        total_cases = len(filtered_cases)
-        correct_cases = sum(1 for c in filtered_cases 
-                           if c.get("case_result", {}).get("breakdown", {}).get("diagnóstico", 0) >= 10)
-        acc_rate = (correct_cases / total_cases * 100) if total_cases > 0 else 0.0
-        
-        durations = [c.get('duration_seconds', 0) for c in filtered_cases if c.get('duration_seconds', 0) > 0]
-        avg_time = sum(durations) / len(durations) if durations else 0
-        
-        # Pega última atividade do período
-        last_act = "N/A"
-        all_acts = filtered_cases + filtered_chat
-        if all_acts:
-            # Ordena seguro
-            all_acts.sort(key=lambda x: datetime.fromisoformat(x['timestamp']) if isinstance(x.get('timestamp'), str) else datetime.min, reverse=True)
-            last_ts = all_acts[0].get('timestamp')
-            if isinstance(last_ts, str): last_ts = datetime.fromisoformat(last_ts)
-            last_act = last_ts
-
-        users_data.append({
-                'Nome': user['name'],
-                'Email': user['email'],
-                'Casos Resolvidos': total_cases,
-                'Taxa de Acertos': acc_rate,
-                'Tempo Médio': avg_time,
-                'Interações Chat': len(filtered_chat),
-                'Última Atividade': last_act
-            })
-    
-    if not users_data:
-        st.info("Nenhum dado de aluno encontrado.")
-        return
-    
-    df = pd.DataFrame(users_data)
-    
-    # KPIs do Período
-    kpi1, kpi2, kpi3, kpi4 = st.columns(4)
-    
-    total_active_period = sum(1 for u in users_data if u['Casos Resolvidos'] > 0 or u['Interações Chat'] > 0)
-    total_cases_period = sum(u['Casos Resolvidos'] for u in users_data)
-    avg_score_period = df[df['Casos Resolvidos'] > 0]['Taxa de Acertos'].mean() if not df.empty else 0
-    total_chat_period = sum(u['Interações Chat'] for u in users_data)
-    
-    with kpi1: st.metric("Alunos Ativos", total_active_period, help="Alunos com alguma atividade neste período")
-    with kpi2: st.metric("Casos Resolvidos", total_cases_period)
-    with kpi3: st.metric("Média Geral de Acertos", f"{avg_score_period:.1f}%")
-    with kpi4: st.metric("Interações Totais", total_chat_period)
     
     st.markdown("---")
-
-    # Gráficos Simples e Diretos
+    
+    # ===== VISUALIZAÇÕES =====
+    
+    # Linha 1: Desempenho por Componente e Distribuição por Nível
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("🏆 Melhores Notas (Taxa de Acerto)")
-        if not df[df['Casos Resolvidos'] > 0].empty:
-            # Filtra apenas quem tem casos e ordena
-            df_acc = df[df['Casos Resolvidos'] > 0].sort_values('Taxa de Acertos', ascending=True).tail(10)
+        st.markdown("### 📚 Desempenho por Componente de Conhecimento")
+        if component_stats:
+            df_comp = pd.DataFrame(component_stats)
             
-            fig_acc = px.bar(
-                df_acc,
-                x='Taxa de Acertos',
-                y='Nome',
+            fig_comp = px.bar(
+                df_comp,
+                x='taxa_acerto',
+                y='componente',
                 orientation='h',
+                title="Taxa de Acerto por Componente (%)",
                 text_auto='.1f',
-                title="Top 10 Alunos por Desempenho",
-                color='Taxa de Acertos',
-                color_continuous_scale='Greens'
+                color='taxa_acerto',
+                color_continuous_scale='RdYlGn',
+                range_color=[0, 100]
             )
-            fig_acc.update_layout(xaxis_title="Acertos (%)", yaxis_title=None, showlegend=False)
-            st.plotly_chart(fig_acc, use_container_width=True)
+            fig_comp.update_layout(
+                xaxis_title="Taxa de Acerto (%)",
+                yaxis_title=None,
+                showlegend=False,
+                height=400
+            )
+            st.plotly_chart(fig_comp, use_container_width=True)
+            
+            # Tooltip explicativo
+            st.caption("💡 Componentes no topo têm menor taxa de acerto (mais difíceis)")
         else:
-            st.info("Sem dados suficientes.")
-
+            st.info("Dados insuficientes para análise por componente")
+    
     with col2:
-        st.subheader("📚 Alunos Mais Engajados")
-        # Gráfico de Barras simples para volume
-        df_vol = df.sort_values('Casos Resolvidos', ascending=True).tail(10)
-        fig_vol = px.bar(
-            df_vol,
-            x='Casos Resolvidos',
-            y='Nome',
+        st.markdown("### 📊 Distribuição de Alunos por Nível")
+        if level_stats.get('total_alunos', 0) > 0:
+            dist = level_stats['distribuicao']
+            
+            df_level = pd.DataFrame({
+                'Nível': ['Básico', 'Intermediário', 'Avançado'],
+                'Quantidade': [dist['basico'], dist['intermediario'], dist['avancado']]
+            })
+            
+            fig_level = px.pie(
+                df_level,
+                values='Quantidade',
+                names='Nível',
+                title="Distribuição de Alunos",
+                color='Nível',
+                color_discrete_map={
+                    'Básico': '#3b82f6',
+                    'Intermediário': '#eab308',
+                    'Avançado': '#22c55e'
+                }
+            )
+            fig_level.update_traces(textposition='inside', textinfo='percent+label')
+            fig_level.update_layout(height=400)
+            st.plotly_chart(fig_level, use_container_width=True)
+        else:
+            st.info("Dados insuficientes")
+    
+    st.markdown("---")
+    
+    # Linha 2: Top 5 Categorias Mais Difíceis
+    st.markdown("### ⚠️ Top 5 Categorias Mais Difíceis")
+    if hardest_categories:
+        df_hardest = pd.DataFrame(hardest_categories)
+        
+        fig_hardest = px.bar(
+            df_hardest,
+            x='taxa_acerto',
+            y='componente',
             orientation='h',
-            text_auto=True,
-            title="Top 10 Alunos por Volume de Casos",
-            color='Casos Resolvidos',
-            color_continuous_scale='Blues'
+            title="Componentes que Precisam de Mais Atenção",
+            text_auto='.1f',
+            color='taxa_acerto',
+            color_continuous_scale='Reds_r',
+            range_color=[0, 100]
         )
-        fig_vol.update_layout(xaxis_title="Casos Completos", yaxis_title=None, showlegend=False)
-        st.plotly_chart(fig_vol, use_container_width=True)
+        fig_hardest.update_layout(
+            xaxis_title="Taxa de Acerto (%)",
+            yaxis_title=None,
+            showlegend=False,
+            height=300
+        )
+        st.plotly_chart(fig_hardest, use_container_width=True)
+        
+        # Tabela detalhada
+        with st.expander("📋 Detalhes das Categorias Difíceis"):
+            df_display = df_hardest[['componente', 'taxa_acerto', 'total_questoes', 'acertos', 'tempo_medio_formatado']].copy()
+            df_display.columns = ['Componente', 'Taxa de Acerto (%)', 'Total de Questões', 'Acertos', 'Tempo Médio']
+            st.dataframe(df_display, use_container_width=True, hide_index=True)
+    else:
+        st.info("Dados insuficientes")
+    
+    st.markdown("---")
+    
+    # Linha 3: Ranking de Alunos
+    st.markdown("### 🏆 Ranking de Alunos")
+    
+    # Prepara dados para ranking
+    ranking_data = []
+    for user in student_users:
+        uid = user['id']
+        u_data = all_analytics.get(uid, {})
+        case_analytics = u_data.get('case_analytics', [])
+        
+        if not case_analytics:
+            continue
+        
+        total_cases = len(case_analytics)
+        correct_cases = sum(1 for c in case_analytics 
+                           if c.get("case_result", {}).get("is_correct", False))
+        acc_rate = (correct_cases / total_cases * 100) if total_cases > 0 else 0.0
+        
+        ranking_data.append({
+            'Nome': user['name'],
+            'Email': user['email'],
+            'Questões': total_cases,
+            'Acertos': correct_cases,
+            'Taxa de Acerto': acc_rate
+        })
+    
+    if ranking_data:
+        df_ranking = pd.DataFrame(ranking_data)
+        df_ranking = df_ranking.sort_values('Taxa de Acerto', ascending=False)
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("#### 🌟 Top 10 Melhores Desempenhos")
+            top_10 = df_ranking.head(10).copy()
+            top_10['Taxa de Acerto'] = top_10['Taxa de Acerto'].apply(lambda x: f"{x:.1f}%")
+            st.dataframe(top_10, use_container_width=True, hide_index=True)
+        
+        with col2:
+            st.markdown("#### 🎯 Alunos que Precisam de Atenção")
+            # Alunos com taxa de acerto < 50% ou menos de 3 questões respondidas
+            need_attention = df_ranking[
+                (df_ranking['Taxa de Acerto'] < 50) | (df_ranking['Questões'] < 3)
+            ].head(10).copy()
+            
+            if not need_attention.empty:
+                need_attention['Taxa de Acerto'] = need_attention['Taxa de Acerto'].apply(lambda x: f"{x:.1f}%")
+                st.dataframe(need_attention, use_container_width=True, hide_index=True)
+            else:
+                st.success("✅ Todos os alunos estão com bom desempenho!")
+    else:
+        st.info("Nenhum aluno respondeu questões ainda")
 
-def show_student_details_tab(student_users: List[Dict], all_analytics: Dict, period: str):
-    """Tab com detalhes por aluno"""
-    st.subheader("👥 Detalhes por Aluno")
+def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict):
+    """Tab de análise individual com perfil detalhado de cada aluno"""
+    st.subheader("👤 Análise Individual de Alunos")
     
-    # Usa apenas alunos (já filtrados)
-    students = student_users
+    # ===== SELEÇÃO DE ALUNO =====
+    st.markdown("### 🔍 Selecione um Aluno")
     
-    if not students:
-        st.info("Nenhum aluno encontrado.")
+    # Filtros
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        search_term = st.text_input("🔎 Buscar por nome ou email", "")
+    
+    with col2:
+        filter_performance = st.selectbox(
+            "📊 Filtrar por desempenho",
+            ["Todos", "Acima da média", "Abaixo da média", "Sem atividade"]
+        )
+    
+    with col3:
+        filter_level = st.selectbox(
+            "📈 Filtrar por nível",
+            ["Todos", "Básico", "Intermediário", "Avançado"]
+        )
+    
+    # Aplica filtros
+    filtered_students = student_users.copy()
+    
+    # Filtro de busca
+    if search_term:
+        filtered_students = [
+            s for s in filtered_students 
+            if search_term.lower() in s['name'].lower() or search_term.lower() in s['email'].lower()
+        ]
+    
+    # Prepara lista para seleção
+    if not filtered_students:
+        st.warning("Nenhum aluno encontrado com os filtros aplicados.")
         return
     
-    # Seletor de aluno
-    student_names = [f"{student['name']} ({student['email']})" for student in students]
+    student_names = [f"{student['name']} ({student['email']})" for student in filtered_students]
     selected_student_idx = st.selectbox(
-        "Selecione um aluno:",
+        "👤 Aluno:",
         range(len(student_names)),
         format_func=lambda x: student_names[x]
     )
     
-    selected_student = students[selected_student_idx]
-    student_stats = get_user_detailed_stats(selected_student['id'])
+    selected_student = filtered_students[selected_student_idx]
+    student_id = selected_student['id']
     
-    st.markdown(f"### 👤 {selected_student['name']}")
+    st.markdown("---")
     
-    # Métricas do aluno
+    # ===== PERFIL DO ALUNO =====
+    
+    # Carrega perfil completo
+    try:
+        profile = get_student_complete_profile(student_id)
+    except Exception as e:
+        st.error(f"Erro ao carregar perfil do aluno: {e}")
+        return
+    
+    basic_stats = profile['estatisticas_basicas']
+    advanced_stats = profile['estatisticas_avancadas']
+    weakness = profile['analise_fraquezas']
+    comparison = profile['comparacao_turma']
+    evolution = profile['evolucao_temporal']
+    
+    # Cabeçalho do perfil
+    st.markdown(f"## 👤 {selected_student['name']}")
+    st.caption(f"📧 {selected_student['email']}")
+    
+    # ===== SEÇÃO: DESEMPENHO GERAL =====
+    st.markdown("### 📊 Desempenho Geral")
+    
     col1, col2, col3, col4, col5 = st.columns(5)
     
     with col1:
         st.metric(
-            "📚 Casos Resolvidos",
-            student_stats['case_stats']['total_cases']
+            "📚 Questões Respondidas",
+            basic_stats['case_stats']['total_cases']
         )
     
     with col2:
+        acc = basic_stats['case_stats']['accuracy_rate']
         st.metric(
             "🎯 Taxa de Acertos",
-            f"{student_stats['case_stats']['accuracy_rate']:.1f}%"
+            f"{acc:.1f}%"
         )
     
     with col3:
         st.metric(
             "⏱️ Tempo Médio",
-            student_stats['case_stats']['average_time_formatted']
+            basic_stats['case_stats']['average_time_formatted']
         )
     
     with col4:
         st.metric(
             "💬 Interações Chat",
-            student_stats['total_chat_interactions']
+            basic_stats['total_chat_interactions']
         )
     
     with col5:
+        # Comparação com turma
+        perf_icon = "🔼" if comparison['performance'] == 'acima' else "🔽" if comparison['performance'] == 'abaixo' else "➡️"
         st.metric(
-            "📊 Score Total",
-            student_stats['case_stats'].get('total_score', 0)
+            "📊 vs Turma",
+            f"{perf_icon} {comparison['performance'].title()}",
+            delta=f"{comparison['diferenca']:.1f}%",
+            delta_color="normal" if comparison['performance'] == 'acima' else "inverse"
         )
     
-    # Gráficos específicos do aluno
+    st.markdown("---")
+    
+    # ===== SEÇÃO: ANÁLISE DE DIFICULDADES =====
+    st.markdown("### ⚠️ Análise de Dificuldades")
+    
     col1, col2 = st.columns(2)
     
     with col1:
-        # Gráfico de casos por dia
-        if student_stats['cases_by_day']:
-            st.subheader("📅 Atividade por Dia (Últimos 7 dias)")
-            days = list(student_stats['cases_by_day'].keys())
-            cases = list(student_stats['cases_by_day'].values())
-            
-            fig_daily = px.bar(
-                x=days,
-                y=cases,
-                title="Casos Resolvidos por Dia",
-                labels={'x': 'Data', 'y': 'Casos'}
-            )
-            st.plotly_chart(fig_daily, use_container_width=True)
+        st.markdown("#### 🎯 Componente Mais Difícil")
+        worst_comp = weakness.get('componente_mais_dificil')
+        if worst_comp:
+            st.error(f"**{worst_comp['nome']}**")
+            st.write(f"- Taxa de acerto: **{worst_comp['acuracia']:.1f}%**")
+            st.write(f"- Questões: {worst_comp['acertos']}/{worst_comp['total']}")
         else:
-            st.info("Nenhuma atividade recente.")
+            st.info("Dados insuficientes")
     
     with col2:
-        # Gráfico de progresso
-        st.subheader("📈 Progresso do Aluno")
-        
-        # Simula dados de progresso (casos resolvidos ao longo do tempo)
-        case_analytics = all_analytics.get(selected_student['id'], {}).get('case_analytics', [])
-        if case_analytics:
-            # Função auxiliar segura para obter timestamp (Naive)
-            def get_safe_timestamp(x):
-                ts = x.get('timestamp', datetime.min)
-                try:
-                    if isinstance(ts, str):
-                        dt_obj = datetime.fromisoformat(ts)
-                        return dt_obj.replace(tzinfo=None) # Remove timezone for safety
-                    if isinstance(ts, datetime):
-                        return ts.replace(tzinfo=None)
-                except:
-                    pass
-                return datetime.min
-
-            # Ordena por data com segurança
-            try:
-                case_analytics.sort(key=get_safe_timestamp)
-            except Exception as e:
-                st.error(f"Erro ao ordenar histórico: {e}")
-            
-            # Calcula acertos acumulados
-            cumulative_correct = 0
-            cumulative_total = 0
-            progress_data = []
-            
-            for case_data in case_analytics:
-                cumulative_total += 1
-                if case_data.get('case_result', {}).get('breakdown', {}).get('diagnóstico', 0) >= 10:
-                    cumulative_correct += 1
-                
-                accuracy = (cumulative_correct / cumulative_total * 100) if cumulative_total > 0 else 0
-                progress_data.append({
-                    'Caso': cumulative_total,
-                    'Taxa de Acertos': accuracy
-                })
-            
-            if progress_data:
-                df_progress = pd.DataFrame(progress_data)
-                fig_progress = px.line(
-                    df_progress,
-                    x='Caso',
-                    y='Taxa de Acertos',
-                    title="Evolução da Taxa de Acertos",
-                    markers=True
-                )
-                st.plotly_chart(fig_progress, use_container_width=True)
+        st.markdown("#### 📈 Nível Mais Difícil")
+        worst_diff = weakness.get('nivel_mais_dificil')
+        if worst_diff:
+            st.error(f"**{worst_diff['nivel'].title()}**")
+            st.write(f"- Taxa de acerto: **{worst_diff['acuracia']:.1f}%**")
+            st.write(f"- Questões: {worst_diff['acertos']}/{worst_diff['total']}")
         else:
-            st.info("Nenhum caso resolvido ainda.")
+            st.info("Dados insuficientes")
     
-    # --- ANALYTICS AVANÇADOS ---
-    from analytics import get_student_advanced_stats
-    adv_stats = get_student_advanced_stats(selected_student['id'])
+    # Componentes problemáticos
+    problematic = weakness.get('componentes_problematicos', [])
+    if problematic:
+        st.markdown("#### 🚨 Componentes Problemáticos (Taxa < 50%)")
+        for comp in problematic[:5]:  # Top 5
+            st.warning(f"**{comp['nome']}**: {comp['acuracia']:.1f}% ({comp['acertos']}/{comp['total']})")
     
-    st.markdown("### 🧠 Análise de Proficiência")
+    # Padrões de erro
+    patterns = weakness.get('padroes_erro', [])
+    if patterns:
+        st.markdown("#### 🔍 Padrões Identificados")
+        for pattern in patterns:
+            st.info(f"**{pattern['padrao']}**: {pattern['descricao']}")
     
-    a_col1, a_col2 = st.columns(2)
+    st.markdown("---")
     
-    with a_col1:
-        st.subheader("Por Componente de Conhecimento")
-        if adv_stats['componentes']:
-            df_comp = pd.DataFrame(adv_stats['componentes'])
+    # ===== SEÇÃO: DESEMPENHO POR CATEGORIA =====
+    st.markdown("### 📚 Desempenho por Categoria")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("#### Por Componente de Conhecimento")
+        if advanced_stats['componentes']:
+            df_comp = pd.DataFrame(advanced_stats['componentes'])
+            
             fig_comp = px.bar(
                 df_comp,
                 x='acuracia',
                 y='nome',
                 orientation='h',
-                title="Acurácia por Tópico (%)",
                 text_auto='.1f',
-                range_x=[0, 100],
                 color='acuracia',
-                color_continuous_scale='RdYlGn'
+                color_continuous_scale='RdYlGn',
+                range_color=[0, 100]
             )
-            fig_comp.update_layout(yaxis_title=None, xaxis_title="Acurácia (%)")
+            fig_comp.update_layout(
+                xaxis_title="Acurácia (%)",
+                yaxis_title=None,
+                showlegend=False,
+                height=400
+            )
             st.plotly_chart(fig_comp, use_container_width=True)
-            
-            # Tabela detalhada
-            st.dataframe(
-                df_comp[['nome', 'acuracia', 'total', 'acertos']].rename(columns={'nome': 'Tópico', 'acuracia': '% Acurácia', 'total': 'Questões', 'acertos': 'Acertos'}),
-                use_container_width=True,
-                hide_index=True
-            )
         else:
-            st.info("Dados insuficientes para análise de componentes.")
-
-    with a_col2:
-        st.subheader("Por Nível de Dificuldade")
-        if adv_stats['dificuldade']:
-            df_diff = pd.DataFrame(adv_stats['dificuldade'])
-            
-            # Ordem customizada se possível
-            difficulty_order = ['básico', 'intermediário', 'avançado']
-            df_diff['nivel'] = pd.Categorical(df_diff['nivel'], categories=difficulty_order, ordered=True)
-            df_diff = df_diff.sort_values('nivel')
+            st.info("Dados insuficientes")
+    
+    with col2:
+        st.markdown("#### Por Nível de Dificuldade")
+        if advanced_stats['dificuldade']:
+            df_diff = pd.DataFrame(advanced_stats['dificuldade'])
             
             fig_diff = px.bar(
                 df_diff,
                 x='nivel',
                 y='acuracia',
-                title="Acurácia por Dificuldade (%)",
                 text_auto='.1f',
-                range_y=[0, 100],
                 color='nivel',
-                color_discrete_map={'básico': '#22c55e', 'intermediário': '#eab308', 'avançado': '#ef4444'}
+                color_discrete_map={
+                    'básico': '#22c55e',
+                    'intermediário': '#eab308',
+                    'avançado': '#ef4444'
+                }
+            )
+            fig_diff.update_layout(
+                xaxis_title="Nível",
+                yaxis_title="Acurácia (%)",
+                showlegend=False,
+                height=400
             )
             st.plotly_chart(fig_diff, use_container_width=True)
-            
-            # Tempo médio por dificuldade
-            fig_time = px.bar(
-                df_diff,
-                x='nivel',
-                y='tempo_medio',
-                title="Tempo Médio por Dificuldade (s)",
-                text_auto='.1f',
-                color='nivel'
-            )
-            st.plotly_chart(fig_time, use_container_width=True)
         else:
-            st.info("Dados insuficientes para análise de dificuldade.")
-
+            st.info("Dados insuficientes")
+    
+    # Tabela detalhada
+    with st.expander("📋 Tabela Detalhada por Componente"):
+        if advanced_stats['componentes']:
+            df_comp_table = pd.DataFrame(advanced_stats['componentes'])
+            df_comp_table.columns = ['Componente', 'Acurácia (%)', 'Total', 'Acertos']
+            df_comp_table = df_comp_table.sort_values('Acurácia (%)')
+            st.dataframe(df_comp_table, use_container_width=True, hide_index=True)
+    
     st.markdown("---")
-
-    # Histórico de casos
-    st.subheader("📋 Histórico de Respostas")
     
-    case_analytics = all_analytics.get(selected_student['id'], {}).get('case_analytics', [])
+    # ===== SEÇÃO: HISTÓRICO DE RESPOSTAS =====
+    st.markdown("### 📋 Histórico de Respostas")
+    
+    case_analytics = all_analytics.get(student_id, {}).get('case_analytics', [])
+    
     if case_analytics:
-        # Prepara dados para tabela
-        case_history = []
-        for case_data in case_analytics:
-            case_id = case_data.get('case_id')
-            case_info = get_case(case_id)
-            
-            case_result = case_data.get('case_result', {})
-            # Is Correct agora vem direto do result para questões novas
-            is_correct = case_result.get('is_correct', False)
-            
-            # Fallback para legado (se houver mix de dados antigos)
-            if 'breakdown' in case_result:
-                 is_correct = case_result.get('breakdown', {}).get('diagnóstico', 0) >= 10
-            
-            # Tenta pegar pergunta ou titulo
-            titulo = case_info.get('pergunta') or case_info.get('titulo', 'Questão')
-            
-            case_history.append({
-                'Questão': titulo,
-                'Dificuldade': case_info.get('dificuldade', 'N/A'),
-                'Tempo': format_duration(case_data.get('duration_seconds', 0)),
-                'Status': '✅ Correto' if is_correct else '❌ Incorreto',
-                'Pontos': case_result.get('points_gained', 0),
-                'Data': (datetime.fromisoformat(case_data.get('timestamp', datetime.now().isoformat())) if isinstance(case_data.get('timestamp'), str) else case_data.get('timestamp', datetime.now())).strftime('%d/%m/%Y %H:%M')
-            })
-        
-        # Ordena por data (mais recente primeiro)
-        case_history.sort(key=lambda x: x['Data'], reverse=True)
-        
-        df_history = pd.DataFrame(case_history)
-        st.dataframe(df_history, use_container_width=True, hide_index=True)
-    else:
-        st.info("Nenhuma questão respondida ainda.")
-
-def show_resolution_times_tab(student_users: List[Dict], all_analytics: Dict, period: str):
-    """Tab com tempos de resolução de casos"""
-    st.subheader("⏱️ Tempos de Resolução de Casos")
-    
-    if not student_users:
-        st.info("Nenhum aluno encontrado.")
-        return
-    
-    # Seletor de aluno
-    student_names = [f"{user['name']} ({user['email']})" for user in student_users]
-    selected_student_idx = st.selectbox(
-        "👤 Selecione um aluno:",
-        range(len(student_names)),
-        format_func=lambda x: student_names[x]
-    )
-    
-    if selected_student_idx is not None:
-        selected_student = student_users[selected_student_idx]
-        student_id = selected_student['id']
-        
-        # Obtém dados de tempo de resolução
-        resolution_times = get_case_resolution_times(student_id)
-        time_stats = get_resolution_time_stats(student_id)
-        
-        if not resolution_times:
-            st.info(f"Nenhum caso resolvido por {selected_student['name']} ainda.")
-            return
-        
-        # Estatísticas gerais
-        col1, col2, col3, col4 = st.columns(4)
+        # Filtros para histórico
+        col1, col2, col3 = st.columns(3)
         
         with col1:
-            st.metric("📊 Total de Casos", time_stats['total_cases'])
+            filter_status = st.selectbox(
+                "Status",
+                ["Todos", "Corretas", "Incorretas"],
+                key="hist_status"
+            )
         
         with col2:
-            st.metric("⏱️ Tempo Médio", time_stats['average_time_formatted'])
+            # Pega componentes únicos
+            all_components = set()
+            for entry in case_analytics:
+                cid = entry.get('case_id')
+                q_info = get_case(cid)
+                comps = q_info.get('componentes_conhecimento', [])
+                all_components.update(comps)
+            
+            filter_component = st.selectbox(
+                "Componente",
+                ["Todos"] + sorted(list(all_components)),
+                key="hist_comp"
+            )
         
         with col3:
-            st.metric("⚡ Mais Rápido", time_stats['fastest_time_formatted'])
+            filter_difficulty = st.selectbox(
+                "Dificuldade",
+                ["Todos", "básico", "intermediário", "avançado"],
+                key="hist_diff"
+            )
         
-        with col4:
-            st.metric("🐌 Mais Lento", time_stats['slowest_time_formatted'])
-        
-        st.markdown("---")
-        
-        # Gráfico de distribuição de tempos
-        st.subheader("📈 Distribuição de Tempos")
-        
-        # Prepara dados para o gráfico
-        times_data = []
-        for case_data in resolution_times:
-            case_info = get_case(case_data['case_id'])
-            times_data.append({
-                'Caso': case_info.get('titulo', f"Caso {case_data['case_id']}"),
-                'Tempo (segundos)': case_data['duration_seconds'],
-                'Tempo Formatado': case_data['duration_formatted'],
-                'Resultado': '✅ Correto' if case_data['is_correct'] else '❌ Incorreto',
-                'Data': case_data['timestamp'].strftime('%d/%m/%Y %H:%M')
+        # Prepara histórico
+        history = []
+        for entry in case_analytics:
+            cid = entry.get('case_id')
+            q_info = get_case(cid)
+            result = entry.get('case_result', {})
+            
+            is_correct = result.get('is_correct', False)
+            timestamp = entry.get('timestamp')
+            
+            if isinstance(timestamp, str):
+                timestamp = datetime.fromisoformat(timestamp)
+            
+            # Aplica filtros
+            if filter_status == "Corretas" and not is_correct:
+                continue
+            if filter_status == "Incorretas" and is_correct:
+                continue
+            
+            comps = q_info.get('componentes_conhecimento', [])
+            if filter_component != "Todos" and filter_component not in comps:
+                continue
+            
+            diff = q_info.get('dificuldade', 'básico')
+            if filter_difficulty != "Todos" and diff != filter_difficulty:
+                continue
+            
+            history.append({
+                'Data': timestamp.strftime('%d/%m/%Y %H:%M'),
+                'Questão': q_info.get('pergunta', 'N/A')[:50] + '...',
+                'Componente': ', '.join(comps),
+                'Dificuldade': diff.title(),
+                'Status': '✅ Correto' if is_correct else '❌ Incorreto',
+                'Tempo': format_duration(entry.get('duration_seconds', 0)),
+                'Pontos': result.get('points_gained', 0)
             })
         
-        if times_data:
-            df_times = pd.DataFrame(times_data)
+        if history:
+            df_history = pd.DataFrame(history)
+            st.dataframe(df_history, use_container_width=True, hide_index=True)
             
-            # Gráfico de barras
-            fig = px.bar(
-                df_times, 
-                x='Caso', 
-                y='Tempo (segundos)',
-                color='Resultado',
-                title="Tempo de Resolução por Caso",
-                color_discrete_map={'✅ Correto': '#00ff00', '❌ Incorreto': '#ff0000'}
+            # Botão de download
+            csv = df_history.to_csv(index=False)
+            st.download_button(
+                label="📥 Baixar Histórico (CSV)",
+                data=csv,
+                file_name=f"historico_{selected_student['name'].replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.csv",
+                mime="text/csv"
             )
-            fig.update_layout(xaxis_tickangle=-45)
-            st.plotly_chart(fig, use_container_width=True)
-            
-            # Tabela detalhada
-            st.subheader("📋 Detalhes dos Casos")
-            st.dataframe(
-                df_times[['Caso', 'Tempo Formatado', 'Resultado', 'Data']],
-                use_container_width=True,
-                hide_index=True
-            )
-        
-        # Comparação entre casos corretos e incorretos
-        if time_stats['correct_cases_time'] and time_stats['incorrect_cases_time']:
-            st.subheader("🔍 Análise Comparativa")
-            
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.metric(
-                    "✅ Tempo Médio (Corretos)", 
-                    format_duration(time_stats['correct_avg_time'])
-                )
-            
-            with col2:
-                st.metric(
-                    "❌ Tempo Médio (Incorretos)", 
-                    format_duration(time_stats['incorrect_avg_time'])
-                )
-
-def show_chat_interactions_tab(student_users: List[Dict], all_analytics: Dict, period: str):
-    """Tab com interações do chat"""
-    st.subheader("💬 Interações com o Chatbot")
-    
-    # Usa apenas alunos (já filtrados)
-    students = student_users
-    
-    if not students:
-        st.info("Nenhum aluno encontrado.")
-        return
-    
-    # Seletor de aluno
-    student_names = [f"{student['name']} ({student['email']})" for student in students]
-    selected_student_idx = st.selectbox(
-        "Selecione um aluno:",
-        range(len(student_names)),
-        format_func=lambda x: student_names[x],
-        key="chat_student_selector"
-    )
-    
-    selected_student = students[selected_student_idx]
-    
-    # Busca interações do chat
-    chat_interactions = get_user_chat_interactions(selected_student['id'])
-    
-    if not chat_interactions:
-        st.info("Nenhuma interação com o chatbot encontrada.")
-        return
-    
-    # Estatísticas do chat
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.metric(
-            "💬 Total de Interações",
-            len(chat_interactions)
-        )
-    
-    with col2:
-        avg_response_time = sum(i.get('response_time_seconds', 0) for i in chat_interactions) / len(chat_interactions)
-        st.metric(
-            "⏱️ Tempo Médio de Resposta",
-            format_duration(avg_response_time)
-        )
-    
-    with col3:
-        # Conta interações por caso
-        cases_with_chat = len(set(i.get('case_id') for i in chat_interactions))
-        st.metric(
-            "📚 Casos com Chat",
-            cases_with_chat
-        )
-    
-    # Lista de interações
-    st.subheader("📝 Histórico de Conversas")
-    
-    for interaction in chat_interactions[:20]:  # Mostra apenas as últimas 20
-        case_id = interaction.get('case_id')
-        case_info = get_case(case_id)
-        
-        timestamp = interaction.get('timestamp', datetime.now())
-        if isinstance(timestamp, str):
-            timestamp = datetime.fromisoformat(timestamp)
-        timestamp_str = timestamp.strftime('%d/%m/%Y %H:%M')
-        with st.expander(f"💬 {case_info.get('titulo', 'Caso')} - {timestamp_str}"):
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.markdown("**👤 Aluno:**")
-                st.write(interaction.get('user_message', 'N/A'))
-            
-            with col2:
-                st.markdown("**🤖 IA Tutora:**")
-                st.write(interaction.get('bot_response', 'N/A'))
-            
-            if interaction.get('response_time_seconds'):
-                st.caption(f"⏱️ Tempo de resposta: {format_duration(interaction['response_time_seconds'])}")
-
-def show_reports_tab(student_users: List[Dict], all_analytics: Dict, period: str):
-    """Tab com relatórios"""
-    st.subheader("📊 Relatórios")
-    
-    # Botão para gerar relatório
-    if st.button("📄 Gerar Relatório Completo", type="primary"):
-        generate_complete_report(student_users, all_analytics)
+        else:
+            st.info("Nenhuma resposta encontrada com os filtros aplicados")
+    else:
+        st.info("Nenhuma questão respondida ainda")
     
     st.markdown("---")
     
-    # Relatório de performance
-    st.subheader("📈 Relatório de Performance")
+    # ===== SEÇÃO: EVOLUÇÃO TEMPORAL =====
+    st.markdown("### 📈 Evolução Temporal")
     
-    # Prepara dados para relatório
-    performance_data = []
-    for user in student_users:
-        user_stats = get_user_detailed_stats(user['id'])
-        performance_data.append({
-                'Aluno': user['name'],
-                'Email': user['email'],
-                'Casos Resolvidos': user_stats['case_stats']['total_cases'],
-                'Taxa de Acertos': f"{user_stats['case_stats']['accuracy_rate']:.1f}%",
-                'Tempo Médio': user_stats['case_stats']['average_time_formatted'],
-                'Interações Chat': user_stats['total_chat_interactions'],
-                'Última Atividade': user_stats['last_activity'].strftime('%d/%m/%Y') if isinstance(user_stats['last_activity'], datetime) else 'N/A'
-            })
+    weekly_perf = evolution.get('desempenho_semanal', {})
+    trend = evolution.get('tendencia', 'estável')
     
-    if performance_data:
-        df_performance = pd.DataFrame(performance_data)
+    if weekly_perf:
+        # Prepara dados para gráfico
+        weeks = sorted(weekly_perf.keys())
+        accuracies = []
         
-        # Ordena por taxa de acertos
-        df_performance = df_performance.sort_values('Taxa de Acertos', ascending=False)
+        for week in weeks:
+            data = weekly_perf[week]
+            acc = (data['correct'] / data['total'] * 100) if data['total'] > 0 else 0
+            accuracies.append(acc)
         
-        st.dataframe(df_performance, use_container_width=True, hide_index=True)
+        df_evolution = pd.DataFrame({
+            'Semana': weeks,
+            'Taxa de Acerto (%)': accuracies
+        })
         
-        # Botão para download
-        csv = df_performance.to_csv(index=False)
-        st.download_button(
-            label="📥 Baixar Relatório CSV",
-            data=csv,
-            file_name=f"relatorio_performance_{datetime.now().strftime('%Y%m%d')}.csv",
-            mime="text/csv"
+        fig_evolution = px.line(
+            df_evolution,
+            x='Semana',
+            y='Taxa de Acerto (%)',
+            title=f"Evolução nas Últimas 4 Semanas (Tendência: {trend.title()})",
+            markers=True
         )
+        fig_evolution.update_layout(height=400)
+        st.plotly_chart(fig_evolution, use_container_width=True)
+        
+        # Indicador de tendência
+        if trend == 'melhorando':
+            st.success("📈 **Tendência Positiva**: O aluno está melhorando!")
+        elif trend == 'piorando':
+            st.error("📉 **Atenção**: O desempenho está caindo")
+        else:
+            st.info("➡️ **Tendência Estável**: Desempenho consistente")
     else:
-        st.info("Nenhum dado de performance encontrado.")
-
-def generate_complete_report(student_users: List[Dict], all_analytics: Dict):
-    """Gera relatório completo"""
-    st.success("📄 Relatório gerado com sucesso!")
-    
-    # Aqui você pode implementar a geração de um relatório mais detalhado
-    # Por exemplo, PDF, Excel, etc.
-    
-    with st.expander("📋 Relatório Completo", expanded=True):
-        st.markdown("### 📊 Resumo Executivo")
-        
-        global_stats = get_global_stats()
-        
-        st.markdown(f"""
-        - **Total de Usuários**: {global_stats.get('total_users', 0)}
-        - **Total de Casos Resolvidos**: {global_stats.get('total_cases', 0)}
-        - **Total de Interações Chat**: {global_stats.get('total_chat_interactions', 0)}
-        - **Taxa Média de Acertos**: {global_stats.get('average_accuracy_rate', 0):.1f}%
-        - **Usuários Ativos Hoje**: {global_stats.get('active_users_today', 0)}
-        """)
-        
-        st.markdown("### 👥 Performance por Aluno")
-        
-        for user in student_users:
-            user_stats = get_user_detailed_stats(user['id'])
-            st.markdown(f"""
-                **{user['name']}**
-                - Casos resolvidos: {user_stats['case_stats']['total_cases']}
-                - Taxa de acertos: {user_stats['case_stats']['accuracy_rate']:.1f}%
-                - Tempo médio: {user_stats['case_stats']['average_time_formatted']}
-                - Interações chat: {user_stats['total_chat_interactions']}
-                """)
+        st.info("Dados insuficientes para análise temporal (mínimo 1 semana de atividade)")
