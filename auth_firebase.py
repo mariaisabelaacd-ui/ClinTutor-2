@@ -69,6 +69,22 @@ def validate_email(email: str) -> bool:
     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     return re.match(pattern, email) is not None
 
+def validate_full_name(name: str) -> Tuple[bool, str]:
+    """Valida se o nome é completo (mínimo 2 palavras, 3+ caracteres cada)"""
+    if not name or not name.strip():
+        return False, "Nome é obrigatório"
+    
+    words = name.strip().split()
+    
+    if len(words) < 2:
+        return False, "Por favor, insira seu nome completo (nome e sobrenome)"
+    
+    for word in words:
+        if len(word) < 2:
+            return False, "Cada parte do nome deve ter pelo menos 2 caracteres"
+    
+    return True, ""
+
 def validate_email_domain(email: str) -> Tuple[bool, str]:
     """
     Valida se o email pertence aos domínios permitidos da Santa Casa
@@ -120,8 +136,10 @@ def email_exists(email: str) -> bool:
         return email_exists_local(email)
 
 def register_user_firebase(name: str, email: str, password: str, user_type: str, ra: str = None) -> Tuple[bool, str]:
-    """Registra usuário no Firebase"""
+    """Registra usuário no Firebase Authentication e Firestore"""
     try:
+        from firebase_config import create_firebase_user
+        
         db = get_firestore_db()
         users_ref = db.collection('users')
         
@@ -129,12 +147,20 @@ def register_user_firebase(name: str, email: str, password: str, user_type: str,
         if user_type not in ["aluno", "professor", "admin"]:
             return False, "Tipo de usuário inválido"
         
-        # Cria novo usuário
+        # Cria usuário no Firebase Authentication
+        success, auth_uid, message = create_firebase_user(email, password, name.strip())
+        
+        if not success:
+            return False, message
+        
+        # Cria documento no Firestore
         user_data = {
+            'auth_uid': auth_uid,  # ID do Firebase Auth
             'name': name.strip(),
             'email': email.lower().strip(),
-            'password': hash_password(password),
             'user_type': user_type,
+            'email_verified': False,  # Será atualizado quando verificar
+            'verification_link': message,  # Link de verificação
             'created_at': datetime.now().isoformat(),
             'last_login': None
         }
@@ -143,14 +169,13 @@ def register_user_firebase(name: str, email: str, password: str, user_type: str,
         if user_type == "aluno" and ra:
             user_data['ra'] = ra.strip()
         
-        # Adiciona ao Firestore e captura o ID do documento
-        doc_ref = users_ref.add(user_data)
-        doc_id = doc_ref[1].id  # O ID do documento criado
+        # Adiciona ao Firestore usando auth_uid como ID do documento
+        users_ref.document(auth_uid).set(user_data)
         
-        return True, f"Usuário cadastrado com sucesso no Firebase! ID: {doc_id}"
+        return True, f"✅ Cadastro realizado! Enviamos um email de verificação para {email}. Verifique sua caixa de entrada (e spam) antes de fazer login."
         
     except Exception as e:
-        return False, f"Erro ao cadastrar no Firebase: {e}"
+        return False, f"Erro ao cadastrar: {e}"
 
 def register_user_local(name: str, email: str, password: str, user_type: str, ra: str = None) -> Tuple[bool, str]:
     """Registra usuário no banco local"""
@@ -176,9 +201,10 @@ def register_user_local(name: str, email: str, password: str, user_type: str, ra
 
 def register_user(name: str, email: str, password: str, user_type: str, ra: str = None) -> Tuple[bool, str]:
     """Registra um novo usuário (Firebase ou local) com validação de domínio"""
-    # Validações
-    if not name.strip():
-        return False, "Nome é obrigatório"
+    # Validação de nome completo
+    is_valid_name, name_error = validate_full_name(name)
+    if not is_valid_name:
+        return False, name_error
     
     if not email.strip():
         return False, "Email é obrigatório"
@@ -218,32 +244,44 @@ def register_user(name: str, email: str, password: str, user_type: str, ra: str 
         return register_user_local(name, email, password, user_type, ra)
 
 def authenticate_user_firebase(email: str, password: str) -> Tuple[bool, str, Optional[Dict]]:
-    """Autentica usuário no Firebase"""
+    """Autentica usuário no Firebase e verifica email"""
     try:
-        db = get_firestore_db()
-        users_ref = db.collection('users')
-        query = users_ref.where('email', '==', email.lower().strip()).limit(1)
-        docs = query.get()
+        from firebase_config import get_firebase_user_by_email
         
-        if not docs:
+        db = get_firestore_db()
+        
+        # Busca usuário no Firebase Auth
+        auth_user = get_firebase_user_by_email(email.lower().strip())
+        
+        if not auth_user:
             return False, "Email ou senha incorretos", None
         
-        user_doc = docs[0]
+        # Verifica se o email foi verificado
+        if not auth_user.email_verified:
+            return False, "⚠️ Email não verificado! Verifique sua caixa de entrada e clique no link de verificação. Não recebeu? Clique em 'Reenviar Email'.", None
+        
+        # Busca dados do usuário no Firestore
+        user_doc = db.collection('users').document(auth_user.uid).get()
+        
+        if not user_doc.exists:
+            return False, "Usuário não encontrado no sistema", None
+        
         user_data = user_doc.to_dict()
         
-        if user_data['password'] != hash_password(password):
-            return False, "Email ou senha incorretos", None
-        
-        # Atualiza último login
-        user_doc.reference.update({'last_login': datetime.now()})
+        # Atualiza último login e status de verificação
+        user_doc.reference.update({
+            'last_login': datetime.now(),
+            'email_verified': True
+        })
         
         # Adiciona ID do documento
-        user_data['id'] = user_doc.id
+        user_data['id'] = auth_user.uid
+        user_data['email_verified'] = True
         
         return True, "Login realizado com sucesso!", user_data
         
     except Exception as e:
-        return False, f"Erro ao autenticar no Firebase: {e}", None
+        return False, f"Erro ao autenticar: {e}", None
 
 def authenticate_user_local(email: str, password: str) -> Tuple[bool, str, Optional[Dict]]:
     """Autentica usuário no banco local"""

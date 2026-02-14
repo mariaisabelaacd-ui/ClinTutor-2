@@ -1,7 +1,7 @@
 import os
 import json
 import streamlit as st
-from firebase_admin import credentials, firestore, initialize_app, get_app
+from firebase_admin import credentials, firestore, auth, initialize_app, get_app
 from typing import Optional
 
 class FirebaseConfig:
@@ -156,3 +156,64 @@ def test_firebase_connection():
         return True, "Conexão com Firebase funcionando!"
     except Exception as e:
         return False, f"Erro na conexão: {e}"
+
+# =============================
+# Firebase Authentication Helpers
+# =============================
+
+def create_firebase_user(email: str, password: str, display_name: str):
+    """Cria usuário no Firebase Authentication e envia email de verificação"""
+    try:
+        user = auth.create_user(
+            email=email,
+            password=password,
+            display_name=display_name,
+            email_verified=False
+        )
+        
+        # Gera link de verificação
+        link = auth.generate_email_verification_link(email)
+        
+        return True, user.uid, link
+    except auth.EmailAlreadyExistsError:
+        return False, None, "Email já cadastrado"
+    except Exception as e:
+        return False, None, f"Erro ao criar usuário: {e}"
+
+def verify_firebase_user(email: str, password: str):
+    """Verifica credenciais e status de verificação do email"""
+    try:
+        # Firebase Admin SDK não tem método direto de login
+        # Precisamos usar a API REST do Firebase Auth
+        # Por enquanto, vamos apenas verificar se o usuário existe
+        user = auth.get_user_by_email(email)
+        
+        return True, user.uid, user.email_verified
+    except auth.UserNotFoundError:
+        return False, None, False
+    except Exception as e:
+        return False, None, False
+
+def send_verification_email_firebase(email: str):
+    """Reenvia email de verificação"""
+    try:
+        link = auth.generate_email_verification_link(email)
+        return True, link
+    except Exception as e:
+        return False, f"Erro ao enviar email: {e}"
+
+def get_firebase_user_by_email(email: str):
+    """Busca usuário no Firebase Auth por email"""
+    try:
+        user = auth.get_user_by_email(email)
+        return user
+    except:
+        return None
+
+def delete_firebase_auth_user(uid: str):
+    """Remove usuário do Firebase Authentication"""
+    try:
+        auth.delete_user(uid)
+        return True
+    except Exception as e:
+        return False

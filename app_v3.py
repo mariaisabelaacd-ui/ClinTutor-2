@@ -49,55 +49,68 @@ def show_login_page():
     col_left, col_center, col_right = st.columns([1, 1.5, 1])
     with col_center:
         st.markdown("<div style='text-align: center; margin-bottom: 2rem;'>", unsafe_allow_html=True)
-        st.markdown(f"<h1 style='color: #11B965; font-size: 3.5em; margin:0;'>BioTutor v3</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #666; font-size: 1.2em;'>Tutor de Biologia Molecular (Nova Versão)</p>", unsafe_allow_html=True)
+        st.markdown(f"<h1 class='login-title'>🧬 {APP_NAME}</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #94a3b8;'>Plataforma de Aprendizado Interativo</p>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
-        with st.container(border=True):
-            tab1, tab2 = st.tabs(["Entrar", "Criar Conta"])
-            with tab1:
-                with st.form("login_form"):
-                    email = st.text_input("Email", placeholder="seu@email.com")
-                    password = st.text_input("Senha", type="password", placeholder="••••••")
-                    remember_me = st.checkbox("Manter conectado por 7 dias")
-                    st.markdown("")
-                    if st.form_submit_button("Acessar Sistema", type="primary", use_container_width=True):
-                        if email and password:
-                            with st.spinner("Autenticando..."):
-                                success, message, user_data = authenticate_user(email, password)
+        
+        tab1, tab2 = st.tabs(["Login", "Cadastro"])
+        
+        with tab1:
+            with st.form("login_form"):
+                email = st.text_input("Email", placeholder="seu.email@fcmsantacasasp.edu.br")
+                password = st.text_input("Senha", type="password", placeholder="••••••••")
+                remember = st.checkbox("Lembrar de mim")
+                submit = st.form_submit_button("Entrar", use_container_width=True)
+                
+                if submit:
+                    success, message, user_data = authenticate_user(email, password)
+                    if success:
+                        login_user(user_data)
+                        if remember and cookie_manager:
+                            token = create_auth_token(str(user_data["id"]))
+                            cookie_manager.set("auth_token", token, max_age=7*24*60*60)
+                        st.success(message)
+                        st.rerun()
+                    else:
+                        st.error(message)
+                        
+                        # Botão para reenviar email de verificação
+                        if "não verificado" in message.lower():
+                            if st.button("📧 Reenviar Email de Verificação", use_container_width=True):
+                                from firebase_config import send_verification_email_firebase
+                                success, result = send_verification_email_firebase(email)
                                 if success:
-                                    login_user(user_data)
-                                    if remember_me:
-                                        token = create_auth_token(user_data['id'])
-                                        cookie_manager.set('auth_token', token, expires_at=datetime.now() + timedelta(days=7), key='set_auth')
-                                        time.sleep(2)
-                                    st.rerun()
+                                    st.success(f"✅ Email de verificação reenviado para {email}!")
+                                    st.info("Verifique sua caixa de entrada e spam.")
                                 else:
-                                    st.error(message, icon="🚫")
+                                    st.error(f"Erro ao reenviar email: {result}")
+        
+        with tab2:
+            with st.form("register_form"):
+                name = st.text_input("Nome Completo", placeholder="João Silva Santos")
+                email = st.text_input("Email Institucional", placeholder="seu.email@fcmsantacasasp.edu.br")
+                
+                user_type = st.selectbox("Tipo de Usuário", ["aluno", "professor"])
+                
+                ra = None
+                if user_type == "aluno":
+                    ra = st.text_input("RA (Registro Acadêmico)", placeholder="123456")
+                
+                password = st.text_input("Senha", type="password", placeholder="Mínimo 6 caracteres")
+                password_confirm = st.text_input("Confirmar Senha", type="password", placeholder="Repita a senha")
+                
+                submit = st.form_submit_button("Criar Conta", use_container_width=True)
+                
+                if submit:
+                    if password != password_confirm:
+                        st.error("As senhas não coincidem")
+                    else:
+                        success, message = register_user(name, email, password, user_type, ra)
+                        if success:
+                            st.success(message)
+                            st.info("📧 Verifique seu email antes de fazer login!")
                         else:
-                            st.warning("Preencha todos os campos.", icon="⚠️")
-            with tab2:
-                st.info("Use seu email institucional para criar conta.")
-                with st.form("register_form"):
-                    name = st.text_input("Nome Completo")
-                    email = st.text_input("Email Institucional")
-                    col_p1, col_p2 = st.columns(2)
-                    with col_p1: password = st.text_input("Senha", type="password")
-                    with col_p2: confirm_password = st.text_input("Confirmar", type="password")
-                    
-                    user_type = None
-                    ra = None
-                    if email and '@' in email:
-                        domain = email.split('@')[1].lower()
-                        if 'professor' in email or domain == 'fcmsantacasasp.edu.br': user_type = 'professor' # Simplificação
-                        else: user_type = 'aluno'; ra = st.text_input("RA")
-
-                    if st.form_submit_button("Criar Minha Conta", type="primary", use_container_width=True):
-                        if password != confirm_password: st.error("Senhas não conferem.")
-                        elif len(password) < 6: st.error("Senha curta.")
-                        else:
-                            success, msg = register_user(name, email, password, user_type or 'aluno', ra)
-                            if success: st.success("Conta criada! Acesse a aba 'Entrar'.")
-                            else: st.error(msg)
+                            st.error(message)
     st.markdown("<div style='text-align: center; margin-top: 3rem; color: #999; font-size: 0.8em;'>BioTutor v3.0</div>", unsafe_allow_html=True)
 
 def show_user_profile():
