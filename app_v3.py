@@ -30,7 +30,7 @@ from professor_dashboard import show_advanced_professor_dashboard
 def get_cookie_manager():
     return stx.CookieManager()
 
-cookie_manager = get_cookie_manager()
+cookie_manager = None # Will be initialized in main()
 
 # --- CONFIGURAÇÃO DE ESTILO ---
 def apply_custom_style():
@@ -45,6 +45,7 @@ def apply_custom_style():
 def show_login_page():
     """Exibe página de login e cadastro com visual modernizado"""
     apply_custom_style()
+    global cookie_manager
     col_left, col_center, col_right = st.columns([1, 1.5, 1])
     with col_center:
         st.markdown("<div style='text-align: center; margin-bottom: 2rem;'>", unsafe_allow_html=True)
@@ -101,6 +102,7 @@ def show_login_page():
 
 def show_user_profile():
     user = get_current_user()
+    global cookie_manager
     with st.sidebar:
         st.markdown(f"### <span class='material-icons-outlined'>account_circle</span> {user['name'].split()[0]}", unsafe_allow_html=True)
         st.caption(f"{user['user_type'].title()}")
@@ -157,6 +159,8 @@ def start_new_case():
 
 def main():
     st.set_page_config(page_title="BioTutor v3", page_icon="🧬", layout="wide")
+    global cookie_manager
+    cookie_manager = get_cookie_manager()
     # st.toast("Versão V3 Carregada!", icon="✅")
     apply_custom_style()
     init_session()
