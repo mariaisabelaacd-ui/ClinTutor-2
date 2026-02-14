@@ -30,11 +30,14 @@ body,
    2. HIDE STREAMLIT BRANDING
    ========================================================================== */
 #MainMenu,
-header,
 footer,
 .stDeployButton {
     visibility: hidden;
     display: none !important;
+}
+
+[data-testid="stHeader"] {
+    background-color: transparent !important;
 }
 
 /* ==========================================================================

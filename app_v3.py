@@ -158,7 +158,7 @@ def start_new_case():
     st.rerun()
 
 def main():
-    st.set_page_config(page_title="BioTutor v3", page_icon="🧬", layout="wide")
+    st.set_page_config(page_title="BioTutor v3", page_icon="🧬", layout="wide", initial_sidebar_state="expanded")
     global cookie_manager
     cookie_manager = get_cookie_manager()
     # st.toast("Versão V3 Carregada!", icon="✅")
