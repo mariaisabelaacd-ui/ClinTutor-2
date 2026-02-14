@@ -93,7 +93,7 @@ def show_login_page():
                             st.markdown("---")
                             st.markdown("**Termo de Consentimento de Uso e Privacidade**")
                             
-                            with st.expander("📋 Clique para ler o termo completo"):
+                            with st.expander("Clique para ler o termo completo"):
                                 st.markdown("""
                                 Ao utilizar esta plataforma, o usuário declara estar ciente e de acordo que o professor responsável terá acesso aos seus resultados, respostas submetidas e interações realizadas com o chatbot educacional. Essas informações serão utilizadas única e exclusivamente para fins pedagógicos, com o objetivo de acompanhar o aprendizado, identificar dificuldades e aprimorar o processo de ensino.
                                 
@@ -104,7 +104,7 @@ def show_login_page():
                                 Ao prosseguir com o uso da plataforma, o usuário manifesta seu consentimento com os termos acima.
                                 """)
                             
-                            consent_given = st.checkbox("✅ Li e declaro que concordo com os termos de uso e privacidade", value=False)
+                            consent_given = st.checkbox("Li e declaro que concordo com os termos de uso e privacidade", value=False)
 
                     if st.form_submit_button("Criar Minha Conta", type="primary", use_container_width=True):
                         if password != confirm_password: st.error("Senhas não conferem.")
