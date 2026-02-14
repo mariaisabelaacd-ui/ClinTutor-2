@@ -41,8 +41,8 @@ def show_login_page():
     col_left, col_center, col_right = st.columns([1, 1.5, 1])
     with col_center:
         st.markdown("<div style='text-align: center; margin-bottom: 2rem;'>", unsafe_allow_html=True)
-        st.markdown(f"<h1 style='color: #11B965; font-size: 3.5em; margin:0;'>BioTutor</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #666; font-size: 1.2em;'>Tutor de Biologia Molecular</p>", unsafe_allow_html=True)
+        st.markdown(f"<h1 style='color: #11B965; font-size: 3.5em; margin:0;'>Helix.AI</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #666; font-size: 1.2em;'>Plataforma inteligente de tutoria em Biologia Molecular</p>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
         with st.container(border=True):
             tab1, tab2 = st.tabs(["Entrar", "Criar Conta"])
@@ -91,7 +91,7 @@ def show_login_page():
                             success, msg = register_user(name, email, password, user_type or 'aluno', ra)
                             if success: st.success("Conta criada! Acesse a aba 'Entrar'.")
                             else: st.error(msg)
-    st.markdown("<div style='text-align: center; margin-top: 3rem; color: #999; font-size: 0.8em;'>BioTutor v2.0</div>", unsafe_allow_html=True)
+    st.markdown("<div style='text-align: center; margin-top: 3rem; color: #999; font-size: 0.8em;'>Helix.AI v1.0</div>", unsafe_allow_html=True)
 
 def show_user_profile():
     user = get_current_user()
@@ -150,7 +150,7 @@ def start_new_case():
     st.rerun()
 
 def main():
-    st.set_page_config(page_title="BioTutor", page_icon="🧬", layout="wide")
+    st.set_page_config(page_title="Helix.AI", page_icon="🧬", layout="wide")
     apply_custom_style()
     init_session()
     create_default_admin()

@@ -48,7 +48,7 @@ if not CLIENT:
 # Modelo Padrão - Usando o que funcionou
 MODEL_NAME = "gemini-2.5-flash"
 
-APP_NAME = "BioTutor"
+APP_NAME = "Helix.AI"
 DATA_DIR = os.path.join(os.path.expanduser("~"), ".clintutor")
 os.makedirs(DATA_DIR, exist_ok=True)
 SAVE_PATH = os.path.join(DATA_DIR, "progresso_gamificado.json")
@@ -275,7 +275,7 @@ def tutor_reply_com_ia(question: Dict[str, Any], user_msg: str, chat_history: Li
 
     contexto = _construir_contexto_para_ia(question, chat_history)
     prompt = f"""
-    Você é um Tutor de Biologia Molecular.
+    Você é um Tutor Inteligente de Biologia Molecular da plataforma Helix.AI.
     Objetivo: Guiar o aluno a responder a questão: "{question['pergunta']}".
     NUNCA dê a resposta final: "{question['resposta_esperada']}".
     Contexto: {contexto}

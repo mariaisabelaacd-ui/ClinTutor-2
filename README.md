@@ -1,4 +1,6 @@
-# BioTutor - Sistema de Tutor de Clínica Geral
+# Helix.AI - Plataforma Inteligente de Tutoria em Biologia Molecular
+
+Versão inicial da plataforma inteligente de tutoria em Biologia Molecular que analisa questões, acompanha o desempenho dos alunos e gera feedback detalhado para o professor.
 
 Sistema educacional para casos clínicos com integração Firebase e analytics avançados.
 
