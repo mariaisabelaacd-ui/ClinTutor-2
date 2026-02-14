@@ -2,45 +2,51 @@ import os
 import json
 from datetime import datetime
 from typing import Dict, List, Any, Generator
-import google.generativeai as genai
+from google import genai
 import streamlit as st  
 import numpy as np
 
-print("DEBUG: LOADED LOGIC.PY v2 (MOLECULAR BIOLOGY)")
+print("DEBUG: LOADED LOGIC.PY v3 (NEW SDK - GEMINI 3 FLASH)")
 
 # =============================
-# CONFIGURAÇÃO DA IA (GEMINI)
+# CONFIGURAÇÃO DA IA (GEMINI - NEW SDK)
 # =============================
+GOOGLE_API_KEY = None
+CLIENT = None
+
 try:
-    if 'google_api' in st.secrets and 'api_key' in st.secrets['google_api']:
-        GOOGLE_API_KEY = st.secrets['google_api']['api_key']
-        genai.configure(api_key=GOOGLE_API_KEY)
-    else:
-        GOOGLE_API_KEY = st.secrets.get("GOOGLE_API_KEY", None)
-        if GOOGLE_API_KEY:
-            genai.configure(api_key=GOOGLE_API_KEY)
+    import toml
+    
+    # Bypass st.secrets to avoid caching issues
+    secrets_path = os.path.join(os.path.dirname(__file__), ".streamlit", "secrets.toml")
+    print(f"DEBUG: Loading secrets from {secrets_path}")
+    
+    try:
+        with open(secrets_path, "r") as f:
+            secrets_data = toml.load(f)
+            
+        if 'google_api' in secrets_data and 'api_key' in secrets_data['google_api']:
+            GOOGLE_API_KEY = secrets_data['google_api']['api_key']
+            print(f"DEBUG: Loaded Key Direct: {GOOGLE_API_KEY[:5]}...{GOOGLE_API_KEY[-5:]}")
+            CLIENT = genai.Client(api_key=GOOGLE_API_KEY)
         else:
-            # Em vez de falhar silenciosamente, printa no console
-            print("AVISO: Chave de API não encontrada.")
-            GOOGLE_API_KEY = None
-except Exception as e:
-    print(f"Erro na configuração da IA: {e}")
-    GOOGLE_API_KEY = None
+            print("AVISO: Chave api_key não encontrada no TOML.")
+    except Exception as e:
+        print(f"Erro ao carregar TOML direto: {e}")
+except ImportError:
+    print("AVISO: Biblioteca toml não instalada.")
 
-GENERATION_CONFIG = {
-    "temperature": 0.7,
-    "top_p": 1,
-    "top_k": 1,
-    "max_output_tokens": 2048,
-    "response_mime_type": "text/plain",
-}
+if not CLIENT:
+    # Fallback to st.secrets just in case
+    try:
+        GOOGLE_API_KEY = st.secrets["google_api"]["api_key"]
+        CLIENT = genai.Client(api_key=GOOGLE_API_KEY)
+    except Exception as e:
+        print(f"Erro no Fallback st.secrets: {e}")
+        CLIENT = None
 
-SAFETY_SETTINGS = [
-    {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
-    {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
-    {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
-    {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
-]
+# Modelo Padrão - Usando o que funcionou
+MODEL_NAME = "gemini-2.5-flash"
 
 APP_NAME = "BioTutor"
 DATA_DIR = os.path.join(os.path.expanduser("~"), ".clintutor")
@@ -190,8 +196,12 @@ LEVEL_MAP = {
 }
 
 def evaluate_answer_with_ai(question_data: Dict, user_answer: str) -> Dict[str, Any]:
-    if not GOOGLE_API_KEY:
-        return {"correct": False, "feedback": "Erro: Chave API ausente.", "evaluation_type": "error"}
+    if not CLIENT:
+        return {"correct": False, "feedback": "Erro: Cliente IA não configurado.", "evaluation_type": "error"}
+
+def evaluate_answer_with_ai(question_data: Dict, user_answer: str) -> Dict[str, Any]:
+    if not CLIENT:
+        return {"correct": False, "feedback": "Erro: Cliente IA não configurado.", "evaluation_type": "error"}
 
     prompt = f"""
     CONTEXTO:
@@ -201,25 +211,46 @@ def evaluate_answer_with_ai(question_data: Dict, user_answer: str) -> Dict[str, 
     
     ALUNO: "{user_answer}"
     
-    Avalie se está correto. Retorne JSON:
+    Avalie se está correto. 
+    Responda APENAS com um JSON válido (sem markdown), neste formato:
     {{
         "correct": true/false,
         "classification": "CORRETA" | "PARCIALMENTE CORRETA" | "INCORRETA",
         "feedback": "Explicação curta."
     }}
     """
-    try:
-        model = genai.GenerativeModel("gemini-pro", generation_config={"response_mime_type": "application/json"})
-        response = model.generate_content(prompt)
+    
+    # Retry logic for 503 errors
+    import time
+    max_retries = 3
+    for attempt in range(max_retries):
         try:
-            return json.loads(response.text)
-        except:
-             # Fallback
-            txt = response.text.lower()
-            acc = "true" in txt or "correta" in txt
-            return {"correct": acc, "classification": "CORRETA" if acc else "INCORRETA", "feedback": response.text}
-    except Exception as e:
-        return {"correct": False, "feedback": f"Erro IA: {e}", "evaluation_type": "error"}
+            # Usando modo texto simples para maior compatibilidade com modelo preview
+            response = CLIENT.models.generate_content(
+                model=MODEL_NAME, 
+                contents=prompt
+                # Removido config JSON para evitar erros no modelo preview
+            )
+            
+            text = response.text.replace("```json", "").replace("```", "").strip()
+            
+            try:
+                return json.loads(text)
+            except:
+                 # Fallback se a IA não retornar JSON limpo
+                lower_text = text.lower()
+                is_correct = "true" in lower_text or "correta" in lower_text
+                return {
+                    "correct": is_correct,
+                    "classification": "CORRETA" if is_correct else "INCORRETA", 
+                    "feedback": text
+                }
+                
+        except Exception as e:
+            print(f"Tentativa {attempt+1} falhou: {e}")
+            if attempt == max_retries - 1:
+                return {"correct": False, "feedback": f"Erro IA (pós retentativas): {e}", "evaluation_type": "error"}
+            time.sleep(1) # Espera antes de tentar de novo
 
 def _construir_contexto_para_ia(question: Dict[str, Any], chat_history: List[Dict[str, str]]) -> str:
     ctx = f"**Questão:** {question['pergunta']}\n"
@@ -232,8 +263,8 @@ def _construir_contexto_para_ia(question: Dict[str, Any], chat_history: List[Dic
     return ctx
 
 def tutor_reply_com_ia(question: Dict[str, Any], user_msg: str, chat_history: List[Dict[str, str]]) -> Generator[str, None, None]:
-    if not GOOGLE_API_KEY:
-        yield "Erro: Chave API ausente."
+    if not CLIENT:
+        yield "Erro: Cliente IA não configurado."
         return
 
     contexto = _construir_contexto_para_ia(question, chat_history)
@@ -245,9 +276,13 @@ def tutor_reply_com_ia(question: Dict[str, Any], user_msg: str, chat_history: Li
     Aluno: "{user_msg}"
     """
     try:
-        model = genai.GenerativeModel("gemini-pro", generation_config={"temperature": 0.7})
-        stream = model.generate_content(prompt, stream=True)
-        for chunk in stream:
+        # Streaming no novo SDK - retorna um iterador diretamente
+        # config pode ter temperature
+        for chunk in CLIENT.models.generate_content_stream(
+            model=MODEL_NAME, 
+            contents=prompt,
+            config={'temperature': 0.7}
+        ):
             yield chunk.text
     except Exception as e:
         yield f"Erro na IA: {e}"
