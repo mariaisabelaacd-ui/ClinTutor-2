@@ -64,9 +64,49 @@ def show_login_page():
                                         time.sleep(2)
                                     st.rerun()
                                 else:
+                                    # Mostra erro
                                     st.error(message, icon="🚫")
+                                    
+                                    # Se o erro for de email não verificado, mostra botão de reenvio
+                                    if "não verificado" in message.lower() or "verifique sua caixa" in message.lower():
+                                        st.markdown("")
+                                        if st.button("📧 Reenviar Email de Verificação", key="resend_from_error", use_container_width=True):
+                                            from auth_firebase import resend_verification_email
+                                            with st.spinner("Enviando email..."):
+                                                resend_success, resend_message = resend_verification_email(email)
+                                                if resend_success:
+                                                    if "Link de verificação:" in resend_message:
+                                                        st.warning("⚠️ Não conseguimos enviar o email automaticamente.")
+                                                        st.info(resend_message)
+                                                    else:
+                                                        st.success(resend_message, icon="✅")
+                                                else:
+                                                    st.error(resend_message, icon="❌")
                         else:
                             st.warning("Preencha todos os campos.", icon="⚠️")
+                
+                # Seção de reenvio de email
+                st.markdown("---")
+                with st.expander("📧 Não recebeu o email de verificação?"):
+                    st.caption("Digite seu email abaixo para reenviar o link de verificação")
+                    resend_email = st.text_input("Email", key="resend_email_input", placeholder="seu@email.com")
+                    
+                    if st.button("Reenviar Email de Verificação", use_container_width=True, key="resend_btn"):
+                        if resend_email:
+                            from auth_firebase import resend_verification_email
+                            with st.spinner("Enviando email..."):
+                                success, message = resend_verification_email(resend_email)
+                                if success:
+                                    if "Link de verificação:" in message:
+                                        st.warning("⚠️ Não conseguimos enviar o email automaticamente.")
+                                        st.info(message)
+                                    else:
+                                        st.success(message, icon="✅")
+                                else:
+                                    st.error(message, icon="❌")
+                        else:
+                            st.warning("Digite seu email", icon="⚠️")
+
             with tab2:
                 st.info("Use seu email institucional para criar conta.")
                 with st.form("register_form"):

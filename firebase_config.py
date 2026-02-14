@@ -195,12 +195,29 @@ def verify_firebase_user(email: str, password: str):
         return False, None, False
 
 def send_verification_email_firebase(email: str):
-    """Reenvia email de verificação"""
+    """Reenvia email de verificação usando Admin SDK + SMTP"""
     try:
+        # Gera link de verificação
         link = auth.generate_email_verification_link(email)
-        return True, link
+        
+        # Tenta enviar via SMTP
+        try:
+            from email_service import send_verification_email_smtp
+            user = auth.get_user_by_email(email)
+            display_name = user.display_name or email.split('@')[0]
+            
+            success, message = send_verification_email_smtp(email, link, display_name)
+            if success:
+                return True, "Email de verificação enviado com sucesso!"
+            else:
+                # Se SMTP falhar, retorna o link para mostrar ao usuário
+                return True, f"Link gerado (SMTP falhou): {link}"
+        except Exception as smtp_error:
+            # Se SMTP falhar, retorna o link
+            return True, f"Link de verificação: {link}"
+            
     except Exception as e:
-        return False, f"Erro ao enviar email: {e}"
+        return False, f"Erro ao gerar link: {e}"
 
 def get_firebase_user_by_email(email: str):
     """Busca usuário no Firebase Auth por email"""

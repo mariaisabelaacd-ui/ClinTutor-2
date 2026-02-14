@@ -110,6 +110,21 @@ div[data-testid="stCard"] {
     border-color: var(--primary-color) !important;
 }
 
+/* Fix for password input with eye icon - rounded corners */
+.stTextInput>div>div>div {
+    border-radius: 8px !important;
+}
+
+/* Ensure the eye icon container also has rounded corners */
+.stTextInput [data-baseweb="base-input"] {
+    border-radius: 8px !important;
+}
+
+/* Fix specifically for password fields */
+input[type="password"] {
+    border-radius: 8px !important;
+}
+
 /* CHAT INPUT */
 [data-testid="stChatInput"] {
     background-color: var(--card-background) !important;
@@ -210,6 +225,7 @@ div {
 /* Login Page Title Gradient */
 .login-title {
     background: linear-gradient(to right, #10b981, #3b82f6);
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }

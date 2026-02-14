@@ -139,6 +139,7 @@ def register_user_firebase(name: str, email: str, password: str, user_type: str,
     """Registra usuário no Firebase Authentication e Firestore"""
     try:
         from firebase_config import create_firebase_user
+        from email_service import send_verification_email_firebase_rest, send_verification_email_smtp
         
         db = get_firestore_db()
         users_ref = db.collection('users')
@@ -146,6 +147,31 @@ def register_user_firebase(name: str, email: str, password: str, user_type: str,
         # Validação do tipo de usuário
         if user_type not in ["aluno", "professor", "admin"]:
             return False, "Tipo de usuário inválido"
+        
+        # MÉTODO 1: Tenta Firebase REST API (envia email automaticamente)
+        success_rest, message_rest, user_id_rest = send_verification_email_firebase_rest(email, password, name.strip())
+        
+        if success_rest and user_id_rest:
+            # Sucesso com REST API - cria documento no Firestore
+            user_data = {
+                'auth_uid': user_id_rest,
+                'name': name.strip(),
+                'email': email.lower().strip(),
+                'user_type': user_type,
+                'email_verified': False,
+                'created_at': datetime.now().isoformat(),
+                'last_login': None
+            }
+            
+            if user_type == "aluno" and ra:
+                user_data['ra'] = ra.strip()
+            
+            users_ref.document(user_id_rest).set(user_data)
+            
+            return True, f"✅ Cadastro realizado! Enviamos um email de verificação para {email}. Verifique sua caixa de entrada (e spam) antes de fazer login."
+        
+        # MÉTODO 2: Fallback para Admin SDK + SMTP
+        st.info("🔄 Tentando método alternativo de cadastro...")
         
         # Cria usuário no Firebase Authentication
         success, auth_uid, message = create_firebase_user(email, password, name.strip())
@@ -155,27 +181,47 @@ def register_user_firebase(name: str, email: str, password: str, user_type: str,
         
         # Cria documento no Firestore
         user_data = {
-            'auth_uid': auth_uid,  # ID do Firebase Auth
+            'auth_uid': auth_uid,
             'name': name.strip(),
             'email': email.lower().strip(),
             'user_type': user_type,
-            'email_verified': False,  # Será atualizado quando verificar
-            'verification_link': message,  # Link de verificação
+            'email_verified': False,
             'created_at': datetime.now().isoformat(),
             'last_login': None
         }
         
-        # Adiciona RA se for aluno
         if user_type == "aluno" and ra:
             user_data['ra'] = ra.strip()
         
-        # Adiciona ao Firestore usando auth_uid como ID do documento
         users_ref.document(auth_uid).set(user_data)
         
-        return True, f"✅ Cadastro realizado! Enviamos um email de verificação para {email}. Verifique sua caixa de entrada (e spam) antes de fazer login."
+        # Tenta enviar email via SMTP usando o link gerado
+        try:
+            from firebase_config import send_verification_email_firebase
+            email_success, email_message = send_verification_email_firebase(email)
+            
+            if email_success:
+                if "Link de verificação:" in email_message:
+                    # SMTP falhou, mostra link
+                    return True, f"✅ Cadastro realizado!\n\n⚠️ Não conseguimos enviar o email automaticamente.\n\nClique no link abaixo para verificar seu email:\n{email_message}"
+                else:
+                    return True, f"✅ Cadastro realizado! Enviamos um email de verificação para {email}. Verifique sua caixa de entrada (e spam) antes de fazer login."
+            else:
+                return True, f"✅ Cadastro realizado, mas houve um problema ao enviar o email de verificação. Entre em contato com o suporte."
+        except Exception as email_error:
+            return True, f"✅ Cadastro realizado, mas houve um problema ao enviar o email de verificação: {email_error}"
         
     except Exception as e:
         return False, f"Erro ao cadastrar: {e}"
+
+def resend_verification_email(email: str) -> Tuple[bool, str]:
+    """Reenvia email de verificação para um usuário"""
+    try:
+        from firebase_config import send_verification_email_firebase
+        return send_verification_email_firebase(email)
+    except Exception as e:
+        return False, f"Erro ao reenviar email: {e}"
+
 
 def register_user_local(name: str, email: str, password: str, user_type: str, ra: str = None) -> Tuple[bool, str]:
     """Registra usuário no banco local"""
@@ -366,11 +412,23 @@ def get_all_users() -> List[Dict]:
         return get_all_users_local()
 
 def delete_user_firebase(user_id: str) -> Tuple[bool, str]:
-    """Remove usuário do Firebase"""
+    """Remove usuário do Firebase (Authentication + Firestore)"""
     try:
+        from firebase_config import delete_firebase_auth_user
+        
         db = get_firestore_db()
+        
+        # Remove do Firestore
         db.collection('users').document(user_id).delete()
-        return True, "Usuário removido do Firebase!"
+        
+        # Remove do Firebase Authentication
+        auth_deleted = delete_firebase_auth_user(user_id)
+        
+        if auth_deleted:
+            return True, "Usuário removido completamente do Firebase!"
+        else:
+            return True, "Usuário removido do Firestore, mas houve problema ao remover do Authentication"
+        
     except Exception as e:
         return False, f"Erro ao remover usuário do Firebase: {e}"
 
