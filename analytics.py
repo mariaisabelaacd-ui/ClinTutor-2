@@ -144,7 +144,7 @@ def calculate_accuracy_rate(user_id: str) -> Dict[str, Any]:
     
     total_cases = len(case_analytics)
     correct_cases = sum(1 for case_data in case_analytics 
-                       if case_data.get("case_result", {}).get("breakdown", {}).get("diagnóstico", 0) >= 10)
+                       if case_data.get("case_result", {}).get("is_correct", False))
     
     accuracy_rate = (correct_cases / total_cases * 100) if total_cases > 0 else 0.0
     

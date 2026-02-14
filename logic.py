@@ -239,10 +239,16 @@ def evaluate_answer_with_ai(question_data: Dict, user_answer: str) -> Dict[str, 
             except:
                  # Fallback se a IA não retornar JSON limpo
                 lower_text = text.lower()
-                is_correct = "true" in lower_text or "correta" in lower_text
+                if "parcial" in lower_text:
+                    is_correct = True
+                    classification = "PARCIALMENTE CORRETA"
+                else:
+                    is_correct = "true" in lower_text or "correta" in lower_text
+                    classification = "CORRETA" if is_correct else "INCORRETA"
+                    
                 return {
                     "correct": is_correct,
-                    "classification": "CORRETA" if is_correct else "INCORRETA", 
+                    "classification": classification, 
                     "feedback": text
                 }
                 
@@ -343,12 +349,27 @@ def get_case(cid: str) -> Dict[str, Any]:
     return QUESTIONS[0]
 
 def finalize_question_response(question: Dict[str, Any], user_answer: str, ai_evaluation: Dict[str, Any]) -> Dict[str, Any]:
-    is_correct = ai_evaluation.get("correct", False)
-    points = 10 if is_correct else 0
+    classification = ai_evaluation.get("classification", "INCORRETA").upper()
+    max_points = question.get("pontuacao", 1)  # Default to 1 if not set (Level 1)
+    
+    if "PARCIAL" in classification:
+        points = max_points * 0.5
+        is_correct = True # Counts as correct/progress for streak purposes? Or maybe distinct?
+        outcome = "partial"
+    elif "CORRETA" in classification and "INCORRETA" not in classification: # Strict check
+        points = max_points
+        is_correct = True
+        outcome = "correct"
+    else:
+        points = 0
+        is_correct = False
+        outcome = "incorrect"
+        
     return {
-        "points_gained": int(points),
+        "points_gained": float(points),
         "is_correct": is_correct,
-        "classification": ai_evaluation.get("classification", "INCORRETA"),
+        "classification": classification,
+        "outcome": outcome,
         "feedback": ai_evaluation.get("feedback", ""),
         "user_answer": user_answer
     }

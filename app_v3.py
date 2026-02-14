@@ -245,7 +245,9 @@ def main():
             if st.session_state.last_result:
                 res = st.session_state.last_result
                 st.markdown("---")
-                if res["is_correct"]:
+                if res.get("outcome") == "partial":
+                    st.warning(f"**Parcialmente Correta. +{res['points_gained']} pontos**")
+                elif res["is_correct"]:
                     st.success(f"**Correto! +{res['points_gained']} pontos**")
                 else:
                     st.error(f"**Incorreto. +{res['points_gained']} pontos**")
