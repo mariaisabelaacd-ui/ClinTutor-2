@@ -344,7 +344,7 @@ def get_case(cid: str) -> Dict[str, Any]:
 
 def finalize_question_response(question: Dict[str, Any], user_answer: str, ai_evaluation: Dict[str, Any]) -> Dict[str, Any]:
     is_correct = ai_evaluation.get("correct", False)
-    points = 10 if is_correct else 2
+    points = 10 if is_correct else 0
     return {
         "points_gained": int(points),
         "is_correct": is_correct,
