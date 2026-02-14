@@ -79,14 +79,38 @@ def show_login_page():
                     
                     user_type = None
                     ra = None
+                    consent_given = True  # Default para professores
+                    
                     if email and '@' in email:
                         domain = email.split('@')[1].lower()
-                        if 'professor' in email or domain == 'fcmsantacasasp.edu.br': user_type = 'professor' # Simplificação
-                        else: user_type = 'aluno'; ra = st.text_input("RA")
+                        if 'professor' in email or domain == 'fcmsantacasasp.edu.br': 
+                            user_type = 'professor'
+                        else: 
+                            user_type = 'aluno'
+                            ra = st.text_input("RA")
+                            
+                            # Termo de consentimento para alunos
+                            st.markdown("---")
+                            st.markdown("**Termo de Consentimento de Uso e Privacidade**")
+                            
+                            with st.expander("📋 Clique para ler o termo completo"):
+                                st.markdown("""
+                                Ao utilizar esta plataforma, o usuário declara estar ciente e de acordo que o professor responsável terá acesso aos seus resultados, respostas submetidas e interações realizadas com o chatbot educacional. Essas informações serão utilizadas única e exclusivamente para fins pedagógicos, com o objetivo de acompanhar o aprendizado, identificar dificuldades e aprimorar o processo de ensino.
+                                
+                                Os dados coletados serão tratados de acordo com a Lei Geral de Proteção de Dados Pessoais (Lei nº 13.709/2018 – LGPD), sendo utilizados apenas para finalidades educacionais, acadêmicas e de melhoria da plataforma, não sendo compartilhados com terceiros para fins comerciais.
+                                
+                                O usuário reconhece ainda que a plataforma é disponibilizada gratuitamente e, por se tratar de um sistema automatizado em constante desenvolvimento, podem ocorrer eventuais erros, imprecisões ou instabilidades, não havendo garantia de funcionamento perfeito ou contínuo.
+                                
+                                Ao prosseguir com o uso da plataforma, o usuário manifesta seu consentimento com os termos acima.
+                                """)
+                            
+                            consent_given = st.checkbox("✅ Li e declaro que concordo com os termos de uso e privacidade", value=False)
 
                     if st.form_submit_button("Criar Minha Conta", type="primary", use_container_width=True):
                         if password != confirm_password: st.error("Senhas não conferem.")
                         elif len(password) < 6: st.error("Senha curta.")
+                        elif user_type == 'aluno' and not consent_given:
+                            st.error("⚠️ Você precisa concordar com os termos de uso para prosseguir")
                         else:
                             success, msg = register_user(name, email, password, user_type or 'aluno', ra)
                             if success: st.success("Conta criada! Acesse a aba 'Entrar'.")
