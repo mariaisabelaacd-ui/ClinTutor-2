@@ -104,33 +104,11 @@ div[data-testid="stCard"] {
 [data-baseweb="input"] {
     border-color: #334155 !important;
     background-color: #0f172a !important;
+    border-radius: 8px !important;
 }
 
 [data-baseweb="input"]:focus-within {
     border-color: var(--primary-color) !important;
-}
-
-/* Fix for password input with eye icon - rounded corners and no overlap */
-.stTextInput>div>div {
-    border-radius: 8px !important;
-    overflow: hidden !important;
-}
-
-/* Ensure the eye icon container also has rounded corners */
-.stTextInput [data-baseweb="base-input"] {
-    border-radius: 8px !important;
-}
-
-/* Fix specifically for password fields - prevent icon overlap */
-input[type="password"] {
-    border-radius: 8px !important;
-    padding-right: 45px !important;
-}
-
-/* Eye icon button positioning */
-.stTextInput button[kind="icon"] {
-    position: absolute !important;
-    right: 4px !important;
 }
 
 /* CHAT INPUT */
