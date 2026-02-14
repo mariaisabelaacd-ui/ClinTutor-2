@@ -110,9 +110,10 @@ div[data-testid="stCard"] {
     border-color: var(--primary-color) !important;
 }
 
-/* Fix for password input with eye icon - rounded corners */
-.stTextInput>div>div>div {
+/* Fix for password input with eye icon - rounded corners and no overlap */
+.stTextInput>div>div {
     border-radius: 8px !important;
+    overflow: hidden !important;
 }
 
 /* Ensure the eye icon container also has rounded corners */
@@ -120,9 +121,16 @@ div[data-testid="stCard"] {
     border-radius: 8px !important;
 }
 
-/* Fix specifically for password fields */
+/* Fix specifically for password fields - prevent icon overlap */
 input[type="password"] {
     border-radius: 8px !important;
+    padding-right: 45px !important;
+}
+
+/* Eye icon button positioning */
+.stTextInput button[kind="icon"] {
+    position: absolute !important;
+    right: 4px !important;
 }
 
 /* CHAT INPUT */
