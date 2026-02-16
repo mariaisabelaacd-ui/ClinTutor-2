@@ -17,10 +17,11 @@ from admin_utils import (
     reset_all_students_analytics, clear_all_chat_interactions,
     log_admin_action, get_database_stats
 )
+from ui_helpers import icon, metric_card
 
 def show_advanced_professor_dashboard():
     """Dashboard redesenhado para professores com foco em insights acionáveis"""
-    st.title("📊 Dashboard do Professor")
+    st.markdown(f"# {icon('dashboard', '#10b981', 32)} Dashboard do Professor", unsafe_allow_html=True)
     st.markdown("---")
     
     try:
@@ -45,9 +46,9 @@ def show_advanced_professor_dashboard():
     
     # Sistema de tabs redesenhado: 3 tabs (adicionada aba Admin)
     tab1, tab2, tab3 = st.tabs([
-        "📊 Visão Geral", 
-        "👤 Análise Individual",
-        "⚙️ Admin"
+        f"{icon('analytics', '#10b981', 18)} Visão Geral", 
+        f"{icon('person', '#3b82f6', 18)} Análise Individual",
+        f"{icon('settings', '#eab308', 18)} Admin"
     ])
     
     with tab1:
@@ -76,22 +77,24 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
     hardest_categories = get_hardest_categories(top_n=5)
     
     # ===== KPIs PRINCIPAIS =====
-    st.markdown("### 📌 Métricas Principais")
+    st.markdown(f"### {icon('push_pin', '#10b981', 24)} Métricas Principais", unsafe_allow_html=True)
     col1, col2, col3, col4, col5 = st.columns(5)
     
     with col1:
-        st.metric(
-            "👥 Total de Alunos",
-            len(student_users),
-            help="Número total de alunos cadastrados"
-        )
+        st.markdown(metric_card(
+            "Total de Alunos",
+            str(len(student_users)),
+            icon_name="people",
+            icon_color="#3b82f6"
+        ), unsafe_allow_html=True)
     
     with col2:
-        st.metric(
-            "🎯 Média Geral",
+        st.markdown(metric_card(
+            "Média Geral",
             f"{global_stats.get('average_accuracy_rate', 0):.1f}%",
-            help="Taxa média de acertos de todos os alunos"
-        )
+            icon_name="target",
+            icon_color="#10b981"
+        ), unsafe_allow_html=True)
     
     
     with col3:
@@ -144,11 +147,12 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
         """, unsafe_allow_html=True)
     
     with col5:
-        st.metric(
-            "📚 Questões Respondidas",
-            global_stats.get('total_cases', 0),
-            help="Total de questões respondidas por todos os alunos"
-        )
+        st.markdown(metric_card(
+            "Questões Respondidas",
+            str(global_stats.get('total_cases', 0)),
+            icon_name="quiz",
+            icon_color="#8b5cf6"
+        ), unsafe_allow_html=True)
     
     st.markdown("---")
     
@@ -158,7 +162,7 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
     col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown("### 📚 Desempenho por Componente de Conhecimento")
+        st.markdown(f"### {icon('menu_book', '#8b5cf6', 24)} Desempenho por Componente de Conhecimento", unsafe_allow_html=True)
         if component_stats:
             df_comp = pd.DataFrame(component_stats)
             
@@ -190,12 +194,12 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
             st.plotly_chart(fig_comp, use_container_width=True)
             
             # Tooltip explicativo
-            st.caption("💡 Componentes no topo têm menor taxa de acerto (mais difíceis)")
+            st.caption(f"{icon('lightbulb', '#eab308', 16)} Componentes no topo têm menor taxa de acerto (mais difíceis)", unsafe_allow_html=True)
         else:
             st.info("Dados insuficientes para análise por componente")
     
     with col2:
-        st.markdown("### 📊 Distribuição de Alunos por Nível")
+        st.markdown(f"### {icon('bar_chart', '#3b82f6', 24)} Distribuição de Alunos por Nível", unsafe_allow_html=True)
         if level_stats.get('total_alunos', 0) > 0:
             dist = level_stats['distribuicao']
             
@@ -225,7 +229,7 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
     st.markdown("---")
     
     # Linha 2: Top 5 Categorias Mais Difíceis
-    st.markdown("### ⚠️ Top 5 Categorias Mais Difíceis")
+    st.markdown(f"### {icon('warning', '#ef4444', 24)} Top 5 Categorias Mais Difíceis", unsafe_allow_html=True)
     if hardest_categories:
         df_hardest = pd.DataFrame(hardest_categories)
         
@@ -257,7 +261,7 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
         st.plotly_chart(fig_hardest, use_container_width=True)
         
         # Tabela detalhada
-        with st.expander("📋 Detalhes das Categorias Difíceis"):
+        with st.expander(f"{icon('description', '#64748b', 18)} Detalhes das Categorias Difíceis"):
             df_display = df_hardest[['componente', 'taxa_acerto', 'total_questoes', 'acertos', 'tempo_medio_formatado']].copy()
             df_display.columns = ['Componente', 'Taxa de Acerto (%)', 'Total de Questões', 'Acertos', 'Tempo Médio']
             st.dataframe(df_display, use_container_width=True, hide_index=True)
@@ -267,7 +271,7 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
     st.markdown("---")
     
     # Linha 3: Ranking de Alunos
-    st.markdown("### 🏆 Ranking de Alunos")
+    st.markdown(f"### {icon('emoji_events', '#f59e0b', 24)} Ranking de Alunos", unsafe_allow_html=True)
     
     # Prepara dados para ranking
     ranking_data = []
@@ -299,13 +303,13 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("#### 🌟 Top 10 Melhores Desempenhos")
+            st.markdown(f"#### {icon('star', '#eab308', 20)} Top 10 Melhores Desempenhos", unsafe_allow_html=True)
             top_10 = df_ranking.head(10).copy()
             top_10['Taxa de Acerto'] = top_10['Taxa de Acerto'].apply(lambda x: f"{x:.1f}%")
             st.dataframe(top_10, use_container_width=True, hide_index=True)
         
         with col2:
-            st.markdown("#### 🎯 Alunos que Precisam de Atenção")
+            st.markdown(f"#### {icon('priority_high', '#ef4444', 20)} Alunos que Precisam de Atenção", unsafe_allow_html=True)
             # Alunos com taxa de acerto < 50% ou menos de 3 questões respondidas
             need_attention = df_ranking[
                 (df_ranking['Taxa de Acerto'] < 50) | (df_ranking['Questões'] < 3)
@@ -321,26 +325,26 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
 
 def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict):
     """Tab de análise individual com perfil detalhado de cada aluno"""
-    st.subheader("👤 Análise Individual de Alunos")
+    st.markdown(f"## {icon('person', '#3b82f6', 28)} Análise Individual de Alunos", unsafe_allow_html=True)
     
     # ===== SELEÇÃO DE ALUNO =====
-    st.markdown("### 🔍 Selecione um Aluno")
+    st.markdown(f"### {icon('search', '#10b981', 24)} Selecione um Aluno", unsafe_allow_html=True)
     
     # Filtros
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        search_term = st.text_input("🔎 Buscar por nome ou email", "")
+        search_term = st.text_input(f"{icon('search', '#64748b', 18)} Buscar por nome ou email", "")
     
     with col2:
         filter_performance = st.selectbox(
-            "📊 Filtrar por desempenho",
+            f"{icon('bar_chart', '#64748b', 18)} Filtrar por desempenho",
             ["Todos", "Acima da média", "Abaixo da média", "Sem atividade"]
         )
     
     with col3:
         filter_level = st.selectbox(
-            "📈 Filtrar por nível",
+            f"{icon('trending_up', '#64748b', 18)} Filtrar por nível",
             ["Todos", "Básico", "Intermediário", "Avançado"]
         )
     
@@ -361,7 +365,7 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
     
     student_names = [f"{student['name']} ({student['email']})" for student in filtered_students]
     selected_student_idx = st.selectbox(
-        "👤 Aluno:",
+        f"{icon('person', '#64748b', 18)} Aluno:",
         range(len(student_names)),
         format_func=lambda x: student_names[x]
     )
@@ -387,11 +391,11 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
     evolution = profile['evolucao_temporal']
     
     # Cabeçalho do perfil
-    st.markdown(f"## 👤 {selected_student['name']}")
-    st.caption(f"📧 {selected_student['email']}")
+    st.markdown(f"## {icon('account_circle', '#3b82f6', 32)} {selected_student['name']}", unsafe_allow_html=True)
+    st.caption(f"{icon('email', '#64748b', 16)} {selected_student['email']}", unsafe_allow_html=True)
     
     # ===== SEÇÃO: DESEMPENHO GERAL =====
-    st.markdown("### 📊 Desempenho Geral")
+    st.markdown(f"### {icon('analytics', '#10b981', 24)} Desempenho Geral", unsafe_allow_html=True)
     
     col1, col2, col3, col4, col5 = st.columns(5)
     
