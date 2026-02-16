@@ -46,9 +46,9 @@ def show_advanced_professor_dashboard():
     
     # Sistema de tabs redesenhado: 3 tabs (adicionada aba Admin)
     tab1, tab2, tab3 = st.tabs([
-        f"{icon('analytics', '#10b981', 18)} Visão Geral", 
-        f"{icon('person', '#3b82f6', 18)} Análise Individual",
-        f"{icon('settings', '#eab308', 18)} Admin"
+        "📊 Visão Geral", 
+        "👤 Análise Individual",
+        "⚙️ Admin"
     ])
     
     with tab1:
@@ -106,7 +106,7 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
                 <div style='background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%); 
                             padding: 1rem; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.3);'>
                     <div style='color: #94a3b8; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem;'>
-                        ⚠️ Categoria Mais Difícil
+                        {icon('warning', '#ef4444', 18)} Categoria Mais Difícil
                     </div>
                     <div style='color: #ef4444; font-size: 1.5rem; font-weight: 600; margin-bottom: 0.25rem; 
                                 word-wrap: break-word; line-height: 1.2;'>
@@ -400,49 +400,64 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
     col1, col2, col3, col4, col5 = st.columns(5)
     
     with col1:
-        st.metric(
-            "📚 Questões Respondidas",
-            basic_stats['case_stats']['total_cases']
-        )
+        st.markdown(metric_card(
+            "Questões Respondidas",
+            str(basic_stats['case_stats']['total_cases']),
+            icon_name="quiz",
+            icon_color="#8b5cf6"
+        ), unsafe_allow_html=True)
     
     with col2:
         acc = basic_stats['case_stats']['accuracy_rate']
-        st.metric(
-            "🎯 Taxa de Acertos",
-            f"{acc:.1f}%"
-        )
+        st.markdown(metric_card(
+            "Taxa de Acertos",
+            f"{acc:.1f}%",
+            icon_name="target",
+            icon_color="#10b981"
+        ), unsafe_allow_html=True)
     
     with col3:
-        st.metric(
-            "⏱️ Tempo Médio",
-            basic_stats['case_stats']['average_time_formatted']
-        )
+        st.markdown(metric_card(
+            "Tempo Médio",
+            basic_stats['case_stats']['average_time_formatted'],
+            icon_name="schedule",
+            icon_color="#3b82f6"
+        ), unsafe_allow_html=True)
     
     with col4:
-        st.metric(
-            "💬 Interações Chat",
-            basic_stats['total_chat_interactions']
-        )
+        st.markdown(metric_card(
+            "Interações Chat",
+            str(basic_stats['total_chat_interactions']),
+            icon_name="chat",
+            icon_color="#ec4899"
+        ), unsafe_allow_html=True)
     
     with col5:
         # Comparação com turma
-        perf_icon = "🔼" if comparison['performance'] == 'acima' else "🔽" if comparison['performance'] == 'abaixo' else "➡️"
-        st.metric(
-            "📊 vs Turma",
+        perf_icons = {
+            'acima': icon('trending_up', '#10b981', 20),
+            'abaixo': icon('trending_down', '#ef4444', 20),
+            'na_media': icon('trending_flat', '#64748b', 20)
+        }
+        perf_icon = perf_icons.get(comparison['performance'], perf_icons['na_media'])
+        
+        st.markdown(metric_card(
+            "vs Turma",
             f"{perf_icon} {comparison['performance'].title()}",
-            delta=f"{comparison['diferenca']:.1f}%",
-            delta_color="normal" if comparison['performance'] == 'acima' else "inverse"
-        )
+            icon_name="compare_arrows",
+            icon_color="#6366f1",
+            subtitle=f"{comparison['diferenca']:.1f}%"
+        ), unsafe_allow_html=True)
     
     st.markdown("---")
     
     # ===== SEÇÃO: ANÁLISE DE DIFICULDADES =====
-    st.markdown("### ⚠️ Análise de Dificuldades")
+    st.markdown(f"### {icon('warning', '#ef4444', 24)} Análise de Dificuldades", unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown("#### 🎯 Componente Mais Difícil")
+        st.markdown(f"#### {icon('error', '#ef4444', 20)} Componente Mais Difícil", unsafe_allow_html=True)
         worst_comp = weakness.get('componente_mais_dificil')
         if worst_comp:
             st.error(f"**{worst_comp['nome']}**")
@@ -452,7 +467,7 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
             st.info("Dados insuficientes")
     
     with col2:
-        st.markdown("#### 📈 Nível Mais Difícil")
+        st.markdown(f"#### {icon('trending_up', '#3b82f6', 20)} Nível Mais Difícil", unsafe_allow_html=True)
         worst_diff = weakness.get('nivel_mais_dificil')
         if worst_diff:
             st.error(f"**{worst_diff['nivel'].title()}**")
@@ -464,21 +479,21 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
     # Componentes problemáticos
     problematic = weakness.get('componentes_problematicos', [])
     if problematic:
-        st.markdown("#### 🚨 Componentes Problemáticos (Taxa < 50%)")
+        st.markdown(f"#### {icon('error_outline', '#ef4444', 20)} Componentes Problemáticos (Taxa < 50%)", unsafe_allow_html=True)
         for comp in problematic[:5]:  # Top 5
             st.warning(f"**{comp['nome']}**: {comp['acuracia']:.1f}% ({comp['acertos']}/{comp['total']})")
     
     # Padrões de erro
     patterns = weakness.get('padroes_erro', [])
     if patterns:
-        st.markdown("#### 🔍 Padrões Identificados")
+        st.markdown(f"#### {icon('search', '#6366f1', 20)} Padrões Identificados", unsafe_allow_html=True)
         for pattern in patterns:
             st.info(f"**{pattern['padrao']}**: {pattern['descricao']}")
     
     st.markdown("---")
     
     # ===== SEÇÃO: DESEMPENHO POR CATEGORIA =====
-    st.markdown("### 📚 Desempenho por Categoria")
+    st.markdown(f"### {icon('menu_book', '#8b5cf6', 24)} Desempenho por Categoria", unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
     
@@ -543,7 +558,7 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
             st.info("Dados insuficientes")
     
     # Tabela detalhada
-    with st.expander("📋 Tabela Detalhada por Componente"):
+    with st.expander(f"{icon('table_chart', '#64748b', 18)} Tabela Detalhada por Componente"):
         if advanced_stats['componentes']:
             df_comp_table = pd.DataFrame(advanced_stats['componentes'])
             df_comp_table.columns = ['Componente', 'Acurácia (%)', 'Total', 'Acertos']
@@ -553,7 +568,7 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
     st.markdown("---")
     
     # ===== SEÇÃO: HISTÓRICO DE RESPOSTAS =====
-    st.markdown("### 📋 Histórico de Respostas")
+    st.markdown(f"### {icon('history', '#10b981', 24)} Histórico de Respostas", unsafe_allow_html=True)
     
     case_analytics = all_analytics.get(student_id, {}).get('case_analytics', [])
     
@@ -689,14 +704,14 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
 
 def show_admin_tab(student_users: List[Dict]):
     """Tab de administração para gerenciar banco de dados"""
-    st.subheader("⚙️ Painel de Administração")
+    st.markdown(f"## {icon('admin_panel_settings', '#eab308', 28)} Painel de Administração", unsafe_allow_html=True)
     
     st.warning("⚠️ **ATENÇÃO**: Esta área contém operações que podem deletar dados permanentemente!")
     
     st.markdown("---")
     
     # ===== ESTATÍSTICAS DO BANCO =====
-    st.markdown("### 📊 Estatísticas do Banco de Dados")
+    st.markdown(f"### {icon('storage', '#3b82f6', 24)} Estatísticas do Banco de Dados", unsafe_allow_html=True)
     
     db_stats = get_database_stats()
     
@@ -726,7 +741,7 @@ def show_admin_tab(student_users: List[Dict]):
     st.markdown("---")
     
     # ===== AÇÕES INDIVIDUAIS =====
-    st.markdown("### 👤 Gerenciar Aluno Individual")
+    st.markdown(f"### {icon('person', '#3b82f6', 24)} Gerenciar Aluno Individual", unsafe_allow_html=True)
     
     if not student_users:
         st.info("Nenhum aluno cadastrado.")
@@ -748,7 +763,7 @@ def show_admin_tab(student_users: List[Dict]):
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("#### 🗑️ Resetar Questões")
+            st.markdown(f"#### {icon('delete', '#ef4444', 20)} Resetar Questões", unsafe_allow_html=True)
             st.caption("Remove todas as questões respondidas por este aluno")
             
             if st.button("Resetar Questões do Aluno", key="reset_student_analytics", type="secondary"):
@@ -773,7 +788,7 @@ def show_admin_tab(student_users: List[Dict]):
                             del st.session_state.confirm_reset_student
         
         with col2:
-            st.markdown("#### 💬 Limpar Chat")
+            st.markdown(f"#### {icon('chat_bubble', '#ec4899', 20)} Limpar Chat", unsafe_allow_html=True)
             st.caption("Remove todas as mensagens de chat deste aluno")
             
             if st.button("Limpar Chat do Aluno", key="clear_student_chat", type="secondary"):
@@ -800,13 +815,13 @@ def show_admin_tab(student_users: List[Dict]):
     st.markdown("---")
     
     # ===== AÇÕES GLOBAIS =====
-    st.markdown("### 🌍 Gerenciar Todos os Alunos")
+    st.markdown(f"### {icon('public', '#f59e0b', 24)} Gerenciar Todos os Alunos", unsafe_allow_html=True)
     st.error("⚠️ **PERIGO**: Estas ações afetam TODOS os alunos e são IRREVERSÍVEIS!")
     
     col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown("#### 🗑️ Resetar Todas as Questões")
+        st.markdown(f"#### {icon('delete_forever', '#ef4444', 20)} Resetar Todas as Questões", unsafe_allow_html=True)
         st.caption("Remove TODAS as questões respondidas de TODOS os alunos")
         
         # Checkbox de confirmação
@@ -843,7 +858,7 @@ def show_admin_tab(student_users: List[Dict]):
                         del st.session_state.confirm_reset_all
     
     with col2:
-        st.markdown("#### 💬 Limpar Todos os Chats")
+        st.markdown(f"#### {icon('forum', '#ec4899', 20)} Limpar Todos os Chats", unsafe_allow_html=True)
         st.caption("Remove TODAS as mensagens de chat de TODOS os usuários")
         
         # Checkbox de confirmação
