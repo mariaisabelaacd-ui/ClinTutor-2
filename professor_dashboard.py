@@ -93,27 +93,55 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
             help="Taxa média de acertos de todos os alunos"
         )
     
+    
     with col3:
-        # Categoria com maior dificuldade
-        hardest_cat = hardest_categories[0]['componente'] if hardest_categories else "N/A"
-        hardest_acc = f"{hardest_categories[0]['taxa_acerto']:.1f}%" if hardest_categories else "N/A"
-        st.metric(
-            "⚠️ Categoria Mais Difícil",
-            hardest_cat,
-            delta=f"{hardest_acc}",
-            delta_color="inverse",
-            help="Componente com menor taxa de acerto geral"
-        )
+        # Categoria com maior dificuldade - Custom display para evitar truncamento
+        if hardest_categories:
+            hardest_cat = hardest_categories[0]['componente']
+            hardest_acc = hardest_categories[0]['taxa_acerto']
+            st.markdown(f"""
+                <div style='background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%); 
+                            padding: 1rem; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.3);'>
+                    <div style='color: #94a3b8; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem;'>
+                        ⚠️ Categoria Mais Difícil
+                    </div>
+                    <div style='color: #ef4444; font-size: 1.5rem; font-weight: 600; margin-bottom: 0.25rem; 
+                                word-wrap: break-word; line-height: 1.2;'>
+                        {hardest_cat}
+                    </div>
+                    <div style='color: #ef4444; font-size: 0.875rem;'>
+                        Taxa: {hardest_acc:.1f}%
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.metric("⚠️ Categoria Mais Difícil", "N/A", help="Componente com menor taxa de acerto geral")
+    
     
     with col4:
-        # Nível médio
+        # Nível médio - Custom display para consistência visual
         nivel_map = {1: "Básico", 2: "Intermediário", 3: "Avançado"}
         nivel_medio = nivel_map.get(level_stats.get('nivel_medio', 1), "Básico")
-        st.metric(
-            "📊 Nível Médio",
-            nivel_medio,
-            help="Nível médio dos alunos baseado em pontuação"
-        )
+        
+        # Cores por nível
+        nivel_colors = {
+            "Básico": "#3b82f6",
+            "Intermediário": "#eab308", 
+            "Avançado": "#22c55e"
+        }
+        color = nivel_colors.get(nivel_medio, "#3b82f6")
+        
+        st.markdown(f"""
+            <div style='background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(5, 150, 105, 0.05) 100%); 
+                        padding: 1rem; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.2);'>
+                <div style='color: #94a3b8; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem;'>
+                    📊 Nível Médio
+                </div>
+                <div style='color: {color}; font-size: 1.875rem; font-weight: 600;'>
+                    {nivel_medio}
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
     
     with col5:
         st.metric(
