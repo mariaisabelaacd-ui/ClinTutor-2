@@ -61,7 +61,6 @@ def show_login_page():
                                     if remember_me:
                                         token = create_auth_token(user_data['id'])
                                         cookie_manager.set('auth_token', token, expires_at=datetime.now() + timedelta(days=7), key='set_auth')
-                                        time.sleep(2)
                                     st.rerun()
                                 else:
                                     st.error(message, icon="🚫")
@@ -180,7 +179,6 @@ def main():
     create_default_admin()
     
     if not is_logged_in():
-        time.sleep(0.5)
         token = cookie_manager.get('auth_token')
         if token:
             uid = validate_auth_token(token)
@@ -198,9 +196,8 @@ def main():
     
     if user["user_type"] == "admin": show_admin_dashboard(); return
     if user["user_type"] == "professor":
-         nav = st.sidebar.radio("Navegação", ["Questões", "Dashboard", "Analytics"], label_visibility="collapsed")
-         if nav == "Dashboard": show_advanced_professor_dashboard(); return # Assuming professor_dashboard has this
-         if nav == "Analytics": show_advanced_professor_dashboard(); return
+         nav = st.sidebar.radio("Navegação", ["Questões", "Dashboard"], label_visibility="collapsed")
+         if nav == "Dashboard": show_advanced_professor_dashboard(); return
     
     # --- SIDEBAR ---
     st.sidebar.markdown("### <span class='material-icons-outlined'>emoji_events</span> Progresso", unsafe_allow_html=True)

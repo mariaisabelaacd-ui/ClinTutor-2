@@ -215,3 +215,228 @@ div {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
+
+/* ==========================================================================
+   7. CUSTOM ENHANCEMENTS - LESS STREAMLIT LOOK
+   ========================================================================== */
+
+/* Hide Streamlit's default padding indicators */
+[data-testid="stDecoration"] {
+    display: none !important;
+}
+
+/* Custom Radio Buttons (Navigation) */
+.stRadio>div {
+    background-color: var(--card-background) !important;
+    padding: 0.5rem !important;
+    border-radius: 12px !important;
+    border: 1px solid #334155 !important;
+}
+
+.stRadio>div>label {
+    background-color: transparent !important;
+    padding: 0.75rem 1rem !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+}
+
+.stRadio>div>label:hover {
+    background-color: rgba(16, 185, 129, 0.1) !important;
+}
+
+.stRadio>div>label[data-checked="true"] {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    color: white !important;
+    font-weight: 600 !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
+}
+
+/* Enhanced Tabs */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 0.5rem !important;
+    background-color: transparent !important;
+    border-bottom: 2px solid #334155 !important;
+}
+
+.stTabs [data-baseweb="tab"] {
+    background-color: transparent !important;
+    border-radius: 8px 8px 0 0 !important;
+    padding: 0.75rem 1.5rem !important;
+    color: #94a3b8 !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+}
+
+.stTabs [data-baseweb="tab"]:hover {
+    background-color: rgba(16, 185, 129, 0.05) !important;
+    color: #e2e8f0 !important;
+}
+
+.stTabs [aria-selected="true"] {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.15) 100%) !important;
+    border-bottom: 3px solid var(--primary-color) !important;
+    color: var(--primary-color) !important;
+    font-weight: 600 !important;
+}
+
+/* Enhanced Dataframes/Tables */
+[data-testid="stDataFrame"] {
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    border: 1px solid #334155 !important;
+}
+
+[data-testid="stDataFrame"] table {
+    background-color: var(--card-background) !important;
+}
+
+[data-testid="stDataFrame"] thead {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+}
+
+[data-testid="stDataFrame"] thead th {
+    color: var(--primary-color) !important;
+    font-weight: 600 !important;
+    padding: 1rem !important;
+    border-bottom: 2px solid var(--primary-color) !important;
+}
+
+[data-testid="stDataFrame"] tbody tr {
+    transition: background-color 0.2s ease !important;
+}
+
+[data-testid="stDataFrame"] tbody tr:hover {
+    background-color: rgba(16, 185, 129, 0.05) !important;
+}
+
+[data-testid="stDataFrame"] tbody td {
+    padding: 0.75rem 1rem !important;
+    border-bottom: 1px solid #334155 !important;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0f172a;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+/* Enhanced Selectbox */
+.stSelectbox>div>div {
+    background-color: var(--card-background) !important;
+    border: 1px solid #334155 !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+}
+
+.stSelectbox>div>div:hover {
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1) !important;
+}
+
+/* Enhanced Metrics */
+[data-testid="stMetric"] {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(5, 150, 105, 0.05) 100%) !important;
+    padding: 1rem !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(16, 185, 129, 0.2) !important;
+    transition: all 0.2s ease !important;
+}
+
+[data-testid="stMetric"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(16, 185, 129, 0.15) !important;
+}
+
+[data-testid="stMetricLabel"] {
+    color: #94a3b8 !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+}
+
+/* Enhanced Progress Bar */
+.stProgress>div>div {
+    background: linear-gradient(90deg, #10b981 0%, #3b82f6 100%) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.5) !important;
+}
+
+/* Enhanced Alerts */
+[data-testid="stAlert"] {
+    border-radius: 12px !important;
+    border-left: 4px solid !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+[data-testid="stAlert"][data-baseweb="notification"][kind="info"] {
+    background-color: rgba(59, 130, 246, 0.1) !important;
+    border-left-color: #3b82f6 !important;
+}
+
+[data-testid="stAlert"][data-baseweb="notification"][kind="success"] {
+    background-color: rgba(16, 185, 129, 0.1) !important;
+    border-left-color: #10b981 !important;
+}
+
+[data-testid="stAlert"][data-baseweb="notification"][kind="warning"] {
+    background-color: rgba(234, 179, 8, 0.1) !important;
+    border-left-color: #eab308 !important;
+}
+
+[data-testid="stAlert"][data-baseweb="notification"][kind="error"] {
+    background-color: rgba(239, 68, 68, 0.1) !important;
+    border-left-color: #ef4444 !important;
+}
+
+/* Enhanced Checkbox */
+.stCheckbox {
+    padding: 0.5rem !important;
+}
+
+.stCheckbox>label {
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+.stCheckbox>label:hover {
+    color: var(--primary-color) !important;
+}
+
+/* Enhanced Expander */
+[data-testid="stExpander"] {
+    border: 1px solid #334155 !important;
+    border-radius: 12px !important;
+    background-color: var(--card-background) !important;
+    overflow: hidden !important;
+}
+
+[data-testid="stExpander"] summary {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, transparent 100%) !important;
+    padding: 1rem !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+}
+
+[data-testid="stExpander"] summary:hover {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, transparent 100%) !important;
+}
+
+/* Plotly Charts Enhancement */
+.js-plotly-plot {
+    border-radius: 12px !important;
+    overflow: hidden !important;
+}

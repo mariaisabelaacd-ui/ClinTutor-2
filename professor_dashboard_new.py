@@ -12,11 +12,6 @@ from analytics import (
 )
 from auth_firebase import get_all_users, get_user_by_id
 from logic import get_case
-from admin_utils import (
-    reset_student_analytics, clear_student_chat_interactions,
-    reset_all_students_analytics, clear_all_chat_interactions,
-    log_admin_action, get_database_stats
-)
 
 def show_advanced_professor_dashboard():
     """Dashboard redesenhado para professores com foco em insights acionáveis"""
@@ -37,33 +32,23 @@ def show_advanced_professor_dashboard():
             
         if not all_analytics:
             st.info("Nenhum dado de analytics encontrado ainda. Os alunos precisam responder questões primeiro.")
-            # Ainda permite acesso ao admin mesmo sem dados
+            return
             
     except Exception as e:
         st.error(f"Erro ao carregar dados: {e}")
         return
     
-    # Sistema de tabs redesenhado: 3 tabs (adicionada aba Admin)
-    tab1, tab2, tab3 = st.tabs([
+    # Sistema de tabs redesenhado: 2 tabs principais
+    tab1, tab2 = st.tabs([
         "📊 Visão Geral", 
-        "👤 Análise Individual",
-        "⚙️ Admin"
+        "👤 Análise Individual"
     ])
     
     with tab1:
-        if all_analytics:
-            show_general_overview_tab(student_users, all_analytics)
-        else:
-            st.info("Aguardando dados de analytics...")
+        show_general_overview_tab(student_users, all_analytics)
     
     with tab2:
-        if all_analytics:
-            show_individual_analysis_tab(student_users, all_analytics)
-        else:
-            st.info("Aguardando dados de analytics...")
-    
-    with tab3:
-        show_admin_tab(student_users)
+        show_individual_analysis_tab(student_users, all_analytics)
 
 def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
     """Tab de visão geral com estatísticas gerais de todos os alunos"""
@@ -134,30 +119,22 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
         if component_stats:
             df_comp = pd.DataFrame(component_stats)
             
-            # Trunca nomes muito longos para melhor visualização
-            df_comp['componente_display'] = df_comp['componente'].apply(
-                lambda x: x if len(x) <= 30 else x[:27] + '...'
-            )
-            
             fig_comp = px.bar(
                 df_comp,
                 x='taxa_acerto',
-                y='componente_display',
+                y='componente',
                 orientation='h',
                 title="Taxa de Acerto por Componente (%)",
                 text_auto='.1f',
                 color='taxa_acerto',
                 color_continuous_scale='RdYlGn',
-                range_color=[0, 100],
-                hover_data={'componente': True, 'componente_display': False}  # Mostra nome completo no hover
+                range_color=[0, 100]
             )
             fig_comp.update_layout(
                 xaxis_title="Taxa de Acerto (%)",
                 yaxis_title=None,
                 showlegend=False,
-                height=400,
-                margin=dict(l=200, r=20, t=40, b=40),  # Mais espaço à esquerda para labels
-                yaxis=dict(tickfont=dict(size=11))  # Fonte menor para caber melhor
+                height=400
             )
             st.plotly_chart(fig_comp, use_container_width=True)
             
@@ -201,30 +178,22 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
     if hardest_categories:
         df_hardest = pd.DataFrame(hardest_categories)
         
-        # Trunca nomes muito longos
-        df_hardest['componente_display'] = df_hardest['componente'].apply(
-            lambda x: x if len(x) <= 30 else x[:27] + '...'
-        )
-        
         fig_hardest = px.bar(
             df_hardest,
             x='taxa_acerto',
-            y='componente_display',
+            y='componente',
             orientation='h',
             title="Componentes que Precisam de Mais Atenção",
             text_auto='.1f',
             color='taxa_acerto',
             color_continuous_scale='Reds_r',
-            range_color=[0, 100],
-            hover_data={'componente': True, 'componente_display': False}
+            range_color=[0, 100]
         )
         fig_hardest.update_layout(
             xaxis_title="Taxa de Acerto (%)",
             yaxis_title=None,
             showlegend=False,
-            height=300,
-            margin=dict(l=200, r=20, t=40, b=40),
-            yaxis=dict(tickfont=dict(size=11))
+            height=300
         )
         st.plotly_chart(fig_hardest, use_container_width=True)
         
@@ -455,29 +424,21 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
         if advanced_stats['componentes']:
             df_comp = pd.DataFrame(advanced_stats['componentes'])
             
-            # Trunca nomes longos
-            df_comp['nome_display'] = df_comp['nome'].apply(
-                lambda x: x if len(x) <= 25 else x[:22] + '...'
-            )
-            
             fig_comp = px.bar(
                 df_comp,
                 x='acuracia',
-                y='nome_display',
+                y='nome',
                 orientation='h',
                 text_auto='.1f',
                 color='acuracia',
                 color_continuous_scale='RdYlGn',
-                range_color=[0, 100],
-                hover_data={'nome': True, 'nome_display': False}
+                range_color=[0, 100]
             )
             fig_comp.update_layout(
                 xaxis_title="Acurácia (%)",
                 yaxis_title=None,
                 showlegend=False,
-                height=400,
-                margin=dict(l=180, r=20, t=20, b=40),
-                yaxis=dict(tickfont=dict(size=10))
+                height=400
             )
             st.plotly_chart(fig_comp, use_container_width=True)
         else:
@@ -654,224 +615,3 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
             st.info("➡️ **Tendência Estável**: Desempenho consistente")
     else:
         st.info("Dados insuficientes para análise temporal (mínimo 1 semana de atividade)")
-
-def show_admin_tab(student_users: List[Dict]):
-    """Tab de administração para gerenciar banco de dados"""
-    st.subheader("⚙️ Painel de Administração")
-    
-    st.warning("⚠️ **ATENÇÃO**: Esta área contém operações que podem deletar dados permanentemente!")
-    
-    st.markdown("---")
-    
-    # ===== ESTATÍSTICAS DO BANCO =====
-    st.markdown("### 📊 Estatísticas do Banco de Dados")
-    
-    db_stats = get_database_stats()
-    
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.metric(
-            "📚 Total de Questões Respondidas",
-            db_stats['total_analytics'],
-            help="Total de registros de case_analytics no banco"
-        )
-    
-    with col2:
-        st.metric(
-            "💬 Total de Interações Chat",
-            db_stats['total_chat_interactions'],
-            help="Total de registros de chat_interactions no banco"
-        )
-    
-    with col3:
-        st.metric(
-            "👥 Total de Usuários",
-            db_stats['total_users'],
-            help="Total de usuários cadastrados"
-        )
-    
-    st.markdown("---")
-    
-    # ===== AÇÕES INDIVIDUAIS =====
-    st.markdown("### 👤 Gerenciar Aluno Individual")
-    
-    if not student_users:
-        st.info("Nenhum aluno cadastrado.")
-    else:
-        # Seletor de aluno
-        student_names = [f"{student['name']} ({student['email']})" for student in student_users]
-        selected_student_idx = st.selectbox(
-            "Selecione um aluno:",
-            range(len(student_names)),
-            format_func=lambda x: student_names[x],
-            key="admin_student_selector"
-        )
-        
-        selected_student = student_users[selected_student_idx]
-        student_id = selected_student['id']
-        
-        st.markdown(f"**Aluno selecionado:** {selected_student['name']}")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("#### 🗑️ Resetar Questões")
-            st.caption("Remove todas as questões respondidas por este aluno")
-            
-            if st.button("Resetar Questões do Aluno", key="reset_student_analytics", type="secondary"):
-                # Confirmação
-                if 'confirm_reset_student' not in st.session_state:
-                    st.session_state.confirm_reset_student = True
-                    st.warning("⚠️ Clique novamente para confirmar")
-                else:
-                    with st.spinner("Resetando questões..."):
-                        success = reset_student_analytics(student_id)
-                        if success:
-                            log_admin_action(
-                                "reset_student_analytics",
-                                f"Resetadas questões do aluno {selected_student['name']} (ID: {student_id})",
-                                student_id
-                            )
-                            st.success(f"✅ Questões de {selected_student['name']} resetadas com sucesso!")
-                            del st.session_state.confirm_reset_student
-                            st.rerun()
-                        else:
-                            st.error("❌ Erro ao resetar questões")
-                            del st.session_state.confirm_reset_student
-        
-        with col2:
-            st.markdown("#### 💬 Limpar Chat")
-            st.caption("Remove todas as mensagens de chat deste aluno")
-            
-            if st.button("Limpar Chat do Aluno", key="clear_student_chat", type="secondary"):
-                # Confirmação
-                if 'confirm_clear_student_chat' not in st.session_state:
-                    st.session_state.confirm_clear_student_chat = True
-                    st.warning("⚠️ Clique novamente para confirmar")
-                else:
-                    with st.spinner("Limpando chat..."):
-                        success = clear_student_chat_interactions(student_id)
-                        if success:
-                            log_admin_action(
-                                "clear_student_chat",
-                                f"Limpado chat do aluno {selected_student['name']} (ID: {student_id})",
-                                student_id
-                            )
-                            st.success(f"✅ Chat de {selected_student['name']} limpo com sucesso!")
-                            del st.session_state.confirm_clear_student_chat
-                            st.rerun()
-                        else:
-                            st.error("❌ Erro ao limpar chat")
-                            del st.session_state.confirm_clear_student_chat
-    
-    st.markdown("---")
-    
-    # ===== AÇÕES GLOBAIS =====
-    st.markdown("### 🌍 Gerenciar Todos os Alunos")
-    st.error("⚠️ **PERIGO**: Estas ações afetam TODOS os alunos e são IRREVERSÍVEIS!")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("#### 🗑️ Resetar Todas as Questões")
-        st.caption("Remove TODAS as questões respondidas de TODOS os alunos")
-        
-        # Checkbox de confirmação
-        confirm_all_analytics = st.checkbox(
-            "Eu entendo que esta ação é irreversível",
-            key="confirm_checkbox_all_analytics"
-        )
-        
-        if st.button(
-            "RESETAR TODAS AS QUESTÕES",
-            key="reset_all_analytics",
-            type="primary",
-            disabled=not confirm_all_analytics
-        ):
-            # Dupla confirmação
-            if 'confirm_reset_all' not in st.session_state:
-                st.session_state.confirm_reset_all = True
-                st.error("🚨 ÚLTIMA CHANCE: Clique novamente para CONFIRMAR a deleção de TODOS os dados!")
-            else:
-                with st.spinner("Resetando TODAS as questões..."):
-                    result = reset_all_students_analytics()
-                    if result['deleted'] > 0:
-                        log_admin_action(
-                            "reset_all_analytics",
-                            f"Resetadas TODAS as questões: {result['deleted']} registros deletados, {result['errors']} erros"
-                        )
-                        st.success(f"✅ {result['deleted']} questões resetadas com sucesso!")
-                        if result['errors'] > 0:
-                            st.warning(f"⚠️ {result['errors']} erros durante a operação")
-                        del st.session_state.confirm_reset_all
-                        st.rerun()
-                    else:
-                        st.error("❌ Erro ao resetar questões")
-                        del st.session_state.confirm_reset_all
-    
-    with col2:
-        st.markdown("#### 💬 Limpar Todos os Chats")
-        st.caption("Remove TODAS as mensagens de chat de TODOS os usuários")
-        
-        # Checkbox de confirmação
-        confirm_all_chat = st.checkbox(
-            "Eu entendo que esta ação é irreversível",
-            key="confirm_checkbox_all_chat"
-        )
-        
-        if st.button(
-            "LIMPAR TODOS OS CHATS",
-            key="clear_all_chat",
-            type="primary",
-            disabled=not confirm_all_chat
-        ):
-            # Dupla confirmação
-            if 'confirm_clear_all_chat' not in st.session_state:
-                st.session_state.confirm_clear_all_chat = True
-                st.error("🚨 ÚLTIMA CHANCE: Clique novamente para CONFIRMAR a deleção de TODAS as mensagens!")
-            else:
-                with st.spinner("Limpando TODOS os chats..."):
-                    result = clear_all_chat_interactions()
-                    if result['deleted'] > 0:
-                        log_admin_action(
-                            "clear_all_chat",
-                            f"Limpados TODOS os chats: {result['deleted']} registros deletados, {result['errors']} erros"
-                        )
-                        st.success(f"✅ {result['deleted']} mensagens deletadas com sucesso!")
-                        if result['errors'] > 0:
-                            st.warning(f"⚠️ {result['errors']} erros durante a operação")
-                        del st.session_state.confirm_clear_all_chat
-                        st.rerun()
-                    else:
-                        st.error("❌ Erro ao limpar chats")
-                        del st.session_state.confirm_clear_all_chat
-    
-    st.markdown("---")
-    
-    # ===== INFORMAÇÕES =====
-    st.markdown("### ℹ️ Informações")
-    
-    with st.expander("📋 Sobre as Operações de Admin"):
-        st.markdown("""
-        **Resetar Questões:**
-        - Remove todos os registros de `case_analytics` do aluno
-        - O aluno poderá responder as questões novamente
-        - Não afeta o cadastro do aluno
-        
-        **Limpar Chat:**
-        - Remove todos os registros de `chat_interactions` do aluno
-        - Libera espaço no banco de dados
-        - Não afeta as questões respondidas
-        
-        **Logs de Admin:**
-        - Todas as ações são registradas em `admin_logs`
-        - Inclui timestamp, ação realizada e usuário admin
-        - Útil para auditoria
-        
-        **Segurança:**
-        - Operações individuais requerem confirmação dupla
-        - Operações globais requerem checkbox + confirmação dupla
-        - Não há como desfazer estas operações
-        """)
-
