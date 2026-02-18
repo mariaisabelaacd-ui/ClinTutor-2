@@ -5,6 +5,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
 from typing import Dict, List, Any
+import textwrap
 from analytics import (
     get_all_users_analytics, get_global_stats,
     get_global_knowledge_component_stats, get_average_user_level,
@@ -370,7 +371,7 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
     
     student_names = [f"{student['name']} ({student['email']})" for student in filtered_students]
     selected_student_idx = st.selectbox(
-        f"{icon('person', '#64748b', 18)} Aluno:",
+        "👤 Aluno:",
         range(len(student_names)),
         format_func=lambda x: student_names[x]
     )
@@ -408,7 +409,7 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
         st.markdown(metric_card(
             "Questões Respondidas",
             str(basic_stats['case_stats']['total_cases']),
-            icon_name="quiz",
+            icon_name="assignment",
             icon_color="#8b5cf6"
         ), unsafe_allow_html=True)
     
@@ -417,7 +418,7 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
         st.markdown(metric_card(
             "Taxa de Acertos",
             f"{acc:.1f}%",
-            icon_name="target",
+            icon_name="track_changes",
             icon_color="#10b981"
         ), unsafe_allow_html=True)
     
@@ -448,10 +449,10 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
         
         st.markdown(metric_card(
             "vs Turma",
-            f"{perf_icon} {comparison['performance'].title()}",
+            f"{comparison['performance'].replace('_', ' ').title()}",
+            subtitle=f"{comparison['diferenca']:.1f}%",
             icon_name="compare_arrows",
-            icon_color="#6366f1",
-            subtitle=f"{comparison['diferenca']:.1f}%"
+            icon_color="#6366f1"
         ), unsafe_allow_html=True)
     
     st.markdown("---")
@@ -572,8 +573,8 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
     
     st.markdown("---")
     
-    # ===== SEÇÃO: HISTÓRICO DE RESPOSTAS =====
-    st.markdown(f"### {icon('history', '#10b981', 24)} Histórico de Respostas", unsafe_allow_html=True)
+    # ===== SEÇÃO: HISTÓRICO DETALHADO =====
+    st.markdown(f"### {icon('history', '#ef4444', 24)} Histórico de Respostas", unsafe_allow_html=True)
     
     case_analytics = all_analytics.get(student_id, {}).get('case_analytics', [])
     
@@ -582,7 +583,7 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            filter_status = st.selectbox(
+            filter_status_hist = st.selectbox(
                 "Status",
                 ["Todos", "Corretas", "Incorretas"],
                 key="hist_status"
@@ -590,16 +591,10 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
         
         with col2:
             # Pega componentes únicos
-            all_components = set()
-            for entry in case_analytics:
-                cid = entry.get('case_id')
-                q_info = get_case(cid)
-                comps = q_info.get('componentes_conhecimento', [])
-                all_components.update(comps)
-            
-            filter_component = st.selectbox(
+            all_comps = list(set([c['nome'] for c in advanced_stats['componentes']]))
+            filter_comp_hist = st.selectbox(
                 "Componente",
-                ["Todos"] + sorted(list(all_components)),
+                ["Todos"] + sorted(all_comps),
                 key="hist_comp"
             )
         
@@ -619,24 +614,35 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
             result = entry.get('case_result', {})
             
             is_correct = result.get('is_correct', False)
-            timestamp = entry.get('timestamp')
             
-            if isinstance(timestamp, str):
-                timestamp = datetime.fromisoformat(timestamp)
+            # Dados de filtro
+            comps = q_info.get('componentes_conhecimento', [])
+            diff = q_info.get('dificuldade', 'desconhecido')
             
             # Aplica filtros
-            if filter_status == "Corretas" and not is_correct:
+            if filter_status_hist == "Corretas" and not is_correct:
                 continue
-            if filter_status == "Incorretas" and is_correct:
-                continue
-            
-            comps = q_info.get('componentes_conhecimento', [])
-            if filter_component != "Todos" and filter_component not in comps:
+            if filter_status_hist == "Incorretas" and is_correct:
                 continue
             
-            diff = q_info.get('dificuldade', 'básico')
+            if filter_comp_hist != "Todos" and filter_comp_hist not in comps:
+                continue
+            
             if filter_difficulty != "Todos" and diff != filter_difficulty:
                 continue
+            
+            timestamp_ts = entry.get('timestamp')
+            if isinstance(timestamp_ts, str):
+                try:
+                    timestamp = datetime.fromisoformat(timestamp_ts)
+                except:
+                    timestamp = datetime.now()
+            else:
+                 # Assumindo timestamp do firebase ou float
+                 try:
+                     timestamp = datetime.fromtimestamp(timestamp_ts) if isinstance(timestamp_ts, (int, float)) else datetime.now()
+                 except:
+                     timestamp = datetime.now()
             
             filtered_entries.append({
                 'entry': entry,
@@ -752,7 +758,8 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
                                         user_msg = interaction.get('user_message', '')
                                         bot_msg = interaction.get('bot_response', '')
                                         
-                                        st.markdown(f"""
+                                        import textwrap
+                                        st.markdown(textwrap.dedent(f"""
                                             <div style='background: rgba(236, 72, 153, 0.05); padding: 0.75rem; 
                                                         border-radius: 8px; margin-bottom: 0.5rem; border-left: 3px solid #ec4899;'>
                                                 <div style='color: #64748b; font-size: 0.75rem; margin-bottom: 0.25rem;'>
@@ -765,7 +772,7 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
                                                     <strong>{icon('smart_toy', '#ec4899', 16)} Tutor:</strong> {bot_msg}
                                                 </div>
                                             </div>
-                                        """, unsafe_allow_html=True)
+                                        """), unsafe_allow_html=True)
 
             
             # Botão de download (tabela resumida)
