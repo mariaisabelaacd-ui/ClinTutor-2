@@ -153,7 +153,7 @@ def answer_detail_card(question_text: str, student_answer: str, expected_answer:
 <!-- Respostas lado a lado -->
 <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;'>
 <!-- Resposta do Aluno -->
-<div style='background: rgba(255, 255, 255, 0.7); padding: 1rem; border-radius: 8px; border-left: 3px solid {color};'>
+<div style='background: #f8fafc; padding: 1rem; border-radius: 8px; border-left: 3px solid {color}; box-shadow: 0 1px 2px rgba(0,0,0,0.05);'>
 <div style='color: {color}; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;'>
 {icon('person', color, 16)} Resposta do Aluno
 </div>
@@ -162,7 +162,7 @@ def answer_detail_card(question_text: str, student_answer: str, expected_answer:
 </div>
 </div>
 <!-- Resposta Esperada -->
-<div style='background: rgba(255, 255, 255, 0.7); padding: 1rem; border-radius: 8px; border-left: 3px solid #10b981;'>
+<div style='background: #f0fdf4; padding: 1rem; border-radius: 8px; border-left: 3px solid #10b981; box-shadow: 0 1px 2px rgba(0,0,0,0.05);'>
 <div style='color: #10b981; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;'>
 {icon('verified', '#10b981', 16)} Resposta Esperada
 </div>
@@ -172,7 +172,7 @@ def answer_detail_card(question_text: str, student_answer: str, expected_answer:
 </div>
 </div>
 <!-- Feedback da IA -->
-<div style='background: rgba(99, 102, 241, 0.1); padding: 1rem; border-radius: 8px; border-left: 3px solid #6366f1;'>
+<div style='background: #eef2ff; padding: 1rem; border-radius: 8px; border-left: 3px solid #6366f1; box-shadow: 0 1px 2px rgba(0,0,0,0.05);'>
 <div style='color: #6366f1; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;'>
 {icon('psychology', '#6366f1', 16)} Feedback da IA
 </div>

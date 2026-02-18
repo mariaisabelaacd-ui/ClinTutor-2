@@ -758,21 +758,18 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
                                         user_msg = interaction.get('user_message', '')
                                         bot_msg = interaction.get('bot_response', '')
                                         
-                                        import textwrap
-                                        st.markdown(textwrap.dedent(f"""
-                                            <div style='background: rgba(236, 72, 153, 0.05); padding: 0.75rem; 
-                                                        border-radius: 8px; margin-bottom: 0.5rem; border-left: 3px solid #ec4899;'>
-                                                <div style='color: #64748b; font-size: 0.75rem; margin-bottom: 0.25rem;'>
-                                                    {icon('schedule', '#64748b', 14)} {chat_time}
-                                                </div>
-                                                <div style='color: #1e293b; font-size: 0.875rem; margin-bottom: 0.5rem;'>
-                                                    <strong>{icon('person', '#3b82f6', 16)} Aluno:</strong> {user_msg}
-                                                </div>
-                                                <div style='color: #475569; font-size: 0.875rem;'>
-                                                    <strong>{icon('smart_toy', '#ec4899', 16)} Tutor:</strong> {bot_msg}
-                                                </div>
-                                            </div>
-                                        """), unsafe_allow_html=True)
+                                        st.markdown(f"""
+<div style='background: #fdf2f8; padding: 0.75rem; border-radius: 8px; margin-bottom: 0.5rem; border-left: 3px solid #ec4899;'>
+<div style='color: #64748b; font-size: 0.75rem; margin-bottom: 0.25rem;'>
+{icon('schedule', '#64748b', 14)} {chat_time}
+</div>
+<div style='color: #1e293b; font-size: 0.875rem; margin-bottom: 0.5rem;'>
+<strong>{icon('person', '#3b82f6', 16)} Aluno:</strong> {user_msg}
+</div>
+<div style='color: #475569; font-size: 0.875rem;'>
+<strong>{icon('smart_toy', '#ec4899', 16)} Tutor:</strong> {bot_msg}
+</div>
+</div>""", unsafe_allow_html=True)
 
             
             # Botão de download (tabela resumida)
