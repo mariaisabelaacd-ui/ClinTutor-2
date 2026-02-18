@@ -107,6 +107,12 @@ def answer_detail_card(question_text: str, student_answer: str, expected_answer:
     
     components_html = ", ".join(components) if components else "Geral"
     
+    
+    # Tratamento de dados ausentes (robusteza)
+    student_answer = student_answer if student_answer else "<em style='color:#94a3b8'>Resposta não registrada (dado anterior à atualização)</em>"
+    expected_answer = expected_answer if expected_answer else "<em style='color:#94a3b8'>Gabarito não disponível</em>"
+    feedback = feedback if feedback else "<em style='color:#94a3b8'>Feedback não disponível</em>"
+    
     return f"""
         <div style='background: linear-gradient(135deg, {bg_gradient_from} 0%, {bg_gradient_to} 100%); 
                     padding: 1.5rem; border-radius: 12px; border: 2px solid {border_color}; margin-bottom: 1rem;'>

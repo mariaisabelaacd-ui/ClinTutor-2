@@ -21,6 +21,9 @@ from ui_helpers import icon, metric_card
 
 def show_advanced_professor_dashboard():
     """Dashboard redesenhado para professores com foco em insights acionáveis"""
+    # Garante carregamento dos ícones
+    st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
+    
     st.markdown(f"# {icon('dashboard', '#10b981', 32)} Dashboard do Professor", unsafe_allow_html=True)
     st.markdown("---")
     
@@ -92,7 +95,7 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
         st.markdown(metric_card(
             "Média Geral",
             f"{global_stats.get('average_accuracy_rate', 0):.1f}%",
-            icon_name="target",
+            icon_name="track_changes", # Fixed: target -> track_changes
             icon_color="#10b981"
         ), unsafe_allow_html=True)
     
@@ -643,6 +646,7 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
                 'diff': diff
             })
         
+        
         if filtered_entries:
             # Ordena por data (mais recente primeiro)
             filtered_entries.sort(key=lambda x: x['timestamp'], reverse=True)
@@ -650,74 +654,117 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
             st.markdown(f"**{len(filtered_entries)} questões encontradas**")
             st.markdown("")
             
-            # Exibe cada questão em um expander
-            for idx, item in enumerate(filtered_entries):
-                entry = item['entry']
-                q_info = item['q_info']
-                result = item['result']
-                timestamp = item['timestamp']
-                is_correct = item['is_correct']
-                comps = item['comps']
-                diff = item['diff']
+            # Agrupa por data
+            grouped_entries = {}
+            today = datetime.now().date()
+            yesterday = today - timedelta(days=1)
+            
+            for item in filtered_entries:
+                item_date = item['timestamp'].date()
+                if item_date == today:
+                    key = "📅 Hoje"
+                elif item_date == yesterday:
+                    key = "📅 Ontem"
+                else:
+                    key = f"📅 {item_date.strftime('%d/%m/%Y')}"
                 
-                # Título do expander
-                status_emoji = "✅" if is_correct else "❌"
-                question_preview = q_info.get('pergunta', 'N/A')[:60] + "..."
-                expander_title = f"{status_emoji} {timestamp.strftime('%d/%m/%Y %H:%M')} - {question_preview}"
+                if key not in grouped_entries:
+                    grouped_entries[key] = []
+                grouped_entries[key].append(item)
+            
+            # Exibe Timeline
+            for date_label, items in grouped_entries.items():
+                st.markdown(f"### {date_label}")
                 
-                with st.expander(expander_title, expanded=False):
-                    # Busca interações do chat para esta questão
-                    chat_interactions = get_user_chat_interactions(student_id, entry.get('case_id'))
+                for item in items:
+                    entry = item['entry']
+                    q_info = item['q_info']
+                    result = item['result']
+                    timestamp = item['timestamp']
+                    is_correct = item['is_correct']
+                    comps = item['comps']
+                    diff = item['diff']
                     
-                    # Exibe card detalhado
-                    from ui_helpers import answer_detail_card
+                    # Layout de Timeline
+                    col_time, col_content = st.columns([0.15, 0.85])
                     
-                    detail_html = answer_detail_card(
-                        question_text=q_info.get('pergunta', 'N/A'),
-                        student_answer=result.get('user_answer', 'Não disponível'),
-                        expected_answer=q_info.get('resposta_esperada', 'Não disponível'),
-                        feedback=result.get('feedback', 'Sem feedback'),
-                        classification=result.get('classification', 'INCORRETA'),
-                        components=comps,
-                        difficulty=diff,
-                        time_spent=format_duration(entry.get('duration_seconds', 0)),
-                        points=result.get('points_gained', 0)
-                    )
+                    with col_time:
+                        st.markdown(f"""
+                            <div style="text-align: right; padding-top: 10px; color: #64748b; font-size: 0.85rem;">
+                                {timestamp.strftime('%H:%M')}
+                            </div>
+                        """, unsafe_allow_html=True)
                     
-                    st.markdown(detail_html, unsafe_allow_html=True)
-                    
-                    # Mostra interações do chat se houver
-                    if chat_interactions:
-                        st.markdown(f"#### {icon('chat', '#ec4899', 20)} Interações do Chat ({len(chat_interactions)})", unsafe_allow_html=True)
+                    with col_content:
+                        # Título do expander mais limpo
+                        status_icon = "🟢" if is_correct else "🔴"
+                        question_preview = q_info.get('pergunta', 'N/A')[:60] + "..."
                         
-                        for chat_idx, interaction in enumerate(chat_interactions[:5]):  # Limita a 5 mais recentes
-                            chat_time = interaction.get('timestamp', '')
-                            if isinstance(chat_time, str):
-                                try:
-                                    chat_time = datetime.fromisoformat(chat_time).strftime('%H:%M:%S')
-                                except:
-                                    chat_time = 'N/A'
-                            
-                            user_msg = interaction.get('user_message', '')
-                            bot_msg = interaction.get('bot_response', '')
-                            
+                        # Usando container para simular timeline visual
+                        with st.container():
                             st.markdown(f"""
-                                <div style='background: rgba(236, 72, 153, 0.05); padding: 0.75rem; 
-                                            border-radius: 8px; margin-bottom: 0.5rem; border-left: 3px solid #ec4899;'>
-                                    <div style='color: #64748b; font-size: 0.75rem; margin-bottom: 0.25rem;'>
-                                        {icon('schedule', '#64748b', 14)} {chat_time}
-                                    </div>
-                                    <div style='color: #1e293b; font-size: 0.875rem; margin-bottom: 0.5rem;'>
-                                        <strong>{icon('person', '#3b82f6', 16)} Aluno:</strong> {user_msg}
-                                    </div>
-                                    <div style='color: #475569; font-size: 0.875rem;'>
-                                        <strong>{icon('smart_toy', '#ec4899', 16)} Tutor:</strong> {bot_msg[:200]}{'...' if len(bot_msg) > 200 else ''}
+                                <div style="border-left: 2px solid #e2e8f0; margin-left: -10px; padding-left: 20px; padding-bottom: 20px;">
+                                    <div style="font-weight: 500; margin-bottom: 5px; color: #334155;">
+                                        {status_icon} {question_preview}
                                     </div>
                                 </div>
                             """, unsafe_allow_html=True)
-                        
-                        if len(chat_interactions) > 5:
-                            st.caption(f"... e mais {len(chat_interactions) - 5} interações")
+                            
+                            # Detalhes (expansível)
+                            with st.expander("Ver detalhes", expanded=False):
+                                # Busca interações do chat para esta questão
+                                # Tenta buscar por case_id primeiro
+                                chat_interactions = get_user_chat_interactions(student_id, entry.get('case_id'))
+                                
+                                # Fallback simples se não achar (opcional, pode ser complexo implementar aqui agora)
+                                
+                                # Exibe card detalhado
+                                from ui_helpers import answer_detail_card
+                                
+                                detail_html = answer_detail_card(
+                                    question_text=q_info.get('pergunta', 'N/A'),
+                                    student_answer=result.get('user_answer', None), # Passa None para ativar fallback
+                                    expected_answer=q_info.get('resposta_esperada', None),
+                                    feedback=result.get('feedback', None),
+                                    classification=result.get('classification', 'INCORRETA'),
+                                    components=comps,
+                                    difficulty=diff,
+                                    time_spent=format_duration(entry.get('duration_seconds', 0)),
+                                    points=result.get('points_gained', 0)
+                                )
+                                
+                                st.markdown(detail_html, unsafe_allow_html=True)
+                                
+                                # Mostra interações do chat se houver
+                                if chat_interactions:
+                                    st.markdown(f"#### {icon('chat', '#ec4899', 20)} Interações do Chat ({len(chat_interactions)})", unsafe_allow_html=True)
+                                    
+                                    for chat_idx, interaction in enumerate(chat_interactions):
+                                        chat_time = interaction.get('timestamp', '')
+                                        if isinstance(chat_time, str):
+                                            try:
+                                                chat_time = datetime.fromisoformat(chat_time).strftime('%H:%M:%S')
+                                            except:
+                                                chat_time = 'N/A'
+                                        
+                                        user_msg = interaction.get('user_message', '')
+                                        bot_msg = interaction.get('bot_response', '')
+                                        
+                                        st.markdown(f"""
+                                            <div style='background: rgba(236, 72, 153, 0.05); padding: 0.75rem; 
+                                                        border-radius: 8px; margin-bottom: 0.5rem; border-left: 3px solid #ec4899;'>
+                                                <div style='color: #64748b; font-size: 0.75rem; margin-bottom: 0.25rem;'>
+                                                    {icon('schedule', '#64748b', 14)} {chat_time}
+                                                </div>
+                                                <div style='color: #1e293b; font-size: 0.875rem; margin-bottom: 0.5rem;'>
+                                                    <strong>{icon('person', '#3b82f6', 16)} Aluno:</strong> {user_msg}
+                                                </div>
+                                                <div style='color: #475569; font-size: 0.875rem;'>
+                                                    <strong>{icon('smart_toy', '#ec4899', 16)} Tutor:</strong> {bot_msg}
+                                                </div>
+                                            </div>
+                                        """, unsafe_allow_html=True)
+
             
             # Botão de download (tabela resumida)
             st.markdown("---")
