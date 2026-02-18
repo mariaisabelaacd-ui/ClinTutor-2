@@ -4,11 +4,11 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
 from typing import Dict, List, Any
-from analytics import (
     get_all_users_analytics, get_global_stats,
     get_global_knowledge_component_stats, get_average_user_level,
     get_hardest_categories, get_student_complete_profile,
-    get_student_weakness_analysis, format_duration
+    get_student_weakness_analysis, format_duration,
+    get_user_chat_interactions
 )
 from auth_firebase import get_all_users, get_user_by_id
 from logic import get_case
@@ -264,7 +264,7 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
         st.plotly_chart(fig_hardest, use_container_width=True)
         
         # Tabela detalhada
-        with st.expander(f"{icon('description', '#64748b', 18)} Detalhes das Categorias Difíceis"):
+        with st.expander("📋 Detalhes das Categorias Difíceis"):
             df_display = df_hardest[['componente', 'taxa_acerto', 'total_questoes', 'acertos', 'tempo_medio_formatado']].copy()
             df_display.columns = ['Componente', 'Taxa de Acerto (%)', 'Total de Questões', 'Acertos', 'Tempo Médio']
             st.dataframe(df_display, use_container_width=True, hide_index=True)
@@ -337,17 +337,17 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        search_term = st.text_input(f"{icon('search', '#64748b', 18)} Buscar por nome ou email", "")
+        search_term = st.text_input("🔍 Buscar por nome ou email", "")
     
     with col2:
         filter_performance = st.selectbox(
-            f"{icon('bar_chart', '#64748b', 18)} Filtrar por desempenho",
+            "📊 Filtrar por desempenho",
             ["Todos", "Acima da média", "Abaixo da média", "Sem atividade"]
         )
     
     with col3:
         filter_level = st.selectbox(
-            f"{icon('trending_up', '#64748b', 18)} Filtrar por nível",
+            "📈 Filtrar por nível",
             ["Todos", "Básico", "Intermediário", "Avançado"]
         )
     
