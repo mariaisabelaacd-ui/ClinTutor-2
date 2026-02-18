@@ -605,8 +605,9 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
                 key="hist_diff"
             )
         
-        # Prepara histórico
-        history = []
+        
+        # Prepara histórico com detalhes completos
+        filtered_entries = []
         for entry in case_analytics:
             cid = entry.get('case_id')
             q_info = get_case(cid)
@@ -632,24 +633,110 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
             if filter_difficulty != "Todos" and diff != filter_difficulty:
                 continue
             
-            history.append({
-                'Data': timestamp.strftime('%d/%m/%Y %H:%M'),
-                'Questão': q_info.get('pergunta', 'N/A')[:50] + '...',
-                'Componente': ', '.join(comps),
-                'Dificuldade': diff.title(),
-                'Status': '✅ Correto' if is_correct else '❌ Incorreto',
-                'Tempo': format_duration(entry.get('duration_seconds', 0)),
-                'Pontos': result.get('points_gained', 0)
+            filtered_entries.append({
+                'entry': entry,
+                'q_info': q_info,
+                'result': result,
+                'timestamp': timestamp,
+                'is_correct': is_correct,
+                'comps': comps,
+                'diff': diff
             })
         
-        if history:
-            df_history = pd.DataFrame(history)
-            st.dataframe(df_history, use_container_width=True, hide_index=True)
+        if filtered_entries:
+            # Ordena por data (mais recente primeiro)
+            filtered_entries.sort(key=lambda x: x['timestamp'], reverse=True)
             
-            # Botão de download
+            st.markdown(f"**{len(filtered_entries)} questões encontradas**")
+            st.markdown("")
+            
+            # Exibe cada questão em um expander
+            for idx, item in enumerate(filtered_entries):
+                entry = item['entry']
+                q_info = item['q_info']
+                result = item['result']
+                timestamp = item['timestamp']
+                is_correct = item['is_correct']
+                comps = item['comps']
+                diff = item['diff']
+                
+                # Título do expander
+                status_emoji = "✅" if is_correct else "❌"
+                question_preview = q_info.get('pergunta', 'N/A')[:60] + "..."
+                expander_title = f"{status_emoji} {timestamp.strftime('%d/%m/%Y %H:%M')} - {question_preview}"
+                
+                with st.expander(expander_title, expanded=False):
+                    # Busca interações do chat para esta questão
+                    chat_interactions = get_user_chat_interactions(student_id, entry.get('case_id'))
+                    
+                    # Exibe card detalhado
+                    from ui_helpers import answer_detail_card
+                    
+                    detail_html = answer_detail_card(
+                        question_text=q_info.get('pergunta', 'N/A'),
+                        student_answer=result.get('user_answer', 'Não disponível'),
+                        expected_answer=q_info.get('resposta_esperada', 'Não disponível'),
+                        feedback=result.get('feedback', 'Sem feedback'),
+                        classification=result.get('classification', 'INCORRETA'),
+                        components=comps,
+                        difficulty=diff,
+                        time_spent=format_duration(entry.get('duration_seconds', 0)),
+                        points=result.get('points_gained', 0)
+                    )
+                    
+                    st.markdown(detail_html, unsafe_allow_html=True)
+                    
+                    # Mostra interações do chat se houver
+                    if chat_interactions:
+                        st.markdown(f"#### {icon('chat', '#ec4899', 20)} Interações do Chat ({len(chat_interactions)})", unsafe_allow_html=True)
+                        
+                        for chat_idx, interaction in enumerate(chat_interactions[:5]):  # Limita a 5 mais recentes
+                            chat_time = interaction.get('timestamp', '')
+                            if isinstance(chat_time, str):
+                                try:
+                                    chat_time = datetime.fromisoformat(chat_time).strftime('%H:%M:%S')
+                                except:
+                                    chat_time = 'N/A'
+                            
+                            user_msg = interaction.get('user_message', '')
+                            bot_msg = interaction.get('bot_response', '')
+                            
+                            st.markdown(f"""
+                                <div style='background: rgba(236, 72, 153, 0.05); padding: 0.75rem; 
+                                            border-radius: 8px; margin-bottom: 0.5rem; border-left: 3px solid #ec4899;'>
+                                    <div style='color: #64748b; font-size: 0.75rem; margin-bottom: 0.25rem;'>
+                                        {icon('schedule', '#64748b', 14)} {chat_time}
+                                    </div>
+                                    <div style='color: #1e293b; font-size: 0.875rem; margin-bottom: 0.5rem;'>
+                                        <strong>{icon('person', '#3b82f6', 16)} Aluno:</strong> {user_msg}
+                                    </div>
+                                    <div style='color: #475569; font-size: 0.875rem;'>
+                                        <strong>{icon('smart_toy', '#ec4899', 16)} Tutor:</strong> {bot_msg[:200]}{'...' if len(bot_msg) > 200 else ''}
+                                    </div>
+                                </div>
+                            """, unsafe_allow_html=True)
+                        
+                        if len(chat_interactions) > 5:
+                            st.caption(f"... e mais {len(chat_interactions) - 5} interações")
+            
+            # Botão de download (tabela resumida)
+            st.markdown("---")
+            history_summary = []
+            for item in filtered_entries:
+                history_summary.append({
+                    'Data': item['timestamp'].strftime('%d/%m/%Y %H:%M'),
+                    'Questão': item['q_info'].get('pergunta', 'N/A')[:50] + '...',
+                    'Componente': ', '.join(item['comps']),
+                    'Dificuldade': item['diff'].title(),
+                    'Status': '✅ Correto' if item['is_correct'] else '❌ Incorreto',
+                    'Tempo': format_duration(item['entry'].get('duration_seconds', 0)),
+                    'Pontos': item['result'].get('points_gained', 0)
+                })
+            
+            df_history = pd.DataFrame(history_summary)
             csv = df_history.to_csv(index=False)
             st.download_button(
-                label="📥 Baixar Histórico (CSV)",
+                label=f"{icon('download', '#10b981', 18)} Baixar Histórico (CSV)",
                 data=csv,
                 file_name=f"historico_{selected_student['name'].replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.csv",
                 mime="text/csv"
