@@ -4,6 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
 from typing import Dict, List, Any
+from analytics import (
     get_all_users_analytics, get_global_stats,
     get_global_knowledge_component_stats, get_average_user_level,
     get_hardest_categories, get_student_complete_profile,
