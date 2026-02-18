@@ -564,7 +564,7 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
             st.info("Dados insuficientes")
     
     # Tabela detalhada
-    with st.expander(f"{icon('table_chart', '#64748b', 18)} Tabela Detalhada por Componente"):
+    with st.expander("📋 Tabela Detalhada por Componente"):
         if advanced_stats['componentes']:
             df_comp_table = pd.DataFrame(advanced_stats['componentes'])
             df_comp_table.columns = ['Componente', 'Acurácia (%)', 'Total', 'Acertos']

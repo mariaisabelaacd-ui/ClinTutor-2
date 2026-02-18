@@ -115,86 +115,69 @@ def answer_detail_card(question_text: str, student_answer: str, expected_answer:
     expected_answer = expected_answer if expected_answer else "<em style='color:#94a3b8'>Gabarito não disponível</em>"
     feedback = feedback if feedback else "<em style='color:#94a3b8'>Feedback não disponível</em>"
     
-    return textwrap.dedent(f"""
-        <div style='background: linear-gradient(135deg, {bg_gradient_from} 0%, {bg_gradient_to} 100%); 
-                    padding: 1.5rem; border-radius: 12px; border: 2px solid {border_color}; margin-bottom: 1rem;'>
-            
-            <!-- Header com status -->
-            <div style='display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;'>
-                <div style='display: flex; align-items: center; gap: 0.5rem;'>
-                    {icon(icon_name, color, 28)}
-                    <span style='color: {color}; font-size: 1.25rem; font-weight: 600;'>{status_label}</span>
-                </div>
-                <div style='display: flex; gap: 1rem; align-items: center;'>
-                    <span style='color: #64748b; font-size: 0.875rem;'>
-                        {icon('schedule', '#64748b', 18)} {time_spent}
-                    </span>
-                    <span style='color: {color}; font-size: 1rem; font-weight: 600;'>
-                        {icon('emoji_events', color, 20)} {points} pts
-                    </span>
-                </div>
-            </div>
-            
-            <!-- Metadados da questão -->
-            <div style='background: rgba(255, 255, 255, 0.5); padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem;'>
-                <div style='color: #475569; font-size: 0.875rem; margin-bottom: 0.25rem;'>
-                    {icon('label', diff_color, 16)} <strong>Dificuldade:</strong> {difficulty.title()}
-                </div>
-                <div style='color: #475569; font-size: 0.875rem;'>
-                    {icon('category', '#8b5cf6', 16)} <strong>Componentes:</strong> {components_html}
-                </div>
-            </div>
-            
-            <!-- Pergunta -->
-            <div style='background: rgba(255, 255, 255, 0.7); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;'>
-                <div style='color: #64748b; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; 
-                            letter-spacing: 0.05em; margin-bottom: 0.5rem;'>
-                    {icon('help_outline', '#64748b', 16)} Pergunta
-                </div>
-                <div style='color: #1e293b; font-size: 0.95rem; line-height: 1.5;'>
-                    {question_text}
-                </div>
-            </div>
-            
-            <!-- Respostas lado a lado -->
-            <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;'>
-                
-                <!-- Resposta do Aluno -->
-                <div style='background: rgba(255, 255, 255, 0.7); padding: 1rem; border-radius: 8px; 
-                            border-left: 3px solid {color};'>
-                    <div style='color: {color}; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; 
-                                letter-spacing: 0.05em; margin-bottom: 0.5rem;'>
-                        {icon('person', color, 16)} Resposta do Aluno
-                    </div>
-                    <div style='color: #1e293b; font-size: 0.9rem; line-height: 1.5;'>
-                        {student_answer}
-                    </div>
-                </div>
-                
-                <!-- Resposta Esperada -->
-                <div style='background: rgba(255, 255, 255, 0.7); padding: 1rem; border-radius: 8px; 
-                            border-left: 3px solid #10b981;'>
-                    <div style='color: #10b981; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; 
-                                letter-spacing: 0.05em; margin-bottom: 0.5rem;'>
-                        {icon('verified', '#10b981', 16)} Resposta Esperada
-                    </div>
-                    <div style='color: #1e293b; font-size: 0.9rem; line-height: 1.5;'>
-                        {expected_answer}
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Feedback da IA -->
-            <div style='background: rgba(99, 102, 241, 0.1); padding: 1rem; border-radius: 8px; 
-                border-left: 3px solid #6366f1;'>
-                <div style='color: #6366f1; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; 
-                            letter-spacing: 0.05em; margin-bottom: 0.5rem;'>
-                    {icon('psychology', '#6366f1', 16)} Feedback da IA
-                </div>
-                <div style='color: #1e293b; font-size: 0.9rem; line-height: 1.5;'>
-                    {feedback}
-                </div>
-            </div>
-            
-        </div>
-    """)
+    return f"""
+<div style='background: linear-gradient(135deg, {bg_gradient_from} 0%, {bg_gradient_to} 100%); padding: 1.5rem; border-radius: 12px; border: 2px solid {border_color}; margin-bottom: 1rem;'>
+<!-- Header com status -->
+<div style='display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;'>
+<div style='display: flex; align-items: center; gap: 0.5rem;'>
+{icon(icon_name, color, 28)}
+<span style='color: {color}; font-size: 1.25rem; font-weight: 600;'>{status_label}</span>
+</div>
+<div style='display: flex; gap: 1rem; align-items: center;'>
+<span style='color: #64748b; font-size: 0.875rem;'>
+{icon('schedule', '#64748b', 18)} {time_spent}
+</span>
+<span style='color: {color}; font-size: 1rem; font-weight: 600;'>
+{icon('emoji_events', color, 20)} {points} pts
+</span>
+</div>
+</div>
+<!-- Metadados da questão -->
+<div style='background: rgba(255, 255, 255, 0.5); padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem;'>
+<div style='color: #475569; font-size: 0.875rem; margin-bottom: 0.25rem;'>
+{icon('label', diff_color, 16)} <strong>Dificuldade:</strong> {difficulty.title()}
+</div>
+<div style='color: #475569; font-size: 0.875rem;'>
+{icon('category', '#8b5cf6', 16)} <strong>Componentes:</strong> {components_html}
+</div>
+</div>
+<!-- Pergunta -->
+<div style='background: rgba(255, 255, 255, 0.7); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;'>
+<div style='color: #64748b; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;'>
+{icon('help_outline', '#64748b', 16)} Pergunta
+</div>
+<div style='color: #1e293b; font-size: 0.95rem; line-height: 1.5;'>
+{question_text}
+</div>
+</div>
+<!-- Respostas lado a lado -->
+<div style='display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;'>
+<!-- Resposta do Aluno -->
+<div style='background: rgba(255, 255, 255, 0.7); padding: 1rem; border-radius: 8px; border-left: 3px solid {color};'>
+<div style='color: {color}; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;'>
+{icon('person', color, 16)} Resposta do Aluno
+</div>
+<div style='color: #1e293b; font-size: 0.9rem; line-height: 1.5;'>
+{student_answer}
+</div>
+</div>
+<!-- Resposta Esperada -->
+<div style='background: rgba(255, 255, 255, 0.7); padding: 1rem; border-radius: 8px; border-left: 3px solid #10b981;'>
+<div style='color: #10b981; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;'>
+{icon('verified', '#10b981', 16)} Resposta Esperada
+</div>
+<div style='color: #1e293b; font-size: 0.9rem; line-height: 1.5;'>
+{expected_answer}
+</div>
+</div>
+</div>
+<!-- Feedback da IA -->
+<div style='background: rgba(99, 102, 241, 0.1); padding: 1rem; border-radius: 8px; border-left: 3px solid #6366f1;'>
+<div style='color: #6366f1; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;'>
+{icon('psychology', '#6366f1', 16)} Feedback da IA
+</div>
+<div style='color: #1e293b; font-size: 0.9rem; line-height: 1.5;'>
+{feedback}
+</div>
+</div>
+</div>"""
