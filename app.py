@@ -50,6 +50,7 @@ def show_login_page():
                 with st.form("login_form"):
                     email = st.text_input("Email", placeholder="seu@email.com")
                     password = st.text_input("Senha", type="password", placeholder="••••••")
+                    prof_code_login = st.text_input("Código de Professor (apenas professores)", type="password", placeholder="Deixe em branco se for aluno")
                     remember_me = st.checkbox("Manter conectado por 7 dias")
                     st.markdown("")
                     if st.form_submit_button("Acessar Sistema", type="primary", use_container_width=True):
@@ -57,6 +58,10 @@ def show_login_page():
                             with st.spinner("Autenticando..."):
                                 success, message, user_data = authenticate_user(email, password)
                                 if success:
+                                    if user_data.get('user_type') == 'professor':
+                                        if prof_code_login != 'pr0f3ss-r':
+                                            st.error("Código de professor inválido.", icon="🔒")
+                                            st.stop()
                                     login_user(user_data)
                                     if remember_me:
                                         token = create_auth_token(user_data['id'])
@@ -78,12 +83,14 @@ def show_login_page():
                     
                     user_type = None
                     ra = None
+                    prof_code_register = ''
                     consent_given = True  # Default para professores
                     
                     if email and '@' in email:
                         domain = email.split('@')[1].lower()
                         if 'professor' in email or domain == 'fcmsantacasasp.edu.br': 
                             user_type = 'professor'
+                            prof_code_register = st.text_input("🔒 Código de Professor", type="password", placeholder="Código obrigatório para professores")
                         else: 
                             user_type = 'aluno'
                             ra = st.text_input("RA")
@@ -110,6 +117,8 @@ def show_login_page():
                         elif len(password) < 6: st.error("Senha curta.")
                         elif user_type == 'aluno' and not consent_given:
                             st.error("⚠️ Você precisa concordar com os termos de uso para prosseguir")
+                        elif user_type == 'professor' and prof_code_register != 'pr0f3ss-r':
+                            st.error("🔒 Código de professor inválido. Solicite o código correto ao administrador.")
                         else:
                             success, msg = register_user(name, email, password, user_type or 'aluno', ra)
                             if success: st.success("Conta criada! Acesse a aba 'Entrar'.")
