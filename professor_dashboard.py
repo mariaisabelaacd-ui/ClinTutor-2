@@ -6,6 +6,8 @@ import plotly.graph_objects as go
 from datetime import datetime, timedelta
 from typing import Dict, List, Any
 import textwrap
+from io import BytesIO
+from fpdf import FPDF
 from analytics import (
     get_all_users_analytics, get_global_stats,
     get_global_knowledge_component_stats, get_average_user_level,
@@ -21,6 +23,178 @@ from admin_utils import (
     log_admin_action, get_database_stats
 )
 from ui_helpers import icon, metric_card
+
+
+def generate_student_pdf(student: Dict, basic_stats: Dict, advanced_stats: Dict, 
+                         weakness: Dict, history_entries: list) -> bytes:
+    """Gera um PDF com o resumo completo do aluno"""
+    pdf = FPDF()
+    pdf.set_auto_page_break(auto=True, margin=20)
+    pdf.add_page()
+    
+    # ---- CABEÇALHO ----
+    pdf.set_fill_color(16, 185, 129)  # verde primário
+    pdf.rect(0, 0, 210, 40, 'F')
+    pdf.set_font('Helvetica', 'B', 22)
+    pdf.set_text_color(255, 255, 255)
+    pdf.cell(0, 15, 'Helix.AI', ln=True, align='C')
+    pdf.set_font('Helvetica', '', 11)
+    pdf.cell(0, 8, 'Relatorio do Aluno', ln=True, align='C')
+    pdf.set_font('Helvetica', '', 9)
+    pdf.cell(0, 7, f'Gerado em {datetime.now().strftime("%d/%m/%Y as %H:%M")}', ln=True, align='C')
+    pdf.ln(10)
+    
+    # ---- INFO DO ALUNO ----
+    pdf.set_text_color(0, 0, 0)
+    pdf.set_fill_color(240, 253, 244)  # verde claro
+    pdf.set_draw_color(16, 185, 129)
+    pdf.rect(10, pdf.get_y(), 190, 30, 'DF')
+    y_info = pdf.get_y() + 3
+    
+    pdf.set_xy(15, y_info)
+    pdf.set_font('Helvetica', 'B', 10)
+    pdf.cell(25, 6, 'Nome:', 0, 0)
+    pdf.set_font('Helvetica', '', 10)
+    pdf.cell(65, 6, student.get('name', 'N/A'), 0, 0)
+    
+    pdf.set_font('Helvetica', 'B', 10)
+    pdf.cell(15, 6, 'RA:', 0, 0)
+    pdf.set_font('Helvetica', '', 10)
+    pdf.cell(0, 6, student.get('ra', 'N/A'), 0, 1)
+    
+    pdf.set_x(15)
+    pdf.set_font('Helvetica', 'B', 10)
+    pdf.cell(25, 6, 'Turma:', 0, 0)
+    pdf.set_font('Helvetica', '', 10)
+    pdf.cell(65, 6, student.get('turma', 'Nao informada'), 0, 0)
+    
+    pdf.set_font('Helvetica', 'B', 10)
+    pdf.cell(15, 6, 'Email:', 0, 0)
+    pdf.set_font('Helvetica', '', 10)
+    pdf.cell(0, 6, student.get('email', 'N/A'), 0, 1)
+    
+    pdf.ln(12)
+    
+    # ---- DESEMPENHO GERAL ----
+    case_stats = basic_stats.get('case_stats', {})
+    pdf.set_font('Helvetica', 'B', 14)
+    pdf.set_text_color(16, 185, 129)
+    pdf.cell(0, 10, 'Desempenho Geral', ln=True)
+    pdf.set_text_color(0, 0, 0)
+    
+    # Tabela de métricas
+    pdf.set_font('Helvetica', 'B', 9)
+    pdf.set_fill_color(241, 245, 249)
+    col_w = 38
+    headers = ['Questoes', 'Taxa Acertos', 'Nivel', 'Tempo Medio', 'Pontos']
+    for h in headers:
+        pdf.cell(col_w, 8, h, 1, 0, 'C', True)
+    pdf.ln()
+    
+    pdf.set_font('Helvetica', '', 9)
+    total = case_stats.get('total_cases', 0)
+    acc = case_stats.get('accuracy_rate', 0)
+    nivel = advanced_stats.get('nivel_estimado', 'N/A') if advanced_stats else 'N/A'
+    avg_time = format_duration(case_stats.get('avg_time_per_case', 0))
+    points = case_stats.get('total_points', 0)
+    values = [str(total), f'{acc:.1f}%', str(nivel), avg_time, str(points)]
+    for v in values:
+        pdf.cell(col_w, 8, v, 1, 0, 'C')
+    pdf.ln(12)
+    
+    # ---- DESEMPENHO POR COMPONENTE ----
+    comp_stats = basic_stats.get('component_stats', {})
+    if comp_stats:
+        pdf.set_font('Helvetica', 'B', 14)
+        pdf.set_text_color(16, 185, 129)
+        pdf.cell(0, 10, 'Desempenho por Componente', ln=True)
+        pdf.set_text_color(0, 0, 0)
+        
+        pdf.set_font('Helvetica', 'B', 9)
+        pdf.set_fill_color(241, 245, 249)
+        pdf.cell(80, 8, 'Componente', 1, 0, 'C', True)
+        pdf.cell(30, 8, 'Total', 1, 0, 'C', True)
+        pdf.cell(30, 8, 'Corretas', 1, 0, 'C', True)
+        pdf.cell(30, 8, 'Taxa', 1, 0, 'C', True)
+        pdf.ln()
+        
+        pdf.set_font('Helvetica', '', 9)
+        for comp_name, comp_data in comp_stats.items():
+            total_c = comp_data.get('total', 0)
+            correct_c = comp_data.get('correct', 0)
+            rate = (correct_c / total_c * 100) if total_c > 0 else 0
+            display_name = comp_name[:40] if len(comp_name) > 40 else comp_name
+            pdf.cell(80, 7, display_name, 1, 0, 'L')
+            pdf.cell(30, 7, str(total_c), 1, 0, 'C')
+            pdf.cell(30, 7, str(correct_c), 1, 0, 'C')
+            pdf.cell(30, 7, f'{rate:.0f}%', 1, 0, 'C')
+            pdf.ln()
+        pdf.ln(8)
+    
+    # ---- ANÁLISE DE FRAQUEZAS ----
+    weak_comps = weakness.get('weakest_components', [])
+    if weak_comps:
+        pdf.set_font('Helvetica', 'B', 14)
+        pdf.set_text_color(239, 68, 68)  # vermelho
+        pdf.cell(0, 10, 'Pontos Fracos Identificados', ln=True)
+        pdf.set_text_color(0, 0, 0)
+        pdf.set_font('Helvetica', '', 9)
+        for i, comp in enumerate(weak_comps[:5], 1):
+            name = comp.get('component', 'N/A')
+            rate = comp.get('accuracy_rate', 0)
+            pdf.cell(0, 6, f'  {i}. {name} (acerto: {rate:.0f}%)', ln=True)
+        pdf.ln(5)
+    
+    # ---- HISTÓRICO DE RESPOSTAS ----
+    if history_entries:
+        pdf.add_page()
+        pdf.set_font('Helvetica', 'B', 14)
+        pdf.set_text_color(16, 185, 129)
+        pdf.cell(0, 10, 'Historico de Respostas', ln=True)
+        pdf.set_text_color(0, 0, 0)
+        
+        pdf.set_font('Helvetica', 'B', 8)
+        pdf.set_fill_color(241, 245, 249)
+        pdf.cell(30, 7, 'Data', 1, 0, 'C', True)
+        pdf.cell(65, 7, 'Questao', 1, 0, 'C', True)
+        pdf.cell(35, 7, 'Componente', 1, 0, 'C', True)
+        pdf.cell(20, 7, 'Status', 1, 0, 'C', True)
+        pdf.cell(20, 7, 'Tempo', 1, 0, 'C', True)
+        pdf.cell(20, 7, 'Pontos', 1, 0, 'C', True)
+        pdf.ln()
+        
+        pdf.set_font('Helvetica', '', 7)
+        for item in history_entries[:50]:  # limita a 50 entries
+            date_str = item.get('Data', '')
+            q_text = item.get('Questao', '')[:35]
+            comp = item.get('Componente', '')[:18]
+            status = item.get('Status', '')
+            tempo = item.get('Tempo', '')
+            pts = str(item.get('Pontos', 0))
+            
+            # Cor por status
+            if status == 'Correto':
+                pdf.set_fill_color(220, 252, 231)
+            elif status == 'Parcial':
+                pdf.set_fill_color(254, 249, 195)
+            else:
+                pdf.set_fill_color(254, 226, 226)
+            
+            pdf.cell(30, 6, date_str, 1, 0, 'C')
+            pdf.cell(65, 6, q_text, 1, 0, 'L')
+            pdf.cell(35, 6, comp, 1, 0, 'C')
+            pdf.cell(20, 6, status, 1, 0, 'C', True)
+            pdf.cell(20, 6, tempo, 1, 0, 'C')
+            pdf.cell(20, 6, pts, 1, 0, 'C')
+            pdf.ln()
+    
+    # Rodapé
+    pdf.set_y(-15)
+    pdf.set_font('Helvetica', 'I', 8)
+    pdf.set_text_color(150, 150, 150)
+    pdf.cell(0, 10, 'Helix.AI - Plataforma de Tutoria em Biologia Molecular', 0, 0, 'C')
+    
+    return pdf.output()
 
 def show_advanced_professor_dashboard():
     """Dashboard redesenhado para professores com foco em insights acionáveis"""
@@ -873,12 +1047,16 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
                 })
             
             df_history = pd.DataFrame(history_summary)
-            csv = df_history.to_csv(index=False)
+            
+            # Gera PDF com resumo do aluno
+            pdf_bytes = generate_student_pdf(
+                selected_student, basic_stats, advanced_stats, weakness, history_summary
+            )
             st.download_button(
-                label="Baixar Histórico (CSV)",
-                data=csv,
-                file_name=f"historico_{selected_student['name'].replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.csv",
-                mime="text/csv"
+                label="Baixar Resumo (PDF)",
+                data=pdf_bytes,
+                file_name=f"resumo_{selected_student['name'].replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.pdf",
+                mime="application/pdf"
             )
         else:
             st.info("Nenhuma resposta encontrada com os filtros aplicados")

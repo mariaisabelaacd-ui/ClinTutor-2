@@ -12,4 +12,5 @@ toml
 requests>=2.31.0
 watchdog
 packaging
+fpdf2>=2.7.0
 # Force Reinstall Trigger
