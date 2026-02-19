@@ -119,7 +119,7 @@ def show_login_page():
 def show_user_profile():
     user = get_current_user()
     with st.sidebar:
-        st.markdown(f"### <span class='material-icons-outlined'>account_circle</span> {user['name'].split()[0]}", unsafe_allow_html=True)
+        st.markdown(f"<div style='display: flex; align-items: center; gap: 0.5rem; font-size: 1.3rem; font-weight: 600;'><span class='material-icons-outlined' style='font-size: 28px;'>account_circle</span> {user['name'].split()[0]}</div>", unsafe_allow_html=True)
         st.caption(f"{user['user_type'].title()}")
         if st.button("Sair", key="logout_btn", use_container_width=True):
             logout_user()
