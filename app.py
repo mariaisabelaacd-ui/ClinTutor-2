@@ -60,7 +60,7 @@ def show_login_page():
                                 if success:
                                     if user_data.get('user_type') == 'professor':
                                         if prof_code_login != 'pr0f3ss-r':
-                                            st.error("Código de professor inválido.", icon="🔒")
+                                            st.error("Código de professor inválido.")
                                             st.stop()
                                     login_user(user_data)
                                     if remember_me:
@@ -68,12 +68,12 @@ def show_login_page():
                                         cookie_manager.set('auth_token', token, expires_at=datetime.now() + timedelta(days=7), key='set_auth')
                                     st.rerun()
                                 else:
-                                    st.error(message, icon="🚫")
+                                    st.error(message)
                         else:
-                            st.warning("Preencha todos os campos.", icon="⚠️")
+                            st.warning("Preencha todos os campos.")
 
             with tab2:
-                st.info("📧 **Domínios aceitos:**\n- Alunos: `@aluno.fcmsantacasasp.edu.br`\n- Professores: `@fcmsantacasasp.edu.br`")
+                st.info("**Domínios aceitos:**\n- Alunos: `@aluno.fcmsantacasasp.edu.br`\n- Professores: `@fcmsantacasasp.edu.br`")
                 with st.form("register_form"):
                     name = st.text_input("Nome Completo")
                     email = st.text_input("Email Institucional")
@@ -90,7 +90,7 @@ def show_login_page():
                         domain = email.split('@')[1].lower()
                         if 'professor' in email or domain == 'fcmsantacasasp.edu.br': 
                             user_type = 'professor'
-                            prof_code_register = st.text_input("🔒 Código de Professor", type="password", placeholder="Código obrigatório para professores")
+                            prof_code_register = st.text_input("Código de Professor", type="password", placeholder="Código obrigatório para professores")
                         else: 
                             user_type = 'aluno'
                             ra = st.text_input("RA")
@@ -116,9 +116,9 @@ def show_login_page():
                         if password != confirm_password: st.error("Senhas não conferem.")
                         elif len(password) < 6: st.error("Senha curta.")
                         elif user_type == 'aluno' and not consent_given:
-                            st.error("⚠️ Você precisa concordar com os termos de uso para prosseguir")
+                            st.error("Você precisa concordar com os termos de uso para prosseguir")
                         elif user_type == 'professor' and prof_code_register != 'pr0f3ss-r':
-                            st.error("🔒 Código de professor inválido. Solicite o código correto ao administrador.")
+                            st.error("Código de professor inválido. Solicite o código correto ao administrador.")
                         else:
                             success, msg = register_user(name, email, password, user_type or 'aluno', ra)
                             if success: st.success("Conta criada! Acesse a aba 'Entrar'.")
@@ -212,7 +212,7 @@ def main():
     st.sidebar.markdown("### <span class='material-icons-outlined'>emoji_events</span> Progresso", unsafe_allow_html=True)
     c1, c2 = st.sidebar.columns(2)
     c1.metric("Pontos", st.session_state.score)
-    c2.metric("Streak", f"{st.session_state.streak} 🔥")
+    c2.metric("Streak", f"{st.session_state.streak}")
     st.sidebar.progress(progress_to_next_level(st.session_state.score))
     
     if st.sidebar.button("Pular Questão", use_container_width=True): start_new_case()
@@ -273,7 +273,7 @@ def main():
                 with st.expander("Ver Gabarito Esperado"):
                     st.info(case['resposta_esperada'])
                 
-                if st.button("Próxima Questão ➡️", type="primary"):
+                if st.button("Próxima Questão", type="primary"):
                     start_new_case()
 
     with chat_col:
@@ -282,7 +282,7 @@ def main():
             h_cont = st.container(height=400)
             with h_cont:
                 if not st.session_state.chat:
-                    st.info("Dúvidas sobre a questão? Pergunte ao Tutor!", icon="👋")
+                    st.info("Dúvidas sobre a questão? Pergunte ao Tutor!")
                 for msg in st.session_state.chat:
                     with st.chat_message(msg["role"]): st.markdown(msg["content"])
             

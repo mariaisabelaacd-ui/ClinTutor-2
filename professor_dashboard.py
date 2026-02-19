@@ -13,7 +13,7 @@ from analytics import (
     get_student_weakness_analysis, format_duration,
     get_user_chat_interactions
 )
-from auth_firebase import get_all_users, get_user_by_id
+from auth_firebase import get_all_users, get_user_by_id, delete_user
 from logic import get_case
 from admin_utils import (
     reset_student_analytics, clear_student_chat_interactions,
@@ -52,9 +52,9 @@ def show_advanced_professor_dashboard():
     
     # Sistema de tabs redesenhado: 3 tabs (adicionada aba Admin)
     tab1, tab2, tab3 = st.tabs([
-        "📊 Visão Geral", 
-        "👤 Análise Individual",
-        "⚙️ Admin"
+        "Visão Geral", 
+        "Análise Individual",
+        "Admin"
     ])
     
     with tab1:
@@ -74,7 +74,7 @@ def show_advanced_professor_dashboard():
 
 def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
     """Tab de visão geral com estatísticas gerais de todos os alunos"""
-    st.subheader("📈 Visão Geral da Turma")
+    st.markdown(f"## {icon('bar_chart', '#10b981', 28)} Visão Geral da Turma", unsafe_allow_html=True)
     
     # Carrega estatísticas globais
     global_stats = get_global_stats()
@@ -124,7 +124,7 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
                 </div>
             """, unsafe_allow_html=True)
         else:
-            st.metric("⚠️ Categoria Mais Difícil", "N/A", help="Componente com menor taxa de acerto geral")
+            st.metric("Categoria Mais Difícil", "N/A", help="Componente com menor taxa de acerto geral")
     
     
     with col4:
@@ -144,7 +144,7 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
             <div style='background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(5, 150, 105, 0.05) 100%); 
                         padding: 1rem; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.2);'>
                 <div style='color: #475569; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem;'>
-                    📊 Nível Médio
+                    {icon('bar_chart', '#475569', 18)} Nível Médio
                 </div>
                 <div style='color: {color}; font-size: 1.875rem; font-weight: 600;'>
                     {nivel_medio}
@@ -267,7 +267,7 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
         st.plotly_chart(fig_hardest, use_container_width=True)
         
         # Tabela detalhada
-        with st.expander("📋 Detalhes das Categorias Difíceis"):
+        with st.expander("Detalhes das Categorias Difíceis"):
             df_display = df_hardest[['componente', 'taxa_acerto', 'total_questoes', 'acertos', 'tempo_medio_formatado']].copy()
             df_display.columns = ['Componente', 'Taxa de Acerto (%)', 'Total de Questões', 'Acertos', 'Tempo Médio']
             st.dataframe(df_display, use_container_width=True, hide_index=True)
@@ -325,7 +325,7 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
                 need_attention['Taxa de Acerto'] = need_attention['Taxa de Acerto'].apply(lambda x: f"{x:.1f}%")
                 st.dataframe(need_attention, use_container_width=True, hide_index=True)
             else:
-                st.success("✅ Todos os alunos estão com bom desempenho!")
+                st.success("Todos os alunos estão com bom desempenho!")
     else:
         st.info("Nenhum aluno respondeu questões ainda")
 
@@ -344,13 +344,13 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
     
     with col2:
         filter_performance = st.selectbox(
-            "📊 Filtrar por desempenho",
+            "Filtrar por desempenho",
             ["Todos", "Acima da média", "Abaixo da média", "Sem atividade"]
         )
     
     with col3:
         filter_level = st.selectbox(
-            "📈 Filtrar por nível",
+            "Filtrar por nível",
             ["Todos", "Básico", "Intermediário", "Avançado"]
         )
     
@@ -371,7 +371,7 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
     
     student_names = [f"{student['name']} ({student['email']})" for student in filtered_students]
     selected_student_idx = st.selectbox(
-        "👤 Aluno:",
+        "Aluno:",
         range(len(student_names)),
         format_func=lambda x: student_names[x]
     )
@@ -564,7 +564,7 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
             st.info("Dados insuficientes")
     
     # Tabela detalhada
-    with st.expander("📋 Tabela Detalhada por Componente"):
+    with st.expander("Tabela Detalhada por Componente"):
         if advanced_stats['componentes']:
             df_comp_table = pd.DataFrame(advanced_stats['componentes'])
             df_comp_table.columns = ['Componente', 'Acurácia (%)', 'Total', 'Acertos']
@@ -714,11 +714,11 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
                     with col_content:
                         # Título do expander mais limpo
                         if is_partial:
-                            status_icon = "🟡" # Ou ⚠️
-                        elif is_correct:
-                            status_icon = "🟢"
+                            status_icon = icon('circle', '#eab308', 14)
+                        elif entry.get('case_result', {}).get('is_correct'):
+                            status_icon = icon('circle', '#10b981', 14)
                         else:
-                            status_icon = "🔴"
+                            status_icon = icon('circle', '#ef4444', 14)
                             
                         question_preview = q_info.get('pergunta', 'N/A')[:60] + "..."
                         
@@ -790,11 +790,11 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
             st.markdown("---")
             history_summary = []
             for item in filtered_entries:
-                status_txt = '✅ Correto'
+                status_txt = 'Correto'
                 if item['is_partial']:
-                    status_txt = '⚠️ Parcial'
+                    status_txt = 'Parcial'
                 elif not item['is_correct']:
-                    status_txt = '❌ Incorreto'
+                    status_txt = 'Incorreto'
                     
                 history_summary.append({
                     'Data': item['timestamp'].strftime('%d/%m/%Y %H:%M'),
@@ -809,7 +809,7 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
             df_history = pd.DataFrame(history_summary)
             csv = df_history.to_csv(index=False)
             st.download_button(
-                label="📥 Baixar Histórico (CSV)",
+                label="Baixar Histórico (CSV)",
                 data=csv,
                 file_name=f"historico_{selected_student['name'].replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.csv",
                 mime="text/csv"
@@ -822,7 +822,7 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
     st.markdown("---")
     
     # ===== SEÇÃO: EVOLUÇÃO TEMPORAL =====
-    st.markdown("### 📈 Evolução Temporal")
+    st.markdown(f"### {icon('trending_up', '#10b981', 24)} Evolução Temporal", unsafe_allow_html=True)
     
     weekly_perf = evolution.get('desempenho_semanal', {})
     trend = evolution.get('tendencia', 'estável')
@@ -854,11 +854,11 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
         
         # Indicador de tendência
         if trend == 'melhorando':
-            st.success("📈 **Tendência Positiva**: O aluno está melhorando!")
+            st.success("**Tendência Positiva**: O aluno está melhorando!")
         elif trend == 'piorando':
-            st.error("📉 **Atenção**: O desempenho está caindo")
+            st.error("**Atenção**: O desempenho está caindo")
         else:
-            st.info("➡️ **Tendência Estável**: Desempenho consistente")
+            st.info("**Tendência Estável**: Desempenho consistente")
     else:
         st.info("Dados insuficientes para análise temporal (mínimo 1 semana de atividade)")
 
@@ -866,7 +866,7 @@ def show_admin_tab(student_users: List[Dict]):
     """Tab de administração para gerenciar banco de dados"""
     st.markdown(f"## {icon('admin_panel_settings', '#eab308', 28)} Painel de Administração", unsafe_allow_html=True)
     
-    st.warning("⚠️ **ATENÇÃO**: Esta área contém operações que podem deletar dados permanentemente!")
+    st.warning("**ATENÇÃO**: Esta área contém operações que podem deletar dados permanentemente!")
     
     st.markdown("---")
     
@@ -886,7 +886,7 @@ def show_admin_tab(student_users: List[Dict]):
     
     with col2:
         st.metric(
-            "💬 Total de Interações Chat",
+            "Total de Interações Chat",
             db_stats['total_chat_interactions'],
             help="Total de registros de chat_interactions no banco"
         )
@@ -930,7 +930,7 @@ def show_admin_tab(student_users: List[Dict]):
                 # Confirmação
                 if 'confirm_reset_student' not in st.session_state:
                     st.session_state.confirm_reset_student = True
-                    st.warning("⚠️ Clique novamente para confirmar")
+                    st.warning("Clique novamente para confirmar")
                 else:
                     with st.spinner("Resetando questões..."):
                         success = reset_student_analytics(student_id)
@@ -940,11 +940,11 @@ def show_admin_tab(student_users: List[Dict]):
                                 f"Resetadas questões do aluno {selected_student['name']} (ID: {student_id})",
                                 student_id
                             )
-                            st.success(f"✅ Questões de {selected_student['name']} resetadas com sucesso!")
+                            st.success(f"Questões de {selected_student['name']} resetadas com sucesso!")
                             del st.session_state.confirm_reset_student
                             st.rerun()
                         else:
-                            st.error("❌ Erro ao resetar questões")
+                            st.error("Erro ao resetar questões")
                             del st.session_state.confirm_reset_student
         
         with col2:
@@ -955,7 +955,7 @@ def show_admin_tab(student_users: List[Dict]):
                 # Confirmação
                 if 'confirm_clear_student_chat' not in st.session_state:
                     st.session_state.confirm_clear_student_chat = True
-                    st.warning("⚠️ Clique novamente para confirmar")
+                    st.warning("Clique novamente para confirmar")
                 else:
                     with st.spinner("Limpando chat..."):
                         success = clear_student_chat_interactions(student_id)
@@ -965,18 +965,58 @@ def show_admin_tab(student_users: List[Dict]):
                                 f"Limpado chat do aluno {selected_student['name']} (ID: {student_id})",
                                 student_id
                             )
-                            st.success(f"✅ Chat de {selected_student['name']} limpo com sucesso!")
+                            st.success(f"Chat de {selected_student['name']} limpo com sucesso!")
                             del st.session_state.confirm_clear_student_chat
                             st.rerun()
                         else:
-                            st.error("❌ Erro ao limpar chat")
+                            st.error("Erro ao limpar chat")
                             del st.session_state.confirm_clear_student_chat
+        
+        st.markdown("---")
+        
+        # ===== EXCLUIR CONTA DO ALUNO =====
+        st.markdown(f"#### {icon('person_remove', '#ef4444', 20)} Excluir Conta do Aluno", unsafe_allow_html=True)
+        st.caption("Remove o aluno completamente do banco de dados (conta, questões e chat)")
+        
+        confirm_delete_account = st.checkbox(
+            f"Confirmo que desejo EXCLUIR a conta de **{selected_student['name']}** permanentemente",
+            key="confirm_delete_account_checkbox"
+        )
+        
+        if st.button(
+            "EXCLUIR CONTA DO ALUNO",
+            key="delete_student_account",
+            type="primary",
+            disabled=not confirm_delete_account
+        ):
+            if 'confirm_delete_account' not in st.session_state:
+                st.session_state.confirm_delete_account = True
+                st.error("ÚLTIMA CHANCE: Clique novamente para CONFIRMAR a exclusão PERMANENTE desta conta!")
+            else:
+                with st.spinner("Excluindo conta..."):
+                    # Primeiro limpa dados vinculados
+                    reset_student_analytics(student_id)
+                    clear_student_chat_interactions(student_id)
+                    # Depois exclui a conta
+                    success, msg = delete_user(student_id)
+                    if success:
+                        log_admin_action(
+                            "delete_student_account",
+                            f"Excluída conta do aluno {selected_student['name']} ({selected_student['email']}), ID: {student_id}",
+                            student_id
+                        )
+                        st.success(f"Conta de {selected_student['name']} excluída com sucesso!")
+                        del st.session_state.confirm_delete_account
+                        st.rerun()
+                    else:
+                        st.error(f"Erro ao excluir conta: {msg}")
+                        del st.session_state.confirm_delete_account
     
     st.markdown("---")
     
     # ===== AÇÕES GLOBAIS =====
     st.markdown(f"### {icon('public', '#f59e0b', 24)} Gerenciar Todos os Alunos", unsafe_allow_html=True)
-    st.error("⚠️ **PERIGO**: Estas ações afetam TODOS os alunos e são IRREVERSÍVEIS!")
+    st.error("**PERIGO**: Estas ações afetam TODOS os alunos e são IRREVERSÍVEIS!")
     
     col1, col2 = st.columns(2)
     
@@ -999,7 +1039,7 @@ def show_admin_tab(student_users: List[Dict]):
             # Dupla confirmação
             if 'confirm_reset_all' not in st.session_state:
                 st.session_state.confirm_reset_all = True
-                st.error("🚨 ÚLTIMA CHANCE: Clique novamente para CONFIRMAR a deleção de TODOS os dados!")
+                st.error("ÚLTIMA CHANCE: Clique novamente para CONFIRMAR a deleção de TODOS os dados!")
             else:
                 with st.spinner("Resetando TODAS as questões..."):
                     result = reset_all_students_analytics()
@@ -1008,13 +1048,13 @@ def show_admin_tab(student_users: List[Dict]):
                             "reset_all_analytics",
                             f"Resetadas TODAS as questões: {result['deleted']} registros deletados, {result['errors']} erros"
                         )
-                        st.success(f"✅ {result['deleted']} questões resetadas com sucesso!")
+                        st.success(f"{result['deleted']} questões resetadas com sucesso!")
                         if result['errors'] > 0:
-                            st.warning(f"⚠️ {result['errors']} erros durante a operação")
+                            st.warning(f"{result['errors']} erros durante a operação")
                         del st.session_state.confirm_reset_all
                         st.rerun()
                     else:
-                        st.error("❌ Erro ao resetar questões")
+                        st.error("Erro ao resetar questões")
                         del st.session_state.confirm_reset_all
     
     with col2:
@@ -1036,7 +1076,7 @@ def show_admin_tab(student_users: List[Dict]):
             # Dupla confirmação
             if 'confirm_clear_all_chat' not in st.session_state:
                 st.session_state.confirm_clear_all_chat = True
-                st.error("🚨 ÚLTIMA CHANCE: Clique novamente para CONFIRMAR a deleção de TODAS as mensagens!")
+                st.error("ÚLTIMA CHANCE: Clique novamente para CONFIRMAR a deleção de TODAS as mensagens!")
             else:
                 with st.spinner("Limpando TODOS os chats..."):
                     result = clear_all_chat_interactions()
@@ -1045,21 +1085,21 @@ def show_admin_tab(student_users: List[Dict]):
                             "clear_all_chat",
                             f"Limpados TODOS os chats: {result['deleted']} registros deletados, {result['errors']} erros"
                         )
-                        st.success(f"✅ {result['deleted']} mensagens deletadas com sucesso!")
+                        st.success(f"{result['deleted']} mensagens deletadas com sucesso!")
                         if result['errors'] > 0:
-                            st.warning(f"⚠️ {result['errors']} erros durante a operação")
+                            st.warning(f"{result['errors']} erros durante a operação")
                         del st.session_state.confirm_clear_all_chat
                         st.rerun()
                     else:
-                        st.error("❌ Erro ao limpar chats")
+                        st.error("Erro ao limpar chats")
                         del st.session_state.confirm_clear_all_chat
     
     st.markdown("---")
     
     # ===== INFORMAÇÕES =====
-    st.markdown("### ℹ️ Informações")
+    st.markdown(f"### {icon('info', '#3b82f6', 24)} Informações", unsafe_allow_html=True)
     
-    with st.expander("📋 Sobre as Operações de Admin"):
+    with st.expander("Sobre as Operações de Admin"):
         st.markdown("""
         **Resetar Questões:**
         - Remove todos os registros de `case_analytics` do aluno
