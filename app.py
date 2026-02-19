@@ -42,7 +42,7 @@ def show_login_page():
     with col_center:
         st.markdown("<div style='text-align: center; margin-bottom: 2rem;'>", unsafe_allow_html=True)
         st.markdown(f"<h1 style='color: #11B965; font-size: 3.5em; margin:0;'>Helix.AI</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #94a3b8; font-size: 1.2em;'>Plataforma inteligente de tutoria em Biologia Molecular</p>", unsafe_allow_html=True)
+        st.markdown("<p style='font-size: 1.2em; opacity: 0.7;'>Plataforma inteligente de tutoria em Biologia Molecular</p>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
         with st.container(border=True):
             tab1, tab2 = st.tabs(["Entrar", "Criar Conta"])
