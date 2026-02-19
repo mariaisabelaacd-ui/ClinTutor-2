@@ -578,7 +578,7 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
     
     case_analytics = all_analytics.get(student_id, {}).get('case_analytics', [])
     
-        if case_analytics:
+    if case_analytics:
         # Filtros para histórico
         col1, col2, col3 = st.columns(3)
         
