@@ -194,7 +194,7 @@ def generate_student_pdf(student: Dict, basic_stats: Dict, advanced_stats: Dict,
     pdf.set_text_color(150, 150, 150)
     pdf.cell(0, 10, 'Helix.AI - Plataforma de Tutoria em Biologia Molecular', 0, 0, 'C')
     
-    return pdf.output()
+    return bytes(pdf.output())
 
 def show_advanced_professor_dashboard():
     """Dashboard redesenhado para professores com foco em insights acionáveis"""
