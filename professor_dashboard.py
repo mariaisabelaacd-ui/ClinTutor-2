@@ -76,6 +76,18 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
     """Tab de visão geral com estatísticas gerais de todos os alunos"""
     st.markdown(f"## {icon('bar_chart', '#10b981', 28)} Visão Geral da Turma", unsafe_allow_html=True)
     
+    # Filtro por turma
+    turma_filter = st.selectbox(
+        "Filtrar por turma",
+        ["Todas", "Biomedicina A", "Biomedicina B"],
+        key="turma_filter_overview"
+    )
+    if turma_filter != "Todas":
+        student_users = [s for s in student_users if s.get('turma') == turma_filter]
+        if not student_users:
+            st.info(f"Nenhum aluno encontrado na turma {turma_filter}.")
+            return
+    
     # Carrega estatísticas globais
     global_stats = get_global_stats()
     component_stats = get_global_knowledge_component_stats()
@@ -337,18 +349,25 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
     st.markdown(f"### {icon('search', '#10b981', 24)} Selecione um Aluno", unsafe_allow_html=True)
     
     # Filtros
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        search_term = st.text_input("🔍 Buscar por nome ou email", "")
+        search_term = st.text_input("Buscar por nome ou email", "")
     
     with col2:
+        turma_filter_ind = st.selectbox(
+            "Filtrar por turma",
+            ["Todas", "Biomedicina A", "Biomedicina B"],
+            key="turma_filter_individual"
+        )
+    
+    with col3:
         filter_performance = st.selectbox(
             "Filtrar por desempenho",
             ["Todos", "Acima da média", "Abaixo da média", "Sem atividade"]
         )
     
-    with col3:
+    with col4:
         filter_level = st.selectbox(
             "Filtrar por nível",
             ["Todos", "Básico", "Intermediário", "Avançado"]
@@ -364,12 +383,19 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
             if search_term.lower() in s['name'].lower() or search_term.lower() in s['email'].lower()
         ]
     
+    # Filtro de turma
+    if turma_filter_ind != "Todas":
+        filtered_students = [
+            s for s in filtered_students
+            if s.get('turma') == turma_filter_ind
+        ]
+    
     # Prepara lista para seleção
     if not filtered_students:
         st.warning("Nenhum aluno encontrado com os filtros aplicados.")
         return
     
-    student_names = [f"{student['name']} ({student['email']})" for student in filtered_students]
+    student_names = [f"{student['name']} — {student.get('turma', 'Sem turma')}" for student in filtered_students]
     selected_student_idx = st.selectbox(
         "Aluno:",
         range(len(student_names)),
@@ -396,9 +422,49 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
     comparison = profile['comparacao_turma']
     evolution = profile['evolucao_temporal']
     
-    # Cabeçalho do perfil
-    st.markdown(f"## {icon('account_circle', '#3b82f6', 32)} {selected_student['name']}", unsafe_allow_html=True)
-    st.caption(f"{icon('email', '#64748b', 16)} {selected_student['email']}", unsafe_allow_html=True)
+    # Mini Card de Informações do Aluno
+    turma_display = selected_student.get('turma', 'Não informada')
+    ra_display = selected_student.get('ra', 'N/A')
+    
+    st.markdown(f"""
+    <div style='background: var(--secondary-background-color); padding: 1.25rem; border-radius: 12px; 
+                border: 1px solid rgba(16, 185, 129, 0.2); margin-bottom: 1.5rem;'>
+        <div style='display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;'>
+            <div style='flex: 1; min-width: 200px;'>
+                <div style='font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;'>
+                    {icon('person', '#3b82f6', 16)} Nome
+                </div>
+                <div style='font-size: 1.25rem; font-weight: 600; color: var(--text-color);'>
+                    {selected_student['name']}
+                </div>
+            </div>
+            <div style='flex: 0.5; min-width: 100px;'>
+                <div style='font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;'>
+                    {icon('badge', '#8b5cf6', 16)} RA
+                </div>
+                <div style='font-size: 1.1rem; font-weight: 500; color: var(--text-color);'>
+                    {ra_display}
+                </div>
+            </div>
+            <div style='flex: 0.7; min-width: 140px;'>
+                <div style='font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;'>
+                    {icon('school', '#10b981', 16)} Turma
+                </div>
+                <div style='font-size: 1.1rem; font-weight: 500; color: var(--text-color);'>
+                    {turma_display}
+                </div>
+            </div>
+            <div style='flex: 1; min-width: 200px;'>
+                <div style='font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;'>
+                    {icon('email', '#64748b', 16)} Email
+                </div>
+                <div style='font-size: 0.9rem; font-weight: 400; color: var(--text-color); opacity: 0.8;'>
+                    {selected_student['email']}
+                </div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     
     # ===== SEÇÃO: DESEMPENHO GERAL =====
     st.markdown(f"### {icon('analytics', '#10b981', 24)} Desempenho Geral", unsafe_allow_html=True)

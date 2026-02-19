@@ -135,7 +135,7 @@ def email_exists(email: str) -> bool:
     else:
         return email_exists_local(email)
 
-def register_user_firebase(name: str, email: str, password: str, user_type: str, ra: str = None) -> Tuple[bool, str]:
+def register_user_firebase(name: str, email: str, password: str, user_type: str, ra: str = None, turma: str = None) -> Tuple[bool, str]:
     """Registra usuário no Firebase Authentication e Firestore (sem verificação de email)"""
     try:
         from firebase_config import create_firebase_user
@@ -165,10 +165,12 @@ def register_user_firebase(name: str, email: str, password: str, user_type: str,
         
         if user_type == "aluno" and ra:
             user_data['ra'] = ra.strip()
+        if user_type == "aluno" and turma:
+            user_data['turma'] = turma
         
         users_ref.document(auth_uid).set(user_data)
         
-        return True, f"✅ Cadastro realizado com sucesso! Você já pode fazer login."
+        return True, f"Cadastro realizado com sucesso! Você já pode fazer login."
         
     except Exception as e:
         return False, f"Erro ao cadastrar: {e}"
@@ -204,7 +206,7 @@ def register_user_local(name: str, email: str, password: str, user_type: str, ra
     
     return True, "Usuário cadastrado com sucesso localmente!"
 
-def register_user(name: str, email: str, password: str, user_type: str, ra: str = None) -> Tuple[bool, str]:
+def register_user(name: str, email: str, password: str, user_type: str, ra: str = None, turma: str = None) -> Tuple[bool, str]:
     """Registra um novo usuário (Firebase ou local) com validação de domínio"""
     # Validação de nome completo
     is_valid_name, name_error = validate_full_name(name)
@@ -220,11 +222,11 @@ def register_user(name: str, email: str, password: str, user_type: str, ra: str 
     # Validação de domínio
     is_valid_domain, detected_user_type = validate_email_domain(email)
     if not is_valid_domain:
-        return False, "❌ Email não permitido! Use apenas emails da Santa Casa:\n• Professores: @fcmsantacasasp.edu.br\n• Alunos: @aluno.fcmsantacasasp.edu.br"
+        return False, "Email não permitido! Use apenas emails da Santa Casa:\n• Professores: @fcmsantacasasp.edu.br\n• Alunos: @aluno.fcmsantacasasp.edu.br"
     
     # Verifica se o tipo de usuário corresponde ao domínio
     if user_type != detected_user_type:
-        return False, f"❌ Tipo de usuário incorreto! Email {email} deve ser registrado como {detected_user_type}"
+        return False, f"Tipo de usuário incorreto! Email {email} deve ser registrado como {detected_user_type}"
     
     if email_exists(email):
         return False, "Email já está cadastrado"
@@ -244,7 +246,7 @@ def register_user(name: str, email: str, password: str, user_type: str, ra: str 
     
     # Tenta Firebase primeiro, depois local
     if is_firebase_connected():
-        return register_user_firebase(name, email, password, user_type, ra)
+        return register_user_firebase(name, email, password, user_type, ra, turma)
     else:
         return register_user_local(name, email, password, user_type, ra)
 

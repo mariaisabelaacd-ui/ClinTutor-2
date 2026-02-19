@@ -83,6 +83,7 @@ def show_login_page():
                     
                     user_type = None
                     ra = None
+                    turma = None
                     prof_code_register = ''
                     consent_given = True  # Default para professores
                     
@@ -94,6 +95,7 @@ def show_login_page():
                         else: 
                             user_type = 'aluno'
                             ra = st.text_input("RA")
+                            turma = st.selectbox("Turma", ["Biomedicina A", "Biomedicina B"])
                             
                             # Termo de consentimento para alunos
                             st.markdown("---")
@@ -120,7 +122,7 @@ def show_login_page():
                         elif user_type == 'professor' and prof_code_register != 'pr0f3ss-r':
                             st.error("Código de professor inválido. Solicite o código correto ao administrador.")
                         else:
-                            success, msg = register_user(name, email, password, user_type or 'aluno', ra)
+                            success, msg = register_user(name, email, password, user_type or 'aluno', ra, turma)
                             if success: st.success("Conta criada! Acesse a aba 'Entrar'.")
                             else: st.error(msg)
     st.markdown("<div style='text-align: center; margin-top: 3rem; color: #999; font-size: 0.8em;'>Helix.AI v1.0</div>", unsafe_allow_html=True)
