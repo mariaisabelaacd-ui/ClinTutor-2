@@ -111,7 +111,7 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
             st.markdown(f"""
                 <div style='background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%); 
                             padding: 1rem; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.3);'>
-                    <div style='color: #94a3b8; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem;'>
+                    <div style='color: #475569; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem;'>
                         {icon('warning', '#ef4444', 18)} Categoria Mais Difícil
                     </div>
                     <div style='color: #ef4444; font-size: 1.5rem; font-weight: 600; margin-bottom: 0.25rem; 
@@ -143,7 +143,7 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
         st.markdown(f"""
             <div style='background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(5, 150, 105, 0.05) 100%); 
                         padding: 1rem; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.2);'>
-                <div style='color: #94a3b8; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem;'>
+                <div style='color: #475569; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem;'>
                     📊 Nível Médio
                 </div>
                 <div style='color: {color}; font-size: 1.875rem; font-weight: 600;'>
@@ -578,14 +578,14 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
     
     case_analytics = all_analytics.get(student_id, {}).get('case_analytics', [])
     
-    if case_analytics:
+        if case_analytics:
         # Filtros para histórico
         col1, col2, col3 = st.columns(3)
         
         with col1:
             filter_status_hist = st.selectbox(
                 "Status",
-                ["Todos", "Corretas", "Incorretas"],
+                ["Todos", "Corretas", "Parciais", "Incorretas"],
                 key="hist_status"
             )
         
@@ -614,15 +614,19 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
             result = entry.get('case_result', {})
             
             is_correct = result.get('is_correct', False)
+            classification = result.get('classification', '').upper()
+            is_partial = 'PARCIAL' in classification
             
             # Dados de filtro
             comps = q_info.get('componentes_conhecimento', [])
             diff = q_info.get('dificuldade', 'desconhecido')
             
             # Aplica filtros
-            if filter_status_hist == "Corretas" and not is_correct:
+            if filter_status_hist == "Corretas" and (not is_correct or is_partial):
                 continue
             if filter_status_hist == "Incorretas" and is_correct:
+                continue
+            if filter_status_hist == "Parciais" and not is_partial:
                 continue
             
             if filter_comp_hist != "Todos" and filter_comp_hist not in comps:
@@ -650,6 +654,8 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
                 'result': result,
                 'timestamp': timestamp,
                 'is_correct': is_correct,
+                'is_partial': is_partial,
+                'classification': classification,
                 'comps': comps,
                 'diff': diff
             })
@@ -690,6 +696,8 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
                     result = item['result']
                     timestamp = item['timestamp']
                     is_correct = item['is_correct']
+                    is_partial = item['is_partial']
+                    classification = item['classification']
                     comps = item['comps']
                     diff = item['diff']
                     
@@ -698,14 +706,20 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
                     
                     with col_time:
                         st.markdown(f"""
-                            <div style="text-align: right; padding-top: 10px; color: #64748b; font-size: 0.85rem;">
+                            <div style="text-align: right; padding-top: 10px; color: #475569; font-size: 0.85rem;">
                                 {timestamp.strftime('%H:%M')}
                             </div>
                         """, unsafe_allow_html=True)
                     
                     with col_content:
                         # Título do expander mais limpo
-                        status_icon = "🟢" if is_correct else "🔴"
+                        if is_partial:
+                            status_icon = "🟡" # Ou ⚠️
+                        elif is_correct:
+                            status_icon = "🟢"
+                        else:
+                            status_icon = "🔴"
+                            
                         question_preview = q_info.get('pergunta', 'N/A')[:60] + "..."
                         
                         # Usando container para simular timeline visual
@@ -719,7 +733,7 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
                             """, unsafe_allow_html=True)
                             
                             # Detalhes (expansível)
-                            with st.expander("Ver detalhes", expanded=False):
+                            with st.expander("Ver detalhes (Completo)", expanded=False):
                                 # Busca interações do chat para esta questão
                                 # Tenta buscar por case_id primeiro
                                 chat_interactions = get_user_chat_interactions(student_id, entry.get('case_id'))
@@ -734,7 +748,7 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
                                     student_answer=result.get('user_answer', None), # Passa None para ativar fallback
                                     expected_answer=q_info.get('resposta_esperada', None),
                                     feedback=result.get('feedback', None),
-                                    classification=result.get('classification', 'INCORRETA'),
+                                    classification=classification if classification else ('CORRETA' if is_correct else 'INCORRETA'),
                                     components=comps,
                                     difficulty=diff,
                                     time_spent=format_duration(entry.get('duration_seconds', 0)),
@@ -760,7 +774,7 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
                                         
                                         st.markdown(f"""
 <div style='background: #fdf2f8; padding: 0.75rem; border-radius: 8px; margin-bottom: 0.5rem; border-left: 3px solid #ec4899;'>
-<div style='color: #64748b; font-size: 0.75rem; margin-bottom: 0.25rem;'>
+<div style='color: #475569; font-size: 0.75rem; margin-bottom: 0.25rem;'>
 {icon('schedule', '#64748b', 14)} {chat_time}
 </div>
 <div style='color: #1e293b; font-size: 0.875rem; margin-bottom: 0.5rem;'>
@@ -776,12 +790,18 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
             st.markdown("---")
             history_summary = []
             for item in filtered_entries:
+                status_txt = '✅ Correto'
+                if item['is_partial']:
+                    status_txt = '⚠️ Parcial'
+                elif not item['is_correct']:
+                    status_txt = '❌ Incorreto'
+                    
                 history_summary.append({
                     'Data': item['timestamp'].strftime('%d/%m/%Y %H:%M'),
                     'Questão': item['q_info'].get('pergunta', 'N/A')[:50] + '...',
                     'Componente': ', '.join(item['comps']),
                     'Dificuldade': item['diff'].title(),
-                    'Status': '✅ Correto' if item['is_correct'] else '❌ Incorreto',
+                    'Status': status_txt,
                     'Tempo': format_duration(item['entry'].get('duration_seconds', 0)),
                     'Pontos': item['result'].get('points_gained', 0)
                 })
@@ -789,7 +809,7 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
             df_history = pd.DataFrame(history_summary)
             csv = df_history.to_csv(index=False)
             st.download_button(
-                label=f"{icon('download', '#10b981', 18)} Baixar Histórico (CSV)",
+                label="📥 Baixar Histórico (CSV)",
                 data=csv,
                 file_name=f"historico_{selected_student['name'].replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.csv",
                 mime="text/csv"
