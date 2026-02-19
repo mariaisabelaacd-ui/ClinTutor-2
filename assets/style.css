@@ -8,22 +8,17 @@ html,
 body,
 [class*="css"] {
     font-family: 'Inter', sans-serif;
-    color: #e2e8f0;
-    /* Slate-200 */
-    background-color: #0f172a;
-    /* Slate-900 */
+    color: var(--text-color);
+    background-color: var(--background-color);
 }
 
 :root {
     --primary-color: #10b981;
-    /* Emerald-500 */
-    --background-color: #0f172a;
-    --card-background: #1e293b;
-    /* Slate-800 */
-    --hover-background: #334155;
-    /* Slate-700 */
-    --text-color: #f8fafc;
-    --muted-text: #94a3b8;
+    --background-color: var(--background-color);
+    --card-background: var(--secondary-background-color);
+    --hover-background: var(--secondary-background-color);
+    --text-color: var(--text-color);
+    --muted-text: var(--text-color);
 }
 
 /* ==========================================================================
@@ -74,10 +69,10 @@ div[data-testid="stCard"] {
 .stSelectbox>div>div,
 .stNumberInput>div>div,
 .stTextArea>div>div {
-    background-color: #0f172a !important;
-    border: 1px solid #334155 !important;
+    background-color: var(--input-background-color, var(--secondary-background-color)) !important;
+    border: 1px solid var(--secondary-background-color) !important;
     border-radius: 8px !important;
-    color: #f8fafc !important;
+    color: var(--text-color) !important;
 }
 
 /* Remove default focus glow from Streamlit and replace with ours */
@@ -95,15 +90,15 @@ div[data-testid="stCard"] {
 .stNumberInput input,
 .stTextArea textarea {
     background-color: transparent !important;
-    color: #f8fafc !important;
+    color: var(--text-color) !important;
     border: none !important;
     /* Let parent handle border */
 }
 
 /* Fix for the "Red" border on forms (Streamlit validation) */
 [data-baseweb="input"] {
-    border-color: #334155 !important;
-    background-color: #0f172a !important;
+    border-color: var(--secondary-background-color) !important;
+    background-color: var(--secondary-background-color) !important;
     border-radius: 8px !important;
 }
 
@@ -125,8 +120,8 @@ div[data-testid="stCard"] {
 /* Secondary Button (Ghost/Outline) */
 .stButton button {
     background-color: transparent !important;
-    color: #e2e8f0 !important;
-    border: 1px solid #475569 !important;
+    color: var(--text-color) !important;
+    border: 1px solid var(--secondary-background-color) !important;
     border-radius: 8px !important;
     transition: all 0.2s ease !important;
 }
@@ -156,9 +151,9 @@ button[kind="primary"]:hover {
    6. SIDEBAR & TEXT ELEMENTS
    ========================================================================== */
 [data-testid="stSidebar"] {
-    background-color: #0f172a;
+    background-color: var(--background-color);
     /* Match body bg for seamless look */
-    border-right: 1px solid #1e293b;
+    border-right: 1px solid var(--secondary-background-color);
 }
 
 /* Headings & Text */
@@ -168,15 +163,14 @@ h3,
 h4,
 h5,
 h6 {
-    color: #f8fafc !important;
+    color: var(--text-color) !important;
 }
 
 p,
 span,
 label,
 div {
-    color: #cbd5e1;
-    /* Slate-300 */
+    color: var(--text-color);
 }
 
 /* Metric Value */
@@ -187,7 +181,7 @@ div {
 /* Expander/Accordion */
 .streamlit-expanderHeader {
     background-color: var(--card-background) !important;
-    color: #e2e8f0 !important;
+    color: var(--text-color) !important;
     border-radius: 8px !important;
 }
 
