@@ -7,7 +7,6 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Any
 import textwrap
 from io import BytesIO
-from fpdf import FPDF
 from analytics import (
     get_all_users_analytics, get_global_stats,
     get_global_knowledge_component_stats, get_average_user_level,
@@ -28,6 +27,7 @@ from ui_helpers import icon, metric_card
 def generate_student_pdf(student: Dict, basic_stats: Dict, advanced_stats: Dict, 
                          weakness: Dict, history_entries: list) -> bytes:
     """Gera um PDF com o resumo completo do aluno"""
+    from fpdf import FPDF
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=20)
     pdf.add_page()
