@@ -143,8 +143,8 @@ def answer_detail_card(question_text: str, student_answer: str, expected_answer:
 </div>
 <!-- Pergunta -->
 <div style='background: rgba(255, 255, 255, 0.7); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;'>
-<div style='color: #64748b; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;'>
-{icon('help_outline', '#64748b', 16)} Pergunta
+<div style='color: #475569; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;'>
+{icon('help_outline', '#475569', 16)} Pergunta
 </div>
 <div style='color: #1e293b; font-size: 0.95rem; line-height: 1.5;'>
 {question_text}
