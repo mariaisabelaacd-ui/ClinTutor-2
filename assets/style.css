@@ -8,17 +8,24 @@ html,
 body,
 [class*="css"] {
     font-family: 'Inter', sans-serif;
-    color: var(--text-color);
-    background-color: var(--background-color);
+    color: #e2e8f0;
+    /* Slate-200 - softer than pure white */
+    background-color: #0f172a;
+    /* Slate-900 */
 }
 
 :root {
     --primary-color: #10b981;
-    --background-color: var(--background-color);
-    --card-background: var(--secondary-background-color);
-    --hover-background: var(--secondary-background-color);
-    --text-color: var(--text-color);
-    --muted-text: var(--text-color);
+    /* Emerald-500 */
+    --background-color: #0f172a;
+    --card-background: #1e293b;
+    /* Slate-800 */
+    --hover-background: #334155;
+    /* Slate-700 */
+    --text-color: #e2e8f0;
+    /* Slate-200 - soft white */
+    --muted-text: #94a3b8;
+    /* Slate-400 */
 }
 
 /* ==========================================================================
@@ -33,6 +40,41 @@ footer,
 
 [data-testid="stHeader"] {
     background-color: transparent !important;
+}
+
+/* ==========================================================================
+   2.5 HAMBURGER MENU BUTTON (SIDEBAR TOGGLE)
+   ========================================================================== */
+button[data-testid="stSidebarCollapsedControl"]>svg,
+button[data-testid="collapsedControl"]>svg,
+[data-testid="stSidebar"] button[kind="header"]>svg {
+    color: #10b981 !important;
+    fill: #10b981 !important;
+    transition: all 0.3s ease !important;
+}
+
+button[data-testid="stSidebarCollapsedControl"],
+button[data-testid="collapsedControl"],
+[data-testid="stSidebar"] button[kind="header"] {
+    background: rgba(16, 185, 129, 0.1) !important;
+    border: 1px solid rgba(16, 185, 129, 0.3) !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+}
+
+button[data-testid="stSidebarCollapsedControl"]:hover,
+button[data-testid="collapsedControl"]:hover,
+[data-testid="stSidebar"] button[kind="header"]:hover {
+    background: rgba(16, 185, 129, 0.2) !important;
+    border-color: #10b981 !important;
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.3) !important;
+}
+
+button[data-testid="stSidebarCollapsedControl"]:hover>svg,
+button[data-testid="collapsedControl"]:hover>svg,
+[data-testid="stSidebar"] button[kind="header"]:hover>svg {
+    color: #34d399 !important;
+    fill: #34d399 !important;
 }
 
 /* ==========================================================================
@@ -69,10 +111,10 @@ div[data-testid="stCard"] {
 .stSelectbox>div>div,
 .stNumberInput>div>div,
 .stTextArea>div>div {
-    background-color: var(--input-background-color, var(--secondary-background-color)) !important;
-    border: 1px solid var(--secondary-background-color) !important;
+    background-color: #0f172a !important;
+    border: 1px solid #334155 !important;
     border-radius: 8px !important;
-    color: var(--text-color) !important;
+    color: #e2e8f0 !important;
 }
 
 /* Remove default focus glow from Streamlit and replace with ours */
@@ -90,15 +132,15 @@ div[data-testid="stCard"] {
 .stNumberInput input,
 .stTextArea textarea {
     background-color: transparent !important;
-    color: var(--text-color) !important;
+    color: #e2e8f0 !important;
     border: none !important;
     /* Let parent handle border */
 }
 
 /* Fix for the "Red" border on forms (Streamlit validation) */
 [data-baseweb="input"] {
-    border-color: var(--secondary-background-color) !important;
-    background-color: var(--secondary-background-color) !important;
+    border-color: #334155 !important;
+    background-color: #0f172a !important;
     border-radius: 8px !important;
 }
 
@@ -120,8 +162,8 @@ div[data-testid="stCard"] {
 /* Secondary Button (Ghost/Outline) */
 .stButton button {
     background-color: transparent !important;
-    color: var(--text-color) !important;
-    border: 1px solid var(--secondary-background-color) !important;
+    color: #e2e8f0 !important;
+    border: 1px solid #475569 !important;
     border-radius: 8px !important;
     transition: all 0.2s ease !important;
 }
@@ -151,9 +193,9 @@ button[kind="primary"]:hover {
    6. SIDEBAR & TEXT ELEMENTS
    ========================================================================== */
 [data-testid="stSidebar"] {
-    background-color: var(--background-color);
+    background-color: #0f172a;
     /* Match body bg for seamless look */
-    border-right: 1px solid var(--secondary-background-color);
+    border-right: 1px solid #1e293b;
 }
 
 /* Headings & Text */
@@ -163,14 +205,15 @@ h3,
 h4,
 h5,
 h6 {
-    color: var(--text-color) !important;
+    color: #e2e8f0 !important;
 }
 
 p,
 span,
 label,
 div {
-    color: var(--text-color);
+    color: #cbd5e1;
+    /* Slate-300 */
 }
 
 /* Metric Value */
@@ -181,7 +224,7 @@ div {
 /* Expander/Accordion */
 .streamlit-expanderHeader {
     background-color: var(--card-background) !important;
-    color: var(--text-color) !important;
+    color: #e2e8f0 !important;
     border-radius: 8px !important;
 }
 
