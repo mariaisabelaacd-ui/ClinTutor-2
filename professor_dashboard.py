@@ -1195,6 +1195,7 @@ def show_admin_tab(student_users: List[Dict]):
                             )
                             st.success(f"Questões de {selected_student['name']} resetadas com sucesso!")
                             del st.session_state.confirm_reset_student
+                            st.cache_data.clear()
                             st.rerun()
                         else:
                             st.error("Erro ao resetar questões")
@@ -1220,6 +1221,7 @@ def show_admin_tab(student_users: List[Dict]):
                             )
                             st.success(f"Chat de {selected_student['name']} limpo com sucesso!")
                             del st.session_state.confirm_clear_student_chat
+                            st.cache_data.clear()
                             st.rerun()
                         else:
                             st.error("Erro ao limpar chat")
@@ -1260,6 +1262,7 @@ def show_admin_tab(student_users: List[Dict]):
                         )
                         st.success(f"Conta de {selected_student['name']} excluída com sucesso!")
                         del st.session_state.confirm_delete_account
+                        st.cache_data.clear()
                         st.rerun()
                     else:
                         st.error(f"Erro ao excluir conta: {msg}")
@@ -1305,6 +1308,7 @@ def show_admin_tab(student_users: List[Dict]):
                         if result['errors'] > 0:
                             st.warning(f"{result['errors']} erros durante a operação")
                         del st.session_state.confirm_reset_all
+                        st.cache_data.clear()
                         st.rerun()
                     else:
                         st.error("Erro ao resetar questões")
@@ -1342,6 +1346,7 @@ def show_admin_tab(student_users: List[Dict]):
                         if result['errors'] > 0:
                             st.warning(f"{result['errors']} erros durante a operação")
                         del st.session_state.confirm_clear_all_chat
+                        st.cache_data.clear()
                         st.rerun()
                     else:
                         st.error("Erro ao limpar chats")
