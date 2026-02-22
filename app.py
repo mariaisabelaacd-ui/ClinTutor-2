@@ -334,6 +334,19 @@ def main():
                         full_resp = f"Erro: {e}"
                         st.error(full_resp)
                 
+                # NOVO: Registrar log do chat para aparecer nas métricas do painel
+                # Pegando user e case do escopo atual
+                user = get_current_user()
+                if user and st.session_state.current_case_id:
+                    # Registra a interação em background
+                    log_chat_interaction(
+                        user_id=user["id"], 
+                        case_id=st.session_state.current_case_id, 
+                        user_message=q_msg, 
+                        bot_response=full_resp, 
+                        response_time=None # Poderia medir usando time() mas None serve
+                    )
+                
                 st.session_state.chat.append({"role": "assistant", "content": full_resp})
                 st.rerun()
 

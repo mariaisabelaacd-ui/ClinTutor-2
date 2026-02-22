@@ -684,6 +684,13 @@ def get_student_advanced_stats(user_id: str) -> Dict[str, Any]:
     """
     case_analytics = get_user_case_analytics(user_id)
     
+    # IMPORTANTE: Desduplicação por case_id (pegar apenas a tentativa mais recente)
+    unique_cases = {}
+    for entry in case_analytics:
+        cid = entry.get('case_id')
+        if cid and cid not in unique_cases:
+            unique_cases[cid] = entry
+    
     # Importa aqui para evitar circularidade no topo, se houver
     from logic import QUESTIONS
     
@@ -696,7 +703,7 @@ def get_student_advanced_stats(user_id: str) -> Dict[str, Any]:
         "tempo_por_dificuldade": {}
     }
     
-    for entry in case_analytics:
+    for entry in unique_cases.values():
         cid = entry.get('case_id')
         result = entry.get('case_result', {})
         duration = entry.get('duration_seconds', 0)
@@ -905,6 +912,13 @@ def get_student_weakness_analysis(user_id: str) -> Dict[str, Any]:
             'padroes_erro': []
         }
     
+    # IMPORTANTE: Desduplicação por case_id
+    unique_cases = {}
+    for entry in case_analytics:
+        cid = entry.get('case_id')
+        if cid and cid not in unique_cases:
+            unique_cases[cid] = entry
+            
     # Análise por componente
     component_performance = {}
     difficulty_performance = {
@@ -913,7 +927,7 @@ def get_student_weakness_analysis(user_id: str) -> Dict[str, Any]:
         'avançado': {'total': 0, 'correct': 0}
     }
     
-    for entry in case_analytics:
+    for entry in unique_cases.values():
         cid = entry.get('case_id')
         result = entry.get('case_result', {})
         
