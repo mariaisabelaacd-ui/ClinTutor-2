@@ -200,34 +200,15 @@ LEVEL_MAP = {
 }
 
 def evaluate_answer_with_ai(question_data: Dict, user_answer: str) -> Dict[str, Any]:
-    client = get_groq_client()
-    if not client:
-        return {"correct": False, "feedback": "Erro: Cliente IA não configurado. Verifique as chaves.", "evaluation_type": "error"}
-
-    prompt = f"""
-    ATENÇÃO: Você é um professor rigoroso. Sua principal tarefa é avaliar se a RESPOSTA DO ALUNO responde DE FATO à PERGUNTA ATUAL.
-    Se o aluno escrever um fato biológico correto, mas que NÃO responda ao que foi especificamente perguntado, você DEVE marcar como INCORRETA.
-    
-    CONTEXTO DA QUESTÃO:
-    Pergunta Atual: "{question_data['pergunta']}"
-    Resposta Esperada: "{question_data['resposta_esperada']}"
-    Erro Crítico: "{question_data.get('erro_critico', 'N/A')}"
-    
-    RESPOSTA DO ALUNO: "{user_answer}"
-    
-    Avalie a resposta. 
-    Responda APENAS com um JSON válido (sem markdown), neste formato estrito:
-    {{
-        "correct": true/false,
-        "classification": "CORRETA" | "PARCIALMENTE CORRETA" | "INCORRETA",
-        "feedback": "Explicação curta."
-    }}
-    """
-    
-    # Retry logic for 503 errors
+    # Retry logic for Rate Limits (429) & 503 errors
     import time
     max_retries = 3
     for attempt in range(max_retries):
+        # MUDANÇA CRÍTICA: Instanciar um NOVO client a cada tentativa para pegar uma nova chave
+        client = get_groq_client()
+        if not client:
+            return {"correct": False, "feedback": "Erro: Cliente IA não configurado. Verifique as chaves.", "evaluation_type": "error"}
+            
         try:
             response = client.chat.completions.create(
                 model=MODEL_NAME, 
@@ -257,10 +238,10 @@ def evaluate_answer_with_ai(question_data: Dict, user_answer: str) -> Dict[str, 
                 }
                 
         except Exception as e:
-            print(f"Tentativa {attempt+1} falhou: {e}")
+            print(f"🔄 Tentativa {attempt+1}/{max_retries} falhou no Avaliador IA: {e}")
             if attempt == max_retries - 1:
-                return {"correct": False, "feedback": f"Erro IA (pós retentativas): {e}", "evaluation_type": "error"}
-            time.sleep(1) # Espera antes de tentar de novo
+                return {"correct": False, "feedback": f"Erro IA após tentar múltiplas chaves: {e}", "evaluation_type": "error"}
+            time.sleep(1) # Espera antes de tentar de novo com uma CHAVE DIFERENTE
 
 def _construir_contexto_para_ia(question: Dict[str, Any], chat_history: List[Dict[str, str]]) -> str:
     ctx = f"**Questão:** {question['pergunta']}\n"
@@ -273,11 +254,6 @@ def _construir_contexto_para_ia(question: Dict[str, Any], chat_history: List[Dic
     return ctx
 
 def tutor_reply_com_ia(question: Dict[str, Any], user_msg: str, chat_history: List[Dict[str, str]]) -> Generator[str, None, None]:
-    client = get_groq_client()
-    if not client:
-        yield "Erro: Cliente IA não configurado."
-        return
-
     contexto = _construir_contexto_para_ia(question, chat_history)
     prompt = f"""
     SITUAÇÃO: Você é um Tutor Inteligente estritamente Socrático de Biologia Molecular da plataforma Helix.AI.
@@ -298,18 +274,31 @@ def tutor_reply_com_ia(question: Dict[str, Any], user_msg: str, chat_history: Li
     
     Responda ao aluno ESTRITAMENTE focado em aplicar a Regra 3 (Perguntar de volta e induzir).
     """
-    try:
-        stream = client.chat.completions.create(
-            model=MODEL_NAME, 
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.7,
-            stream=True
-        )
-        for chunk in stream:
-            if chunk.choices[0].delta.content is not None:
-                yield chunk.choices[0].delta.content
-    except Exception as e:
-        yield f"Erro na IA: {e}"
+    import time
+    max_retries = 3
+    for attempt in range(max_retries):
+        client = get_groq_client()
+        if not client:
+            yield "Erro: Cliente IA não configurado."
+            return
+            
+        try:
+            stream = client.chat.completions.create(
+                model=MODEL_NAME, 
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.7,
+                stream=True
+            )
+            for chunk in stream:
+                if chunk.choices[0].delta.content is not None:
+                    yield chunk.choices[0].delta.content
+            return # Sai da função se o stream completou com sucesso sem crashar
+        except Exception as e:
+            print(f"🔄 Tentativa {attempt+1}/{max_retries} falhou no Tutor Chat: {e}")
+            if attempt == max_retries - 1:
+                yield f"Erro na IA após tentar múltiplas chaves: {e}"
+                return
+            time.sleep(1)
 
 # =============================
 # PERSISTÊNCIA
