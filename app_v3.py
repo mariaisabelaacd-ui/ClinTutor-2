@@ -138,7 +138,7 @@ def init_state():
         "score": 0, "streak": 0, "unlocked_level": 1,
         "current_case_id": None, "case_scored": False, "last_result": None,
         "chat": [], "show_next_case_btn": False, "used_cases": user_progress.get("used_cases", []),
-        "current_timer_id": None
+        "current_timer_id": None, "case_counter": 0
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -165,9 +165,8 @@ def start_new_case():
     try: st.session_state.current_timer_id = start_case_timer(user["id"], new_case["id"])
     except: pass
     
-    # Limpa a caixa de texto da resposta anterior
-    if "ans_input" in st.session_state:
-        del st.session_state["ans_input"]
+    # Increase counter to force text_area to remount clean
+    st.session_state.case_counter += 1
         
     st.session_state.case_scored = False
     st.session_state.last_result = None
@@ -238,7 +237,9 @@ def main():
     with main_col:
         with st.container(border=True):
             st.markdown("### Sua Resposta")
-            user_answer = st.text_area("Escreva sua explicação detalhada:", height=150, key="ans_input", disabled=st.session_state.case_scored)
+            # Dynamic key prevents text persistence between cases
+            text_key = f"ans_input_{st.session_state.get('case_counter', 0)}"
+            user_answer = st.text_area("Escreva sua explicação detalhada:", height=150, key=text_key, disabled=st.session_state.case_scored)
             
             if st.button("Enviar Resposta", type="primary", disabled=not user_answer or st.session_state.case_scored):
                 with st.spinner("IA Analisando sua resposta..."):
