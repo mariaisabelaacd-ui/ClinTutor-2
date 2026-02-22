@@ -199,20 +199,19 @@ def evaluate_answer_with_ai(question_data: Dict, user_answer: str) -> Dict[str, 
     if not CLIENT:
         return {"correct": False, "feedback": "Erro: Cliente IA não configurado.", "evaluation_type": "error"}
 
-def evaluate_answer_with_ai(question_data: Dict, user_answer: str) -> Dict[str, Any]:
-    if not CLIENT:
-        return {"correct": False, "feedback": "Erro: Cliente IA não configurado.", "evaluation_type": "error"}
-
     prompt = f"""
-    CONTEXTO:
-    Pergunta: "{question_data['pergunta']}"
+    ATENÇÃO: Você é um professor rigoroso. Sua principal tarefa é avaliar se a RESPOSTA DO ALUNO responde DE FATO à PERGUNTA ATUAL.
+    Se o aluno escrever um fato biológico correto, mas que NÃO responda ao que foi especificamente perguntado, você DEVE marcar como INCORRETA.
+    
+    CONTEXTO DA QUESTÃO:
+    Pergunta Atual: "{question_data['pergunta']}"
     Resposta Esperada: "{question_data['resposta_esperada']}"
     Erro Crítico: "{question_data.get('erro_critico', 'N/A')}"
     
-    ALUNO: "{user_answer}"
+    RESPOSTA DO ALUNO: "{user_answer}"
     
-    Avalie se está correto. 
-    Responda APENAS com um JSON válido (sem markdown), neste formato:
+    Avalie a resposta. 
+    Responda APENAS com um JSON válido (sem markdown), neste formato estrito:
     {{
         "correct": true/false,
         "classification": "CORRETA" | "PARCIALMENTE CORRETA" | "INCORRETA",
