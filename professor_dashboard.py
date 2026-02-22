@@ -166,14 +166,20 @@ def generate_student_pdf(student: Dict, basic_stats: Dict, advanced_stats: Dict,
         pdf.set_font('Helvetica', '', 7)
         for item in history_entries[:50]:  # limita a 50 entries
             date_str = item.get('Data', '')
-            q_text = item.get('Questao', '')[:35]
-            comp = item.get('Componente', '')[:18]
-            status = item.get('Status', '')
-            tempo = item.get('Tempo', '')
-            pts = str(item.get('Pontos', 0))
+            
+            def safe_text(txt):
+                if not txt: return ""
+                return str(txt).encode('latin-1', 'replace').decode('latin-1')
+            
+            q_text = safe_text(item.get('Questao', ''))[:35]
+            comp = safe_text(item.get('Componente', ''))[:18]
+            status = safe_text(item.get('Status', ''))
+            tempo = safe_text(item.get('Tempo', ''))
+            pts = safe_text(item.get('Pontos', 0))
+            ans_text = safe_text(item.get('Resposta_Aluno', ''))
             
             # Cor por status
-            if status == 'Correto':
+            if status == 'Correto' or status == 'Correta':
                 pdf.set_fill_color(220, 252, 231)
             elif status == 'Parcial':
                 pdf.set_fill_color(254, 249, 195)
@@ -187,8 +193,99 @@ def generate_student_pdf(student: Dict, basic_stats: Dict, advanced_stats: Dict,
             pdf.cell(20, 6, tempo, 1, 0, 'C')
             pdf.cell(20, 6, pts, 1, 0, 'C')
             pdf.ln()
+            
+            # Sub-linha da Resposta do Aluno
+            if ans_text and ans_text.lower() != 'n/a':
+                pdf.set_font('Helvetica', 'I', 7)
+                pdf.set_text_color(80, 80, 80)
+                pdf.cell(30, 5, '', 0, 0) # empty cell for indent
+                pdf.multi_cell(160, 5, f'Resposta do Aluno: {ans_text}', border=0, fill=False)
+                pdf.set_text_color(0, 0, 0)
+                pdf.set_font('Helvetica', '', 7)
     
     # Rodapé
+    pdf.set_y(-15)
+    pdf.set_font('Helvetica', 'I', 8)
+    pdf.set_text_color(150, 150, 150)
+    pdf.cell(0, 10, 'Helix.AI - Plataforma de Tutoria em Biologia Molecular', 0, 0, 'C')
+    
+    return bytes(pdf.output())
+
+def generate_class_pdf(turma_name: str, student_users: List[Dict], global_stats: Dict, component_stats: list) -> bytes:
+    """Gera um PDF com a visao geral da turma"""
+    from fpdf import FPDF
+    pdf = FPDF()
+    pdf.set_auto_page_break(auto=True, margin=20)
+    pdf.add_page()
+    
+    def safe_text(txt):
+        if not txt: return ""
+        return str(txt).encode('latin-1', 'replace').decode('latin-1')
+    
+    # ---- CABEÇALHO ----
+    pdf.set_fill_color(16, 185, 129)
+    pdf.rect(0, 0, 210, 40, 'F')
+    pdf.set_font('Helvetica', 'B', 22)
+    pdf.set_text_color(255, 255, 255)
+    pdf.cell(0, 15, 'Helix.AI', ln=True, align='C')
+    pdf.set_font('Helvetica', '', 11)
+    pdf.cell(0, 8, safe_text(f'Visao Geral - Turma: {turma_name}'), ln=True, align='C')
+    pdf.set_font('Helvetica', '', 9)
+    pdf.cell(0, 7, f'Gerado em {datetime.now().strftime("%d/%m/%Y as %H:%M")}', ln=True, align='C')
+    pdf.ln(10)
+    
+    pdf.set_text_color(0, 0, 0)
+    
+    # ---- METRICAS PRINCIPAIS ----
+    pdf.set_font('Helvetica', 'B', 14)
+    pdf.set_text_color(16, 185, 129)
+    pdf.cell(0, 10, 'Metricas Principais', ln=True)
+    pdf.set_text_color(0, 0, 0)
+    
+    pdf.set_font('Helvetica', 'B', 9)
+    pdf.set_fill_color(241, 245, 249)
+    col_w = 63
+    pdf.cell(col_w, 8, 'Total de Alunos', 1, 0, 'C', True)
+    pdf.cell(col_w, 8, 'Media Geral (%)', 1, 0, 'C', True)
+    pdf.cell(col_w, 8, 'Questoes Respondidas', 1, 0, 'C', True)
+    pdf.ln()
+    
+    pdf.set_font('Helvetica', '', 9)
+    total_alunos = len(student_users)
+    media_geral = f"{global_stats.get('average_accuracy_rate', 0):.1f}%"
+    tot_questoes = str(global_stats.get('total_cases', 0))
+    pdf.cell(col_w, 8, str(total_alunos), 1, 0, 'C')
+    pdf.cell(col_w, 8, media_geral, 1, 0, 'C')
+    pdf.cell(col_w, 8, tot_questoes, 1, 0, 'C')
+    pdf.ln(15)
+    
+    # ---- DESEMPENHO POR COMPONENTE ----
+    if component_stats:
+        pdf.set_font('Helvetica', 'B', 14)
+        pdf.set_text_color(16, 185, 129)
+        pdf.cell(0, 10, 'Desempenho por Categoria', ln=True)
+        pdf.set_text_color(0, 0, 0)
+        
+        pdf.set_font('Helvetica', 'B', 9)
+        pdf.cell(100, 8, 'Componente', 1, 0, 'C', True)
+        pdf.cell(30, 8, 'Tentativas', 1, 0, 'C', True)
+        pdf.cell(30, 8, 'Acertos', 1, 0, 'C', True)
+        pdf.cell(30, 8, 'Acuracia', 1, 0, 'C', True)
+        pdf.ln()
+        
+        pdf.set_font('Helvetica', '', 9)
+        sorted_comps = sorted(component_stats, key=lambda x: x.get('taxa_acerto', 0), reverse=True)
+        for comp in sorted_comps:
+            nome = safe_text(comp.get('componente', 'N/A'))[:45]
+            tot = str(comp.get('total_attempts', 0))
+            corr = str(comp.get('total_correct', 0))
+            acc = f"{comp.get('taxa_acerto', 0):.1f}%"
+            pdf.cell(100, 7, nome, 1, 0, 'L')
+            pdf.cell(30, 7, tot, 1, 0, 'C')
+            pdf.cell(30, 7, corr, 1, 0, 'C')
+            pdf.cell(30, 7, acc, 1, 0, 'C')
+            pdf.ln()
+    
     pdf.set_y(-15)
     pdf.set_font('Helvetica', 'I', 8)
     pdf.set_text_color(150, 150, 150)
@@ -355,6 +452,17 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
             icon_color="#8b5cf6"
         ), unsafe_allow_html=True)
     
+    st.markdown("---")
+    
+    # PDF de Visão Geral
+    pdf_bytes_class = generate_class_pdf(turma_filter, student_users, global_stats, component_stats)
+    st.download_button(
+        label=f"📥 Baixar Relatório da Turma ({turma_filter}) - PDF",
+        data=pdf_bytes_class,
+        file_name=f"relatorio_turma_{turma_filter.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.pdf",
+        mime="application/pdf",
+        use_container_width=True
+    )
     st.markdown("---")
     
     # ===== VISUALIZAÇÕES =====
@@ -1052,7 +1160,8 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
                     'Dificuldade': item['diff'].title(),
                     'Status': status_txt,
                     'Tempo': format_duration(item['entry'].get('duration_seconds', 0)),
-                    'Pontos': item['result'].get('points_gained', 0)
+                    'Pontos': item['result'].get('points_gained', 0),
+                    'Resposta_Aluno': item['result'].get('user_answer', 'N/A')
                 })
             
             df_history = pd.DataFrame(history_summary)
