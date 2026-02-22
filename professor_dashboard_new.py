@@ -8,7 +8,7 @@ from analytics import (
     get_all_users_analytics, get_global_stats,
     get_global_knowledge_component_stats, get_average_user_level,
     get_hardest_categories, get_student_complete_profile,
-    get_student_weakness_analysis, format_duration
+    get_student_weakness_analysis, format_duration, get_user_chat_interactions
 )
 from auth_firebase import get_all_users, get_user_by_id
 from logic import get_case
@@ -615,3 +615,48 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
             st.info("➡️ **Tendência Estável**: Desempenho consistente")
     else:
         st.info("Dados insuficientes para análise temporal (mínimo 1 semana de atividade)")
+        
+    st.markdown("---")
+    
+    # ===== SEÇÃO: HISTÓRICO DO TUTOR IA =====
+    st.markdown("### 💬 Histórico do Tutor IA")
+    chat_history = get_user_chat_interactions(student_id)
+    
+    if chat_history:
+        st.write(f"Encontradas {len(chat_history)} interações com a IA.")
+        
+        # Filtro opcional por questão para facilitar a vida do professor
+        all_cases_in_chat = set()
+        for chat in chat_history:
+            if chat.get('case_id'):
+                all_cases_in_chat.add(chat['case_id'])
+                
+        selected_case_filter = st.selectbox(
+            "Filtrar por Questão:",
+            ["Todas as Questões"] + sorted(list(all_cases_in_chat)),
+            key="chat_filter"
+        )
+        
+        # Exibe os chats
+        for chat in chat_history:
+            if selected_case_filter != "Todas as Questões" and chat.get('case_id') != selected_case_filter:
+                continue
+                
+            timestamp = chat.get('timestamp', '')
+            if isinstance(timestamp, str) and 'T' in timestamp:
+                dt = datetime.fromisoformat(timestamp)
+                timestamp_str = dt.strftime('%d/%m/%Y %H:%M')
+            else:
+                timestamp_str = str(timestamp)
+                
+            q_info = get_case(chat.get('case_id', ''))
+            q_title = q_info.get('pergunta', 'Questão Desconhecida')[:60] + '...'
+            
+            with st.expander(f"🕒 {timestamp_str} | Questão: {q_title}"):
+                st.markdown("**👤 Aluno perguntou:**")
+                st.info(chat.get('user_message', 'MENSAGEM VAZIA'))
+                
+                st.markdown("**🤖 IA respondeu:**")
+                st.success(chat.get('bot_response', 'MENSAGEM VAZIA'))
+    else:
+        st.info("Este aluno ainda não utilizou o Tutor IA.")
