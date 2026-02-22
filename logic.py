@@ -45,8 +45,8 @@ if not CLIENT:
         print(f"Erro no Fallback st.secrets: {e}")
         CLIENT = None
 
-# Modelo Padrão do Groq
-MODEL_NAME = "llama-3.3-70b-versatile"
+# Modelo Padrão do Groq (Versão 8B para limite muito maior de tokens por minuto)
+MODEL_NAME = "llama-3.1-8b-instant"
 
 APP_NAME = "Helix.AI"
 DATA_DIR = os.path.join(os.path.expanduser("~"), ".clintutor")
