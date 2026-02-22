@@ -382,6 +382,8 @@ def delete_user_firebase(user_id: str) -> Tuple[bool, str]:
         # Remove do Firebase Authentication
         auth_deleted = delete_firebase_auth_user(user_id)
         
+        import streamlit as st
+        st.cache_data.clear() # Fix for ghosting
         if auth_deleted:
             return True, "Usuário removido completamente do Firebase!"
         else:
@@ -395,6 +397,8 @@ def delete_user_local(user_id: int) -> Tuple[bool, str]:
     users = load_users_local()
     users = [user for user in users if user["id"] != user_id]
     save_users_local(users)
+    import streamlit as st
+    st.cache_data.clear()
     return True, "Usuário removido com sucesso!"
 
 def delete_user(user_id) -> Tuple[bool, str]:
