@@ -45,6 +45,8 @@ def get_groq_client():
         return None
     # Escolhe uma chave aleatoria para dividir a carga e evitar Rate Limit (429)
     key = random.choice(GROQ_API_KEYS)
+    safe_key = key[:10] + "..." + key[-5:]
+    print(f"🤖 [IA LOGGER] Requisição enviada. Usando chave Groq: {safe_key}", flush=True)
     return Groq(api_key=key)
 
 # Modelo Padrão do Groq (Versão 8B para limite muito maior de tokens por minuto)
