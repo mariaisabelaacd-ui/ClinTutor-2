@@ -198,10 +198,12 @@ def generate_student_pdf(student: Dict, basic_stats: Dict, advanced_stats: Dict,
             if ans_text and ans_text.lower() != 'n/a':
                 pdf.set_font('Helvetica', 'I', 7)
                 pdf.set_text_color(80, 80, 80)
-                pdf.cell(30, 5, '', 0, 0) # empty cell for indent
+                pdf.set_x(40) # margin is at 10, shift right by 30
                 pdf.multi_cell(160, 5, f'Resposta do Aluno: {ans_text}', border=0, fill=False)
                 pdf.set_text_color(0, 0, 0)
                 pdf.set_font('Helvetica', '', 7)
+                # FIX: reset X to default margin (10) so the next table row is not offset
+                pdf.set_x(10)
     
     # Rodapé
     pdf.set_y(-15)
