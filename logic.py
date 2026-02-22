@@ -9,41 +9,43 @@ import numpy as np
 print("DEBUG: LOADED LOGIC.PY v4 (GROQ SDK - LLAMA 3)")
 
 # =============================
-# CONFIGURAÇÃO DA IA (GROQ)
+# CONFIGURAÇÃO DA IA (GROQ LOAD BALANCER)
 # =============================
-GROQ_API_KEY = None
-CLIENT = None
+GROQ_API_KEYS = []
 
 try:
     import toml
-    
-    # Bypass st.secrets to avoid caching issues
     secrets_path = os.path.join(os.path.dirname(__file__), ".streamlit", "secrets.toml")
-    print(f"DEBUG: Loading secrets from {secrets_path}")
-    
     try:
         with open(secrets_path, "r") as f:
             secrets_data = toml.load(f)
             
-        if 'groq_api' in secrets_data and 'api_key' in secrets_data['groq_api']:
-            GROQ_API_KEY = secrets_data['groq_api']['api_key']
-            print(f"DEBUG: Loaded Key Direct: {GROQ_API_KEY[:5]}...{GROQ_API_KEY[-5:]}")
-            CLIENT = Groq(api_key=GROQ_API_KEY)
-        else:
-            print("AVISO: Chave api_key do groq não encontrada no TOML.")
+        if 'groq_api' in secrets_data and 'api_keys' in secrets_data['groq_api']:
+            GROQ_API_KEYS = secrets_data['groq_api']['api_keys']
+        elif 'groq_api' in secrets_data and 'api_key' in secrets_data['groq_api']:
+            GROQ_API_KEYS = [secrets_data['groq_api']['api_key']]
     except Exception as e:
         print(f"Erro ao carregar TOML direto: {e}")
 except ImportError:
-    print("AVISO: Biblioteca toml não instalada.")
+    pass
 
-if not CLIENT:
-    # Fallback to st.secrets just in case
+if not GROQ_API_KEYS:
+    # Fallback to st.secrets
     try:
-        GROQ_API_KEY = st.secrets["groq_api"]["api_key"]
-        CLIENT = Groq(api_key=GROQ_API_KEY)
+        if "api_keys" in st.secrets["groq_api"]:
+            GROQ_API_KEYS = list(st.secrets["groq_api"]["api_keys"])
+        elif "api_key" in st.secrets["groq_api"]:
+            GROQ_API_KEYS = [st.secrets["groq_api"]["api_key"]]
     except Exception as e:
         print(f"Erro no Fallback st.secrets: {e}")
-        CLIENT = None
+
+import random
+def get_groq_client():
+    if not GROQ_API_KEYS:
+        return None
+    # Escolhe uma chave aleatoria para dividir a carga e evitar Rate Limit (429)
+    key = random.choice(GROQ_API_KEYS)
+    return Groq(api_key=key)
 
 # Modelo Padrão do Groq (Versão 8B para limite muito maior de tokens por minuto)
 MODEL_NAME = "llama-3.1-8b-instant"
@@ -196,8 +198,9 @@ LEVEL_MAP = {
 }
 
 def evaluate_answer_with_ai(question_data: Dict, user_answer: str) -> Dict[str, Any]:
-    if not CLIENT:
-        return {"correct": False, "feedback": "Erro: Cliente IA não configurado.", "evaluation_type": "error"}
+    client = get_groq_client()
+    if not client:
+        return {"correct": False, "feedback": "Erro: Cliente IA não configurado. Verifique as chaves.", "evaluation_type": "error"}
 
     prompt = f"""
     ATENÇÃO: Você é um professor rigoroso. Sua principal tarefa é avaliar se a RESPOSTA DO ALUNO responde DE FATO à PERGUNTA ATUAL.
@@ -224,7 +227,7 @@ def evaluate_answer_with_ai(question_data: Dict, user_answer: str) -> Dict[str, 
     max_retries = 3
     for attempt in range(max_retries):
         try:
-            response = CLIENT.chat.completions.create(
+            response = client.chat.completions.create(
                 model=MODEL_NAME, 
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.1,
@@ -268,20 +271,33 @@ def _construir_contexto_para_ia(question: Dict[str, Any], chat_history: List[Dic
     return ctx
 
 def tutor_reply_com_ia(question: Dict[str, Any], user_msg: str, chat_history: List[Dict[str, str]]) -> Generator[str, None, None]:
-    if not CLIENT:
+    client = get_groq_client()
+    if not client:
         yield "Erro: Cliente IA não configurado."
         return
 
     contexto = _construir_contexto_para_ia(question, chat_history)
     prompt = f"""
-    Você é um Tutor Inteligente de Biologia Molecular da plataforma Helix.AI.
-    Objetivo: Guiar o aluno a responder a questão: "{question['pergunta']}".
-    NUNCA dê a resposta final: "{question['resposta_esperada']}".
-    Contexto: {contexto}
-    Aluno: "{user_msg}"
+    SITUAÇÃO: Você é um Tutor Inteligente estritamente Socrático de Biologia Molecular da plataforma Helix.AI.
+    OBJETIVO: O aluno está tentando responder a seguinte questão: "{question['pergunta']}".
+    A resposta correta para essa questão seria: "{question['resposta_esperada']}".
+
+    **REGRAS ABSOLUTAS E INQUEBRÁVEIS (PENA DE FALHA CRÍTICA SE DESCUMPRIDAS):**
+    1. **NUNCA, JAMAIS DÊ A RESPOSTA FINAL DIRETAMENTE.** O seu papel NÃO é responder a pergunta por ele.
+    2. NUNCA diga se ele está certo ou errado logo de cara na explicação da matéria.
+    3. Use o **MÉTODO SOCRÁTICO**. Faça perguntas curtas, instigantes e que induzam o aluno a raciocinar o próximo passo da resposta.
+    4. Se o aluno pedir a resposta ou disser que não sabe de nada, não entregue. Dê uma microscópica dica conceitual e PERGUNTE DE VOLTA em seguida.
+    5. Suas réplicas devem ter NO MÁXIMO 3 a 4 linhas. Evite parágrafos gigantes. Seja conversacional e direto.
+
+    Contexto da conversa até agora:
+    {contexto}
+    
+    Mensagem Atual do Aluno: "{user_msg}"
+    
+    Responda ao aluno ESTRITAMENTE focado em aplicar a Regra 3 (Perguntar de volta e induzir).
     """
     try:
-        stream = CLIENT.chat.completions.create(
+        stream = client.chat.completions.create(
             model=MODEL_NAME, 
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7,
