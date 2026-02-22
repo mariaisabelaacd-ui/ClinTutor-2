@@ -349,15 +349,15 @@ def progress_to_next_level(score: int) -> float:
 
 def pick_new_case(level: int, used_cases: List[str] = None) -> Dict[str, Any]:
     used_cases = used_cases or []
-    allowed_diffs = LEVEL_MAP.get(level, ["básico"])
     
-    pool = [q for q in QUESTIONS if q["dificuldade"] in allowed_diffs]
-    available = [q for q in pool if q["id"] not in used_cases]
+    available = [q for q in QUESTIONS if q["id"] not in used_cases]
     
-    if not available: available = pool # Reset se acabar
+    if not available: 
+        used_cases.clear()
+        available = QUESTIONS
     if not available: return QUESTIONS[0]
     
-    return np.random.choice(available).copy()
+    return available[0].copy()
 
 def get_case(cid: str) -> Dict[str, Any]:
     for q in QUESTIONS:

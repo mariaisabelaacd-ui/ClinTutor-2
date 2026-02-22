@@ -155,7 +155,7 @@ def init_state():
     }
     for k, v in defaults.items():
         if k not in st.session_state:
-            st.session_state[k] = user_progress.get(k, v) if k in ["score", "streak", "unlocked_level"] else v
+            st.session_state[k] = user_progress.get(k, v) if k in ["score", "streak", "unlocked_level", "used_cases"] else v
 
 def persist_now():
     user = get_current_user()
@@ -164,6 +164,7 @@ def persist_now():
         "score": st.session_state.score,
         "streak": st.session_state.streak,
         "unlocked_level": st.session_state.unlocked_level,
+        "used_cases": st.session_state.used_cases,
         "when": datetime.now().isoformat()
     })
 
@@ -217,7 +218,13 @@ def main():
     c1, c2 = st.sidebar.columns(2)
     c1.metric("Pontos", st.session_state.score)
     c2.metric("Streak", f"{st.session_state.streak}")
-    st.sidebar.progress(progress_to_next_level(st.session_state.score))
+    
+    # Barra de Progresso Real
+    total_q = len(QUESTIONS)
+    answered_q = min(len(st.session_state.used_cases), total_q)
+    
+    st.sidebar.markdown(f"**Questões Concluídas:** {answered_q} de {total_q}")
+    st.sidebar.progress(answered_q / total_q if total_q > 0 else 0)
     
     if st.sidebar.button("Pular Questão", use_container_width=True): start_new_case()
 
