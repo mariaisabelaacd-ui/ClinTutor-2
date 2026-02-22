@@ -59,7 +59,7 @@ def show_login_page():
             with st.form("login_form"):
                 email = st.text_input("Email", placeholder="seu.email@fcmsantacasasp.edu.br")
                 password = st.text_input("Senha", type="password", placeholder="••••••••")
-                remember = st.checkbox("Lembrar de mim")
+                remember = st.checkbox("Lembrar de mim", value=True)
                 submit = st.form_submit_button("Entrar", use_container_width=True)
                 
                 if submit:
@@ -184,8 +184,8 @@ def main():
     create_default_admin()
     
     if not is_logged_in():
-        time.sleep(0.5)
-        token = cookie_manager.get('auth_token')
+        # Lendo de forma nativa e ultra-rapida a partir do contexto do streamlit
+        token = st.context.cookies.get('auth_token')
         if token:
             uid = validate_auth_token(token)
             if uid:
