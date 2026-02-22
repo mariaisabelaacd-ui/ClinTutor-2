@@ -158,6 +158,7 @@ def log_admin_action(action: str, details: str, user_id: str = None):
     except Exception as e:
         print(f"Erro ao registrar log de admin: {e}")
 
+@st.cache_data(ttl=300, show_spinner=False)
 def get_database_stats() -> Dict[str, int]:
     """
     Retorna estatísticas sobre o tamanho do banco de dados.

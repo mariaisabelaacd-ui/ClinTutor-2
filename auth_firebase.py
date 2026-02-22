@@ -337,6 +337,7 @@ def get_user_by_id(user_id) -> Optional[Dict]:
     else:
         return get_user_by_id_local(int(user_id))
 
+@st.cache_data(ttl=300, show_spinner=False)
 def get_all_users_firebase() -> List[Dict]:
     """Retorna todos os usuários do Firebase"""
     try:
@@ -355,10 +356,12 @@ def get_all_users_firebase() -> List[Dict]:
         st.error(f"Erro ao buscar usuários no Firebase: {e}")
         return []
 
+@st.cache_data(ttl=300, show_spinner=False)
 def get_all_users_local() -> List[Dict]:
     """Retorna todos os usuários do banco local"""
     return load_users_local()
 
+@st.cache_data(ttl=300, show_spinner=False)
 def get_all_users() -> List[Dict]:
     """Retorna lista de todos os usuários (Firebase ou local)"""
     if is_firebase_connected():

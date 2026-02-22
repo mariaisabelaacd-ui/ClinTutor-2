@@ -239,6 +239,7 @@ def save_chat_interaction_local(interaction: Dict):
 # Recuperação de Dados
 # =============================
 
+@st.cache_data(ttl=300, show_spinner=False)
 def get_user_case_analytics(user_id: str) -> List[Dict]:
     """Recupera analytics de casos de um usuário"""
     if is_firebase_connected():
@@ -247,6 +248,7 @@ def get_user_case_analytics(user_id: str) -> List[Dict]:
         # Se Firebase não está conectado, usa local
         return get_user_case_analytics_local(user_id)
 
+@st.cache_data(ttl=300, show_spinner=False)
 def get_user_case_analytics_firebase(user_id: str) -> List[Dict]:
     """Recupera analytics de casos do Firebase"""
     try:
@@ -277,11 +279,13 @@ def get_user_case_analytics_firebase(user_id: str) -> List[Dict]:
         st.error(f"Erro ao buscar analytics no Firebase: {e}")
         return []
 
+@st.cache_data(ttl=300, show_spinner=False)
 def get_user_case_analytics_local(user_id: str) -> List[Dict]:
     """Recupera analytics de casos localmente"""
     analytics = load_analytics_local()
     return [data for data in analytics if data.get("user_id") == user_id and data.get("type") != "chat_interaction"]
 
+@st.cache_data(ttl=300, show_spinner=False)
 def get_user_chat_interactions(user_id: str, case_id: str = None) -> List[Dict]:
     """Recupera interações do chat de um usuário"""
     if is_firebase_connected():
@@ -290,6 +294,7 @@ def get_user_chat_interactions(user_id: str, case_id: str = None) -> List[Dict]:
         # Se Firebase não está conectado, usa local
         return get_user_chat_interactions_local(user_id, case_id)
 
+@st.cache_data(ttl=300, show_spinner=False)
 def get_user_chat_interactions_firebase(user_id: str, case_id: str = None) -> List[Dict]:
     """Recupera interações do chat do Firebase"""
     try:
@@ -321,6 +326,7 @@ def get_user_chat_interactions_firebase(user_id: str, case_id: str = None) -> Li
         st.error(f"Erro ao buscar interações do chat no Firebase: {e}")
         return []
 
+@st.cache_data(ttl=300, show_spinner=False)
 def get_user_chat_interactions_local(user_id: str, case_id: str = None) -> List[Dict]:
     """Recupera interações do chat localmente"""
     analytics = load_analytics_local()
@@ -331,6 +337,7 @@ def get_user_chat_interactions_local(user_id: str, case_id: str = None) -> List[
     
     return interactions
 
+@st.cache_data(ttl=300, show_spinner=False)
 def get_all_users_analytics() -> Dict[str, Dict]:
     """Recupera analytics de todos os usuários (apenas alunos)"""
     if is_firebase_connected():
@@ -340,6 +347,7 @@ def get_all_users_analytics() -> Dict[str, Dict]:
         st.warning("⚠️ Firebase não está conectado. Dados podem não estar sincronizados.")
         return get_all_users_analytics_local()
 
+@st.cache_data(ttl=300, show_spinner=False)
 def get_all_users_analytics_firebase() -> Dict[str, Dict]:
     """Recupera analytics de todos os usuários do Firebase (apenas alunos)"""
     try:
@@ -389,6 +397,7 @@ def get_all_users_analytics_firebase() -> Dict[str, Dict]:
         st.error(f"Erro ao buscar analytics no Firebase: {e}")
         return {}
 
+@st.cache_data(ttl=300, show_spinner=False)
 def get_all_users_analytics_local() -> Dict[str, Dict]:
     """Recupera analytics de todos os usuários localmente (apenas alunos)"""
     analytics = load_analytics_local()

@@ -201,7 +201,16 @@ def show_advanced_professor_dashboard():
     # Garante carregamento dos ícones
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
     
-    st.markdown(f"# {icon('dashboard', '#10b981', 32)} Dashboard do Professor", unsafe_allow_html=True)
+    col_t, col_b = st.columns([3, 1])
+    with col_t:
+        st.markdown(f"# {icon('dashboard', '#10b981', 32)} Dashboard do Professor", unsafe_allow_html=True)
+    with col_b:
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("🔄 Atualizar Dados", help="Limpar cache e buscar dados em tempo real", use_container_width=True):
+            st.cache_data.clear()
+            st.rerun()
+    
+    st.caption("ℹ️ Os dados do painel são mantidos em cache por 5 minutos para alta velocidade. Use o botão acima se precisar dos últimos dados exatos.")
     st.markdown("---")
     
     try:

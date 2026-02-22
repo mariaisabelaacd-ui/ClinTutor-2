@@ -260,10 +260,13 @@ def show_data_management():
         if is_firebase_connected():
             db = get_firestore_db()
             
-            # Conta documentos nas coleções
-            case_analytics_count = len(list(db.collection('case_analytics').stream()))
-            chat_interactions_count = len(list(db.collection('chat_interactions').stream()))
-            users_count = len(list(db.collection('users').stream()))
+            from admin_utils import get_database_stats
+            stats = get_database_stats()
+            
+            # Conta documentos nas coleções (via cache)
+            case_analytics_count = stats.get('total_analytics', 0)
+            chat_interactions_count = stats.get('total_chat_interactions', 0)
+            users_count = stats.get('total_users', 0)
             
             col1, col2, col3 = st.columns(3)
             
