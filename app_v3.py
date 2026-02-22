@@ -137,12 +137,12 @@ def init_state():
     defaults = {
         "score": 0, "streak": 0, "unlocked_level": 1,
         "current_case_id": None, "case_scored": False, "last_result": None,
-        "chat": [], "show_next_case_btn": False, "used_cases": [],
+        "chat": [], "show_next_case_btn": False, "used_cases": user_progress.get("used_cases", []),
         "current_timer_id": None
     }
     for k, v in defaults.items():
         if k not in st.session_state:
-            st.session_state[k] = user_progress.get(k, v) if k in ["score", "streak", "unlocked_level"] else v
+            st.session_state[k] = user_progress.get(k, v) if k in ["score", "streak", "unlocked_level", "used_cases"] else v
 
 def persist_now():
     user = get_current_user()
@@ -151,6 +151,7 @@ def persist_now():
         "score": st.session_state.score,
         "streak": st.session_state.streak,
         "unlocked_level": st.session_state.unlocked_level,
+        "used_cases": st.session_state.get("used_cases", []),
         "when": datetime.now().isoformat()
     })
 
@@ -164,6 +165,10 @@ def start_new_case():
     try: st.session_state.current_timer_id = start_case_timer(user["id"], new_case["id"])
     except: pass
     
+    # Limpa a caixa de texto da resposta anterior
+    if "ans_input" in st.session_state:
+        del st.session_state["ans_input"]
+        
     st.session_state.case_scored = False
     st.session_state.last_result = None
     st.session_state.chat = []
