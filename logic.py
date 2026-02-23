@@ -200,6 +200,25 @@ LEVEL_MAP = {
 }
 
 def evaluate_answer_with_ai(question_data: Dict, user_answer: str) -> Dict[str, Any]:
+    prompt = f"""
+Você é um avaliador acadêmico preciso para uma plataforma de ensino de Genética e Biologia Molecular.
+Sua tarefa é avaliar a resposta do aluno em relação ao gabarito esperado.
+
+Pergunta: {question_data.get('pergunta')}
+Conceitos-chave: {', '.join(question_data.get('componentes_conhecimento', []))}
+Resposta Esperada / Gabarito: {question_data.get('resposta_esperada')}
+Erro Crítico a penalizar (se houver/se aplicável): {question_data.get('erro_critico', 'Nenhum')}
+
+Resposta do Aluno: {user_answer}
+
+Avalie a resposta do aluno e retorne SUA AVALIAÇÃO ESTRITAMENTE NESTE FORMATO JSON VÁLIDO:
+{{
+  "correct": true ou false,
+  "classification": "CORRETA" ou "PARCIALMENTE CORRETA" ou "INCORRETA",
+  "feedback": "Um texto claro indicando o que ele acertou e o que errou."
+}}
+NÃO RETORNE TEXTO FORA DO JSON.
+"""
     # Retry logic for Rate Limits (429) & 503 errors
     import time
     max_retries = 3
