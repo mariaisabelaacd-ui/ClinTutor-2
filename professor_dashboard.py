@@ -1464,6 +1464,37 @@ def show_admin_tab(student_users: List[Dict]):
                         del st.session_state.confirm_clear_all_chat
     
     st.markdown("---")
+
+    # Ação 4: Mudar a própria senha
+    st.markdown(f"### {icon('password', '#f59e0b', 24)} Alterar Sua Senha", unsafe_allow_html=True)
+    st.write("Aqui você pode alterar sua própria senha de acesso.")
+    
+    with st.expander("Abrir painel de alteração de senha", expanded=False):
+        current_prof = st.session_state.get('user_id')
+        if current_prof:
+            with st.form("change_prof_password_form"):
+                current_pw = st.text_input("Senha Atual", type="password")
+                new_pw = st.text_input("Nova Senha", type="password")
+                confirm_pw = st.text_input("Confirmar Nova Senha", type="password")
+                
+                submit_pw = st.form_submit_button("Alterar Senha")
+                
+                if submit_pw:
+                    if not current_pw or not new_pw or not confirm_pw:
+                        st.error("Todos os campos de senha são obrigatórios.")
+                    elif new_pw != confirm_pw:
+                        st.error("A nova senha e a confirmação não coincidem.")
+                    else:
+                        from auth_firebase import change_password
+                        ok, msg = change_password(current_prof, current_pw, new_pw)
+                        if ok:
+                            st.success(f"Senha alterada com sucesso! {msg}")
+                        else:
+                            st.error(f"Falha ao alterar senha: {msg}")
+        else:
+            st.warning("Usuário não identificado na sessão.")
+
+    st.markdown("---")
     
     # ===== INFORMAÇÕES =====
     st.markdown(f"### {icon('info', '#3b82f6', 24)} Informações", unsafe_allow_html=True)

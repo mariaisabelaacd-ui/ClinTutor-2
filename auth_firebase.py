@@ -158,11 +158,12 @@ def register_user_firebase(name: str, email: str, password: str, user_type: str,
             'auth_uid': auth_uid,
             'name': name.strip(),
             'email': email.lower().strip(),
+            'password': hash_password(password),
             'user_type': user_type,
             'created_at': datetime.now().isoformat(),
             'last_login': None
         }
-        
+
         if user_type == "aluno" and ra:
             user_data['ra'] = ra.strip()
         if user_type == "aluno" and turma:
@@ -270,6 +271,12 @@ def authenticate_user_firebase(email: str, password: str) -> Tuple[bool, str, Op
             return False, "Usuário não encontrado no sistema", None
         
         user_data = user_doc.to_dict()
+        
+        # O Firebase Auth sem API Key no client side ou REST não permite verificar senha.
+        # Por isso verificamos o hash salvo no Firestore (foi salvo no registro)
+        stored_hash = user_data.get('password')
+        if not stored_hash or stored_hash != hash_password(password):
+            return False, "Email ou senha incorretos", None
         
         # Atualiza último login
         user_doc.reference.update({

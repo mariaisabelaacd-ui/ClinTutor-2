@@ -38,10 +38,11 @@ def show_advanced_professor_dashboard():
         st.error(f"Erro ao carregar dados: {e}")
         return
     
-    # Sistema de tabs redesenhado: 2 tabs principais
-    tab1, tab2 = st.tabs([
+    # Sistema de tabs redesenhado: 3 tabs principais
+    tab1, tab2, tab3 = st.tabs([
         "📊 Visão Geral", 
-        "👤 Análise Individual"
+        "👤 Análise Individual",
+        "⚙️ Admin"
     ])
     
     with tab1:
@@ -49,6 +50,9 @@ def show_advanced_professor_dashboard():
     
     with tab2:
         show_individual_analysis_tab(student_users, all_analytics)
+
+    with tab3:
+        show_admin_tab()
 
 def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
     """Tab de visão geral com estatísticas gerais de todos os alunos"""
@@ -660,3 +664,38 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
                 st.success(chat.get('bot_response', 'MENSAGEM VAZIA'))
     else:
         st.info("Este aluno ainda não utilizou o Tutor IA.")
+
+def show_admin_tab():
+    """Tab de administração para gerenciar configurações da conta"""
+    st.subheader("⚙️ Configurações Administrativas")
+    
+    # Ação: Mudar a própria senha
+    st.markdown("### 🔑 Alterar Sua Senha")
+    st.write("Aqui você pode alterar sua própria senha de acesso.")
+    
+    with st.expander("Abrir painel de alteração de senha", expanded=False):
+        current_prof = st.session_state.get('user_id')
+        if current_prof:
+            with st.form("change_prof_password_form_new"):
+                current_pw = st.text_input("Senha Atual", type="password")
+                new_pw = st.text_input("Nova Senha", type="password", help="No mínimo 6 caracteres")
+                confirm_pw = st.text_input("Confirmar Nova Senha", type="password")
+                
+                submit_pw = st.form_submit_button("Alterar Senha")
+                
+                if submit_pw:
+                    if not current_pw or not new_pw or not confirm_pw:
+                        st.error("Todos os campos de senha são obrigatórios.")
+                    elif new_pw != confirm_pw:
+                        st.error("A nova senha e a confirmação não coincidem.")
+                    elif len(new_pw) < 6:
+                        st.error("A nova senha deve ter pelo menos 6 caracteres.")
+                    else:
+                        from auth_firebase import change_password
+                        ok, msg = change_password(current_prof, current_pw, new_pw)
+                        if ok:
+                            st.success(f"Senha alterada com sucesso! {msg}")
+                        else:
+                            st.error(f"Falha ao alterar senha: {msg}")
+        else:
+            st.warning("Usuário não identificado na sessão.")
