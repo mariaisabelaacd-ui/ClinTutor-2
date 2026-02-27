@@ -212,8 +212,8 @@ Erro Crítico a penalizar com nota zero (se houver aplicável): {question_data.g
 Resposta do Aluno: {user_answer}
 
 DIRETRIZES DE AVALIAÇÃO:
-1. CORRETA: O aluno acertou o cerne da questão. Pode ter palavras diferentes do gabarito, mas a ideia principal está certa e completa.
-2. PARCIALMENTE CORRETA: O aluno acertou parte da resposta, demonstrou algum conhecimento válido, mas cometeu erros menores ou deixou a resposta incompleta. (Ex: acertou que é uma base nitrogenada e um fosfato, mas errou o nome de um deles).
+1. CORRETA: O aluno acertou **perfeitamente** o cerne da questão e **NÃO OMITIU** nenhum detalhe relevante do gabarito esperado. A resposta deve ser completa, precisa e cobrir todos os pontos principais.
+2. PARCIALMENTE CORRETA: O aluno acertou parte da resposta ou demonstrou conhecimento válido, mas **COMETEU PEQUENOS ERROS, FOI IMPRECISO OU DEIXOU A RESPOSTA INCOMPLETA**. Se faltar qualquer informação importante que está no gabarito, você DEVE classificar como PARCIALMENTE CORRETA.
 3. INCORRETA: O aluno errou completamente, demonstrou desconhecimento ou cometeu o "Erro Crítico" supracitado.
 
 Avalie a resposta do aluno e retorne SUA AVALIAÇÃO ESTRITAMENTE NESTE FORMATO JSON VÁLIDO:
