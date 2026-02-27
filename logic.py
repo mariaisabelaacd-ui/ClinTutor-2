@@ -207,15 +207,20 @@ Sua tarefa é avaliar a resposta do aluno em relação ao gabarito esperado.
 Pergunta: {question_data.get('pergunta')}
 Conceitos-chave: {', '.join(question_data.get('componentes_conhecimento', []))}
 Resposta Esperada / Gabarito: {question_data.get('resposta_esperada')}
-Erro Crítico a penalizar (se houver/se aplicável): {question_data.get('erro_critico', 'Nenhum')}
+Erro Crítico a penalizar com nota zero (se houver aplicável): {question_data.get('erro_critico', 'Nenhum')}
 
 Resposta do Aluno: {user_answer}
+
+DIRETRIZES DE AVALIAÇÃO:
+1. CORRETA: O aluno acertou o cerne da questão. Pode ter palavras diferentes do gabarito, mas a ideia principal está certa e completa.
+2. PARCIALMENTE CORRETA: O aluno acertou parte da resposta, demonstrou algum conhecimento válido, mas cometeu erros menores ou deixou a resposta incompleta. (Ex: acertou que é uma base nitrogenada e um fosfato, mas errou o nome de um deles).
+3. INCORRETA: O aluno errou completamente, demonstrou desconhecimento ou cometeu o "Erro Crítico" supracitado.
 
 Avalie a resposta do aluno e retorne SUA AVALIAÇÃO ESTRITAMENTE NESTE FORMATO JSON VÁLIDO:
 {{
   "correct": true ou false,
   "classification": "CORRETA" ou "PARCIALMENTE CORRETA" ou "INCORRETA",
-  "feedback": "Um texto claro indicando o que ele acertou e o que errou."
+  "feedback": "Um texto claro indicando o que ele acertou e o que faltou ou errou."
 }}
 NÃO RETORNE TEXTO FORA DO JSON.
 """
@@ -382,11 +387,16 @@ def finalize_question_response(question: Dict[str, Any], user_answer: str, ai_ev
         points = max_points * 0.5
         is_correct = True # Counts as correct/progress for streak purposes? Or maybe distinct?
         outcome = "partial"
-    elif "CORRETA" in classification and "INCORRETA" not in classification: # Strict check
+    elif "INCORRETA" in classification and "PARCIAL" not in classification: # Strict check
+        points = 0
+        is_correct = False
+        outcome = "incorrect"
+    elif "CORRETA" in classification:
         points = max_points
         is_correct = True
         outcome = "correct"
     else:
+        # Fallback if AI gave something weird
         points = 0
         is_correct = False
         outcome = "incorrect"
