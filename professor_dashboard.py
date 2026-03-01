@@ -214,232 +214,356 @@ def generate_student_pdf(student: Dict, basic_stats: Dict, advanced_stats: Dict,
     return bytes(pdf.output())
 
 def generate_class_pdf(turma_name: str, student_users: List[Dict], global_stats: Dict, component_stats: list) -> bytes:
-    """Gera um PDF com a visao geral da turma"""
+    """Gera um PDF com a visao geral da turma - versao completa"""
     from fpdf import FPDF
     pdf = FPDF()
-    pdf.set_auto_page_break(auto=True, margin=20)
+    pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
-    
+    W = 190
+
     def safe_text(txt):
         if not txt: return ""
         return str(txt).encode('latin-1', 'replace').decode('latin-1')
-    
-    # ---- CABEÇALHO ----
+
+    # ---- CABECALHO ----
     pdf.set_fill_color(16, 185, 129)
     pdf.rect(0, 0, 210, 40, 'F')
-    pdf.set_font('Helvetica', 'B', 22)
+    pdf.set_font('Helvetica', 'B', 24)
     pdf.set_text_color(255, 255, 255)
     pdf.cell(0, 15, 'Helix.AI', ln=True, align='C')
-    pdf.set_font('Helvetica', '', 11)
-    pdf.cell(0, 8, safe_text(f'Visao Geral - Turma: {turma_name}'), ln=True, align='C')
+    pdf.set_font('Helvetica', '', 12)
+    pdf.cell(0, 8, safe_text(f'Relatorio da Turma: {turma_name}'), ln=True, align='C')
     pdf.set_font('Helvetica', '', 9)
     pdf.cell(0, 7, f'Gerado em {datetime.now().strftime("%d/%m/%Y as %H:%M")}', ln=True, align='C')
     pdf.ln(10)
-    
     pdf.set_text_color(0, 0, 0)
-    
-    # ---- METRICAS PRINCIPAIS ----
-    pdf.set_font('Helvetica', 'B', 14)
-    pdf.set_text_color(16, 185, 129)
-    pdf.cell(0, 10, 'Metricas Principais', ln=True)
+
+    # ---- METRICAS GLOBAIS ----
+    pdf.set_fill_color(16, 185, 129)
+    pdf.set_text_color(255, 255, 255)
+    pdf.set_font('Helvetica', 'B', 10)
+    pdf.cell(W, 7, '  Metricas Gerais da Turma', ln=True, fill=True)
     pdf.set_text_color(0, 0, 0)
-    
-    pdf.set_font('Helvetica', 'B', 9)
+    pdf.ln(1)
+
     pdf.set_fill_color(241, 245, 249)
-    col_w = 63
-    pdf.cell(col_w, 8, 'Total de Alunos', 1, 0, 'C', True)
-    pdf.cell(col_w, 8, 'Media Geral (%)', 1, 0, 'C', True)
-    pdf.cell(col_w, 8, 'Questoes Respondidas', 1, 0, 'C', True)
+    pdf.set_font('Helvetica', 'B', 9)
+    col4 = W / 4
+    for h in ['Total de Alunos', 'Media Geral (%)', 'Questoes Respondidas', 'Total de Chats']:
+        pdf.cell(col4, 7, h, 1, 0, 'C', True)
     pdf.ln()
-    
-    pdf.set_font('Helvetica', '', 9)
-    total_alunos = len(student_users)
-    media_geral = f"{global_stats.get('average_accuracy_rate', 0):.1f}%"
-    tot_questoes = str(global_stats.get('total_cases', 0))
-    pdf.cell(col_w, 8, str(total_alunos), 1, 0, 'C')
-    pdf.cell(col_w, 8, media_geral, 1, 0, 'C')
-    pdf.cell(col_w, 8, tot_questoes, 1, 0, 'C')
-    pdf.ln(15)
-    
-    # ---- DESEMPENHO POR COMPONENTE ----
+    pdf.set_font('Helvetica', '', 10)
+    pdf.cell(col4, 8, str(len(student_users)), 1, 0, 'C')
+    pdf.cell(col4, 8, f"{global_stats.get('average_accuracy_rate', 0):.1f}%", 1, 0, 'C')
+    pdf.cell(col4, 8, str(global_stats.get('total_cases', 0)), 1, 0, 'C')
+    pdf.cell(col4, 8, str(global_stats.get('total_chat_interactions', 0)), 1, 0, 'C')
+    pdf.ln(12)
+
+    # ---- DESEMPENHO POR CATEGORIA (ordenado: pior primeiro) ----
     if component_stats:
-        pdf.set_font('Helvetica', 'B', 14)
-        pdf.set_text_color(16, 185, 129)
-        pdf.cell(0, 10, 'Desempenho por Categoria', ln=True)
+        sorted_comps = sorted(component_stats, key=lambda x: x.get('taxa_acerto', 0))
+        hardest = sorted_comps[0] if sorted_comps else None
+
+        # Destaque da categoria mais dificil
+        if hardest:
+            pdf.set_fill_color(254, 226, 226)
+            pdf.set_draw_color(220, 38, 38)
+            pdf.set_font('Helvetica', 'B', 9)
+            pdf.set_text_color(220, 38, 38)
+            pdf.cell(W, 7, safe_text(f'  Categoria Mais Dificil: {hardest["componente"]}  —  Taxa de acerto: {hardest["taxa_acerto"]:.1f}%'), 1, 1, 'L', True)
+            pdf.set_text_color(0, 0, 0)
+            pdf.set_draw_color(0, 0, 0)
+            pdf.ln(3)
+
+        pdf.set_fill_color(16, 185, 129)
+        pdf.set_text_color(255, 255, 255)
+        pdf.set_font('Helvetica', 'B', 10)
+        pdf.cell(W, 7, '  Desempenho por Categoria de Conhecimento (do mais dificil ao mais facil)', ln=True, fill=True)
         pdf.set_text_color(0, 0, 0)
-        
-        pdf.set_font('Helvetica', 'B', 9)
-        pdf.cell(100, 8, 'Componente', 1, 0, 'C', True)
-        pdf.cell(30, 8, 'Tentativas', 1, 0, 'C', True)
-        pdf.cell(30, 8, 'Acertos', 1, 0, 'C', True)
-        pdf.cell(30, 8, 'Acuracia', 1, 0, 'C', True)
+        pdf.ln(1)
+
+        # Header da tabela
+        pdf.set_fill_color(241, 245, 249)
+        pdf.set_font('Helvetica', 'B', 8)
+        pdf.cell(80, 7, 'Categoria', 1, 0, 'C', True)
+        pdf.cell(28, 7, 'Tentativas', 1, 0, 'C', True)
+        pdf.cell(28, 7, 'Acertos', 1, 0, 'C', True)
+        pdf.cell(28, 7, 'Erros', 1, 0, 'C', True)
+        pdf.cell(26, 7, 'Taxa (%)', 1, 0, 'C', True)
         pdf.ln()
-        
-        pdf.set_font('Helvetica', '', 9)
-        sorted_comps = sorted(component_stats, key=lambda x: x.get('taxa_acerto', 0), reverse=True)
+
+        pdf.set_font('Helvetica', '', 8)
         for comp in sorted_comps:
-            nome = safe_text(comp.get('componente', 'N/A'))[:45]
-            tot = str(comp.get('total_attempts', 0))
-            corr = str(comp.get('total_correct', 0))
-            acc = f"{comp.get('taxa_acerto', 0):.1f}%"
-            pdf.cell(100, 7, nome, 1, 0, 'L')
-            pdf.cell(30, 7, tot, 1, 0, 'C')
-            pdf.cell(30, 7, corr, 1, 0, 'C')
-            pdf.cell(30, 7, acc, 1, 0, 'C')
+            taxa = comp.get('taxa_acerto', 0)
+            total = comp.get('total_questoes', comp.get('total_attempts', 0))
+            acertos = comp.get('acertos', comp.get('total_correct', 0))
+            erros = total - acertos
+            nome = safe_text(comp.get('componente', 'N/A'))[:40]
+
+            # Cor de fundo pela taxa
+            if taxa < 40:
+                pdf.set_fill_color(254, 226, 226)  # vermelho claro
+            elif taxa < 65:
+                pdf.set_fill_color(254, 249, 195)  # amarelo claro
+            else:
+                pdf.set_fill_color(220, 252, 231)  # verde claro
+
+            pdf.cell(80, 6, nome, 1, 0, 'L', True)
+            pdf.cell(28, 6, str(total), 1, 0, 'C', True)
+            pdf.cell(28, 6, str(acertos), 1, 0, 'C', True)
+            pdf.cell(28, 6, str(erros), 1, 0, 'C', True)
+            pdf.cell(26, 6, f'{taxa:.1f}%', 1, 0, 'C', True)
             pdf.ln()
-    
+        pdf.ln(8)
+
+    # ---- RANKING DOS ALUNOS ----
+    from analytics import get_all_users_analytics, get_user_case_analytics
+    all_analytics = get_all_users_analytics()
+
+    pdf.set_fill_color(16, 185, 129)
+    pdf.set_text_color(255, 255, 255)
+    pdf.set_font('Helvetica', 'B', 10)
+    pdf.cell(W, 7, '  Ranking de Alunos', ln=True, fill=True)
+    pdf.set_text_color(0, 0, 0)
+    pdf.ln(1)
+
+    pdf.set_fill_color(241, 245, 249)
+    pdf.set_font('Helvetica', 'B', 8)
+    pdf.cell(55, 7, 'Nome', 1, 0, 'C', True)
+    pdf.cell(30, 7, 'Turma', 1, 0, 'C', True)
+    pdf.cell(20, 7, 'RA', 1, 0, 'C', True)
+    pdf.cell(25, 7, 'Questoes', 1, 0, 'C', True)
+    pdf.cell(25, 7, 'Acertos', 1, 0, 'C', True)
+    pdf.cell(35, 7, 'Taxa Acerto (%)', 1, 0, 'C', True)
+    pdf.ln()
+
+    ranking = []
+    for s in student_users:
+        uid = s['id']
+        cas = all_analytics.get(uid, {}).get('case_analytics', [])
+        if not cas: continue
+        total_q = len(cas)
+        corr_q = sum(1 for e in cas if e.get('case_result', {}).get('is_correct', False))
+        acc = (corr_q / total_q * 100) if total_q > 0 else 0
+        ranking.append((s, total_q, corr_q, acc))
+
+    ranking.sort(key=lambda x: x[3], reverse=True)
+
+    pdf.set_font('Helvetica', '', 8)
+    for i, (s, total_q, corr_q, acc) in enumerate(ranking):
+        if acc >= 70:
+            pdf.set_fill_color(220, 252, 231)
+        elif acc >= 40:
+            pdf.set_fill_color(254, 249, 195)
+        else:
+            pdf.set_fill_color(254, 226, 226)
+
+        nome = safe_text(s.get('name', 'N/A'))[:25]
+        turma = safe_text(s.get('turma', '-'))[:14]
+        ra = safe_text(s.get('ra', '-'))[:10]
+        pdf.cell(55, 6, nome, 1, 0, 'L', True)
+        pdf.cell(30, 6, turma, 1, 0, 'C', True)
+        pdf.cell(20, 6, ra, 1, 0, 'C', True)
+        pdf.cell(25, 6, str(total_q), 1, 0, 'C', True)
+        pdf.cell(25, 6, str(corr_q), 1, 0, 'C', True)
+        pdf.cell(35, 6, f'{acc:.1f}%', 1, 0, 'C', True)
+        pdf.ln()
+
     pdf.set_y(-15)
     pdf.set_font('Helvetica', 'I', 8)
     pdf.set_text_color(150, 150, 150)
     pdf.cell(0, 10, 'Helix.AI - Plataforma de Tutoria em Biologia Molecular', 0, 0, 'C')
-    
+
     return bytes(pdf.output())
 
 def generate_global_interactions_pdf(student_users: List[Dict], all_analytics: Dict) -> bytes:
-    """Gera um PDF completo com todas as interações e respostas de todos os alunos"""
+    """Gera PDF completo com todas as interacoes e respostas de todos os alunos"""
     from fpdf import FPDF
-    import textwrap
-    from logic import get_case
-    
+    from logic import get_case, level_from_score
+
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=15)
-    
-    def safe_text(txt):
-        if txt is None:
-            return ""
+    W = 190
+
+    def safe(txt):
+        if txt is None: return ""
         return str(txt).encode('latin-1', 'replace').decode('latin-1')
 
-    # Capa do Relatório
+    # ── CAPA ─────────────────────────────────────────────────────
     pdf.add_page()
     pdf.set_fill_color(16, 185, 129)
-    pdf.rect(0, 0, 210, 297, 'F') # Preenche a página inteira
-    
-    pdf.set_y(100)
-    pdf.set_font('Helvetica', 'B', 32)
+    pdf.rect(0, 0, 210, 297, 'F')
+    pdf.set_y(90)
+    pdf.set_font('Helvetica', 'B', 36)
     pdf.set_text_color(255, 255, 255)
     pdf.cell(0, 20, 'Helix.AI', ln=True, align='C')
-    
-    pdf.set_font('Helvetica', '', 18)
-    pdf.cell(0, 15, 'Relatorio Completo de Interacoes', ln=True, align='C')
-    
-    pdf.set_font('Helvetica', '', 12)
-    pdf.cell(0, 10, f'Gerado em {datetime.now().strftime("%d/%m/%Y as %H:%M")}', ln=True, align='C')
-    
+    pdf.set_font('Helvetica', '', 16)
+    pdf.cell(0, 12, 'Relatorio Completo de Interacoes', ln=True, align='C')
+    pdf.set_font('Helvetica', '', 10)
+    pdf.cell(0, 8, f'Gerado em {datetime.now().strftime("%d/%m/%Y as %H:%M")}', ln=True, align='C')
+    total_ativos = len([s for s in student_users if all_analytics.get(s['id'], {}).get('case_analytics')])
+    pdf.set_font('Helvetica', 'B', 11)
+    pdf.cell(0, 8, safe(f'{total_ativos} aluno(s) com atividade'), ln=True, align='C')
     pdf.set_text_color(0, 0, 0)
-    
+
+    nivel_map = {1: 'Basico', 2: 'Intermediario', 3: 'Avancado'}
+
     for student in student_users:
         uid = student['id']
         u_data = all_analytics.get(uid, {})
-        case_analytics = u_data.get('case_analytics', [])
-        
-        # Só inclui alunos que têm alguma atividade
-        if not case_analytics:
+        case_list = u_data.get('case_analytics', [])
+        if not case_list:
             continue
-            
+
+        # ── Calcula stats do aluno ───────────────────────────────
+        total_q  = len(case_list)
+        correct_q = sum(1 for e in case_list if e.get('case_result', {}).get('is_correct', False))
+        parcial_q = sum(1 for e in case_list if 'PARCIAL' in e.get('case_result', {}).get('classification', '').upper())
+        errado_q  = total_q - correct_q
+        total_pts = sum(e.get('case_result', {}).get('points_gained', 0) for e in case_list)
+        accuracy  = (correct_q / total_q * 100) if total_q > 0 else 0.0
+        nivel_txt = nivel_map.get(level_from_score(int(total_pts)), 'Basico')
+        total_ch  = len(u_data.get('chat_interactions', []))
+
+        # ── PAGINA DO ALUNO ──────────────────────────────────────
         pdf.add_page()
-        
-        # Cabeçalho do Aluno
-        pdf.set_fill_color(240, 253, 244)
-        pdf.rect(10, 10, 190, 30, 'DF')
-        pdf.set_xy(15, 15)
-        
+
+        # Cabecalho verde com nome
+        pdf.set_fill_color(16, 185, 129)
+        pdf.set_text_color(255, 255, 255)
         pdf.set_font('Helvetica', 'B', 14)
-        pdf.set_text_color(16, 185, 129)
-        pdf.cell(0, 8, safe_text(student.get('name', 'N/A')), ln=True)
-        
-        pdf.set_font('Helvetica', '', 10)
+        pdf.set_x(10)
+        pdf.cell(W, 10, safe('  ' + student.get('name', 'N/A')), ln=True, fill=True)
         pdf.set_text_color(0, 0, 0)
-        turma = student.get('turma', 'Nao informada')
-        ra = student.get('ra', 'N/A')
-        email = student.get('email', 'N/A')
-        pdf.cell(0, 6, safe_text(f"Turma: {turma} | RA: {ra} | Email: {email}"), ln=True)
-        pdf.ln(10)
-        
-        # Ordena as respostas cronologicamente
+        pdf.ln(1)
+
+        # Card de identificacao
+        pdf.set_fill_color(240, 253, 244)
+        pdf.set_draw_color(16, 185, 129)
+        card_y = pdf.get_y()
+        pdf.rect(10, card_y, W, 20, 'DF')
+        pdf.set_x(13)
+        pdf.set_font('Helvetica', 'B', 8)  ;  pdf.cell(18, 5, 'RA:', 0, 0)
+        pdf.set_font('Helvetica', '', 8)   ;  pdf.cell(40, 5, safe(student.get('ra', 'N/A')), 0, 0)
+        pdf.set_font('Helvetica', 'B', 8)  ;  pdf.cell(20, 5, 'Turma:', 0, 0)
+        pdf.set_font('Helvetica', '', 8)   ;  pdf.cell(0,  5, safe(student.get('turma', 'N/A')), 0, 1)
+        pdf.set_x(13)
+        pdf.set_font('Helvetica', 'B', 8)  ;  pdf.cell(18, 5, 'Email:', 0, 0)
+        pdf.set_font('Helvetica', '', 8)   ;  pdf.cell(0,  5, safe(student.get('email', 'N/A')), 0, 1)
+        pdf.set_x(13)
+        pdf.set_font('Helvetica', 'B', 8)  ;  pdf.cell(18, 5, 'Nivel:', 0, 0)
+        pdf.set_font('Helvetica', '', 8)   ;  pdf.cell(40, 5, nivel_txt, 0, 0)
+        pdf.set_font('Helvetica', 'B', 8)  ;  pdf.cell(25, 5, 'Pontos Total:', 0, 0)
+        pdf.set_font('Helvetica', '', 8)   ;  pdf.cell(0,  5, str(total_pts), 0, 1)
+        pdf.set_draw_color(0, 0, 0)
+        pdf.ln(4)
+
+        # Tabela-resumo de desempenho
+        pdf.set_fill_color(241, 245, 249)
+        pdf.set_font('Helvetica', 'B', 8)
+        col = W / 5
+        for h in ['Questoes', 'Taxa Acerto', 'Corretas', 'Parciais', 'Erradas']:
+            pdf.cell(col, 6, h, 1, 0, 'C', True)
+        pdf.ln()
+        pdf.set_font('Helvetica', '', 9)
+        pdf.cell(col, 7, str(total_q),  1, 0, 'C')
+        pdf.cell(col, 7, f'{accuracy:.1f}%', 1, 0, 'C')
+        pdf.cell(col, 7, str(correct_q), 1, 0, 'C')
+        pdf.cell(col, 7, str(parcial_q), 1, 0, 'C')
+        pdf.cell(col, 7, str(errado_q),  1, 0, 'C')
+        pdf.ln(8)
+
+        # Secao de questoes
+        pdf.set_fill_color(16, 185, 129)
+        pdf.set_text_color(255, 255, 255)
+        pdf.set_font('Helvetica', 'B', 9)
+        pdf.cell(W, 6, '  Historico de Questoes e Interacoes', ln=True, fill=True)
+        pdf.set_text_color(0, 0, 0)
+        pdf.ln(1)
+
         try:
-            case_analytics.sort(key=lambda x: str(x.get('timestamp', '')), reverse=False)
-        except:
+            case_list.sort(key=lambda x: str(x.get('timestamp', '')))
+        except Exception:
             pass
 
-        for entry in case_analytics:
-            cid = entry.get('case_id')
+        for idx, entry in enumerate(case_list, 1):
+            cid    = entry.get('case_id')
             q_info = get_case(cid)
             result = entry.get('case_result', {})
-            
+
             is_correct = result.get('is_correct', False)
-            classification = result.get('classification', '').upper()
-            is_partial = 'PARCIAL' in classification
-            
-            # Formata carimbo de tempo
-            timestamp_ts = entry.get('timestamp')
-            date_str = ""
-            if isinstance(timestamp_ts, str):
-                try:
-                    date_str = datetime.fromisoformat(timestamp_ts).strftime("%d/%m/%Y %H:%M")
-                except:
-                    date_str = timestamp_ts[:16]
-            
-            # Caixa da Questão
-            pdf.set_fill_color(248, 250, 252)
-            pdf.set_font('Helvetica', 'B', 11)
-            pdf.cell(0, 8, safe_text(f"Questao: {date_str}"), 0, 1, 'L', True)
-            
-            pdf.set_font('Helvetica', '', 10)
-            pdf.multi_cell(0, 5, safe_text(q_info.get('pergunta', '')))
-            
-            # Status e Pontos
-            status_txt = "Correto"
-            if is_partial:
-                status_txt = "Parcial"
-            elif not is_correct:
-                status_txt = "Incorreto"
-                
+            is_partial = 'PARCIAL' in result.get('classification', '').upper()
+            status_txt = 'Correto' if (is_correct and not is_partial) else ('Parcial' if is_partial else 'Incorreto')
             pts = result.get('points_gained', 0)
+
+            ts = entry.get('timestamp', '')
+            date_str = ''
+            if isinstance(ts, str):
+                try:   date_str = datetime.fromisoformat(ts).strftime('%d/%m/%Y %H:%M')
+                except: date_str = ts[:16]
+
+            if status_txt == 'Correto':  status_color = (22, 163, 74)
+            elif status_txt == 'Parcial': status_color = (202, 138, 4)
+            else:                          status_color = (220, 38, 38)
+
+            # Cabecalho da questao
+            pdf.set_fill_color(230, 230, 235)
             pdf.set_font('Helvetica', 'B', 9)
-            pdf.cell(0, 6, safe_text(f"Status: {status_txt} | Pontos: {pts}"), 0, 1)
-            
-            # Resposta do Aluno
-            pdf.set_font('Helvetica', 'I', 10)
-            pdf.set_text_color(50, 50, 200)
-            ans = result.get('user_answer', 'N/A')
-            pdf.multi_cell(0, 5, safe_text(f"Resposta do Aluno: {ans}"))
+            pdf.cell(W, 6, safe(f'  [{idx}] {date_str}  |  Dificuldade: {q_info.get("dificuldade","N/A").title()}  |  Componente: {", ".join(q_info.get("componentes_conhecimento",[]))}'), 1, 1, 'L', True)
+
+            pdf.set_font('Helvetica', '', 8)
+            pdf.multi_cell(W, 5, safe(q_info.get('pergunta', 'N/A')))
+
+            # Barra status
+            pdf.set_fill_color(*status_color)
+            pdf.set_text_color(255, 255, 255)
+            pdf.set_font('Helvetica', 'B', 8)
+            pdf.cell(W, 6, safe(f'  Status: {status_txt}   |   Pontos ganhos: {pts}   |   Max pontos: {q_info.get("pontuacao",1)}'), 0, 1, 'L', True)
             pdf.set_text_color(0, 0, 0)
-            
-            # Interações do Chat Linkadas
-            chat_interactions = get_user_chat_interactions(uid, cid)
-            if chat_interactions:
-                pdf.ln(2)
-                pdf.set_font('Helvetica', 'B', 9)
-                pdf.set_text_color(236, 72, 153) # Pinkish for chat
-                pdf.cell(0, 6, "--- Historico do Chat Tutor ---", 0, 1)
-                
-                # Sort chat by timestamp
+
+            # Resposta do aluno
+            ans = result.get('user_answer', 'N/A')
+            pdf.set_fill_color(237, 242, 255)
+            pdf.set_font('Helvetica', 'B', 8)
+            pdf.cell(W, 5, '  Resposta do Aluno:', 0, 1, 'L', True)
+            pdf.set_font('Helvetica', '', 8)
+            pdf.multi_cell(W, 5, safe(str(ans) if ans else 'Nao respondeu'))
+
+            # Chat desta questao
+            chats = get_user_chat_interactions(uid, cid)
+            if chats:
                 try:
-                    chat_interactions.sort(key=lambda x: str(x.get('timestamp', '')), reverse=False)
-                except:
+                    chats.sort(key=lambda x: str(x.get('timestamp', '')))
+                except Exception:
                     pass
-                    
-                pdf.set_text_color(0, 0, 0)
-                pdf.set_font('Helvetica', '', 9)
-                for chat in chat_interactions:
-                    u_msg = safe_text(chat.get('user_message', ''))
-                    b_msg = safe_text(chat.get('bot_response', ''))
-                    
-                    pdf.set_font('Helvetica', 'B', 9)
-                    pdf.cell(15, 5, "Aluno: ", 0, 0)
-                    pdf.set_font('Helvetica', '', 9)
-                    # Instead of returning to the start with multi_cell immediately, 
-                    # we store current Y, move X past the label, and use a fixed width.
-                    x_start = pdf.get_x()
-                    y_start = pdf.get_y()
-                    pdf.multi_cell(160, 5, u_msg)
-                    
-                    pdf.set_font('Helvetica', 'B', 9)
-                    pdf.cell(15, 5, "Tutor: ", 0, 0)
-                    pdf.set_font('Helvetica', 'I', 9)
-                    pdf.multi_cell(160, 5, b_msg)
-                    pdf.ln(2)
+
+                pdf.set_fill_color(253, 242, 248)
+                pdf.set_font('Helvetica', 'B', 8)
+                pdf.cell(W, 5, safe(f'  Chat com o Tutor ({len(chats)} mensagens):'), 0, 1, 'L', True)
+
+                for chat in chats:
+                    u_msg = safe(chat.get('user_message', ''))
+                    b_msg = safe(chat.get('bot_response',  ''))
+
+                    pdf.set_fill_color(219, 234, 254)
+                    pdf.set_font('Helvetica', 'B', 7)
+                    pdf.cell(18, 5, '  Aluno:', 0, 0, 'L', True)
+                    pdf.set_font('Helvetica', '', 7)
+                    pdf.multi_cell(W - 18, 5, u_msg)
+
+                    pdf.set_fill_color(240, 253, 244)
+                    pdf.set_font('Helvetica', 'B', 7)
+                    pdf.cell(18, 5, '  Tutor:', 0, 0, 'L', True)
+                    pdf.set_font('Helvetica', 'I', 7)
+                    pdf.multi_cell(W - 18, 5, b_msg)
+                    pdf.ln(1)
+
             pdf.ln(5)
+
+    pdf.set_y(-15)
+    pdf.set_font('Helvetica', 'I', 8)
+    pdf.set_text_color(150, 150, 150)
+    pdf.cell(0, 10, 'Helix.AI - Plataforma de Tutoria em Biologia Molecular', 0, 0, 'C')
 
     return bytes(pdf.output())
 
