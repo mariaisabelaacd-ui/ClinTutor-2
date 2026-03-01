@@ -229,6 +229,50 @@ def calculate_accuracy_rate(user_id: str) -> Dict[str, Any]:
     }
 
 # =============================
+# Progresso do Aluno (sem custos extras de DB)
+# =============================
+
+def save_student_progress(user_id: str, current_question_id: str, used_cases: list, score: int, streak: int):
+    """
+    Salva o progresso do aluno no próprio documento users/{user_id}.
+    ZERO documentos criados — apenas um UPDATE no doc existente.
+    Custo: 1 write por chamada. Chamado só quando o aluno troca de questão ou responde.
+    """
+    if not is_firebase_connected() or not user_id:
+        return
+    try:
+        db = get_firestore_db()  # Usuários sempre ficam no Firebase primário
+        db.collection('users').document(user_id).update({
+            'progress': {
+                'current_question_id': current_question_id,
+                'used_cases': used_cases,
+                'score': score,
+                'streak': streak,
+                'updated_at': datetime.now().isoformat()
+            }
+        })
+    except Exception as e:
+        print(f"Aviso: não foi possível salvar progresso: {e}")
+
+def load_student_progress(user_id: str) -> dict:
+    """
+    Carrega o progresso salvo do aluno a partir do documento users/{user_id}.
+    Custo: 1 read (o mesmo doc de login que já é buscado na autenticação).
+    Retorna dict vazio se não houver progresso salvo.
+    """
+    if not is_firebase_connected() or not user_id:
+        return {}
+    try:
+        db = get_firestore_db()
+        doc = db.collection('users').document(user_id).get()
+        if doc.exists:
+            return doc.to_dict().get('progress', {})
+        return {}
+    except Exception as e:
+        print(f"Aviso: não foi possível carregar progresso: {e}")
+        return {}
+
+# =============================
 # Armazenamento no Firebase
 # =============================
 

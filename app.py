@@ -18,7 +18,8 @@ from auth_firebase import (
 )
 from analytics import (
     start_case_timer, end_case_timer, log_chat_interaction, 
-    get_user_detailed_stats, calculate_accuracy_rate
+    get_user_detailed_stats, calculate_accuracy_rate,
+    save_student_progress, load_student_progress
 )
 from admin_dashboard import show_admin_dashboard
 from professor_dashboard import show_advanced_professor_dashboard
@@ -146,7 +147,13 @@ def init_state():
     if isinstance(saved, list):
         for p in saved:
             if p.get("user_id") == user["id"]: user_progress = p; break
-    
+
+    # Tenta restaurar progresso salvo no Firebase (1 read)
+    firebase_progress = {}
+    if 'progress_loaded' not in st.session_state:
+        firebase_progress = load_student_progress(user["id"])
+        st.session_state.progress_loaded = True
+
     defaults = {
         "score": 0, "streak": 0, "unlocked_level": 1,
         "current_case_id": None, "case_scored": False, "last_result": None,
@@ -155,7 +162,16 @@ def init_state():
     }
     for k, v in defaults.items():
         if k not in st.session_state:
-            st.session_state[k] = user_progress.get(k, v) if k in ["score", "streak", "unlocked_level", "used_cases"] else v
+            if k == "current_case_id" and firebase_progress.get("current_question_id"):
+                st.session_state[k] = firebase_progress["current_question_id"]
+            elif k == "used_cases" and firebase_progress.get("used_cases"):
+                st.session_state[k] = firebase_progress["used_cases"]
+            elif k == "score" and firebase_progress.get("score") is not None:
+                st.session_state[k] = firebase_progress["score"]
+            elif k == "streak" and firebase_progress.get("streak") is not None:
+                st.session_state[k] = firebase_progress["streak"]
+            else:
+                st.session_state[k] = user_progress.get(k, v) if k in ["score", "streak", "unlocked_level", "used_cases"] else v
 
 def persist_now():
     user = get_current_user()
@@ -167,6 +183,14 @@ def persist_now():
         "used_cases": st.session_state.used_cases,
         "when": datetime.now().isoformat()
     })
+    # Salva progresso no Firebase (atualiza o doc do usuário — 1 write)
+    save_student_progress(
+        user_id=user["id"],
+        current_question_id=st.session_state.get("current_case_id", "") or "",
+        used_cases=st.session_state.used_cases,
+        score=st.session_state.score,
+        streak=st.session_state.streak
+    )
 
 def start_new_case():
     new_case = pick_new_case(st.session_state.unlocked_level, st.session_state.used_cases)
