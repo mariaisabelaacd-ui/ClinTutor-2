@@ -62,158 +62,29 @@ SAVE_PATH = os.path.join(DATA_DIR, "progresso_gamificado.json")
 # =============================
 QUESTIONS: List[Dict[str, Any]] = [
     {
-      "id": "q1_nucleotideo",
-      "pergunta": "Qual a estrutura do nucleotídeo?",
-      "componentes_conhecimento": ["Química dos nucleotídeos"],
-      "resposta_esperada": "O nucleotídeo é composto por uma base nitrogenada, uma pentose e um ou mais grupos fosfato.",
-      "erro_critico": "Nucleotídeo é uma base do DNA",
+      "id": "q_meselson_stahl",
+      "pergunta": "O experimento de Meselson e Stahl demonstrou que a replicação do DNA é semiconservativa. Explique o que significa esse mecanismo e por que ele é biologicamente relevante para a manutenção da informação genética.",
+      "componentes_conhecimento": ["Mecanismo semiconservativo de replicação"],
+      "resposta_esperada": "Na replicação semiconservativa, a dupla-fita de DNA parental é separada, e cada fita serve como molde para a síntese de uma nova fita complementar. O resultado são duas moléculas-filhas, cada uma contendo uma fita original (parental) e uma fita recém-sintetizada. Esse mecanismo garante que a informação genética seja fielmente copiada e transmitida às células-filhas, pois a fita parental serve como gabarito altamente preciso para a montagem da nova fita.",
+      "erro_critico": "Confundir com replicação conservativa (molde permanece intacto) ou dispersiva. Afirmar que ambas as fitas são completamente novas. Não mencionar que cada fita parental serve como molde.",
       "pontuacao": 1,
       "dificuldade": "básico"
     },
     {
-      "id": "q2_ribose_vs_desoxi",
-      "pergunta": "Compare ribose e desoxirribose destacando a diferença no carbono 2’ e por que isso distingue RNA de DNA.",
-      "componentes_conhecimento": ["Química dos nucleotídeos"],
-      "resposta_esperada": "Ribose possui OH no carbono 2’, enquanto a desoxirribose tem H; essa ausência do 2’-OH caracteriza o DNA e ajuda a distingui-lo do RNA.",
-      "pontuacao": 1,
-      "dificuldade": "básico"
-    },
-    {
-      "id": "q3_nucleosideo_vs_nucleotideo",
-      "pergunta": "Defina nucleosídeo e nucleotídeo e explique por que apenas um deles forma polímeros.",
-      "componentes_conhecimento": ["Química dos nucleotídeos"],
-      "resposta_esperada": "Nucleosídeo é formado por base e pentose; nucleotídeo inclui fosfato, que viabiliza ligações fosfodiéster e a formação do polímero.",
-      "pontuacao": 1,
-      "dificuldade": "básico"
-    },
-    {
-      "id": "q4_atp_damp_ump",
-      "pergunta": "Explique o que significam ATP, dAMP e UMP (açúcar, base e número de fosfatos).",
-      "componentes_conhecimento": ["Nomenclatura de nucleotídeos"],
-      "resposta_esperada": "ATP é adenosina trifosfato, dAMP é desoxiadenosina monofosfato, UMP é uridina monofosfato.",
-      "pontuacao": 1,
-      "dificuldade": "básico"
-    },
-    {
-      "id": "q5_purinas_pirimidinas",
-      "pergunta": "Resuma as diferenças estruturais entre bases púricas e pirimídicas e relacione com o pareamento na dupla hélice.",
-      "componentes_conhecimento": ["Estrutura das bases nitrogenadas e pareamento"],
-      "resposta_esperada": "Purinas (A,G) têm dois anéis; pirimidinas (C,T) um anel; pareamento purina-pirimidina ajuda a manter diâmetro constante da hélice.",
-      "erro_critico": "A e G são pirimidinas; T e C são purinas",
-      "pontuacao": 1,
-      "dificuldade": "básico"
-    },
-    {
-      "id": "q6_dna_definicao",
-      "pergunta": "O que é DNA? Responda incluindo do que ele é feito e que tipo de informação ele armazena.",
-      "componentes_conhecimento": ["Estrutura química do DNA", "Organização da dupla hélice"],
-      "resposta_esperada": "DNA é um polímero de desoxirribonucleotídeos; a ordem das bases (A, T, C, G) codifica informação hereditária e instruções para produzir RNAs e proteínas.",
-      "erro_critico": "DNA é uma proteína ou é feito de aminoácidos",
+      "id": "q_dna_polimerase_requisitos",
+      "pergunta": "A DNA polimerase requer condições especiais para sintetizar DNA. Quais são os componentes obrigatórios para sua ação e quais são suas principais limitações funcionais?",
+      "componentes_conhecimento": ["As características e limitações funcionais da DNA polimerase"],
+      "resposta_esperada": "A DNA polimerase possui os seguintes requisitos: Molde (template) — uma fita de DNA simples para servir de base; Primer — um oligonucleotídeo (geralmente de RNA) com extremidade 3'-OH livre, pois a DNA polimerase não consegue iniciar síntese do zero; Desoxirribonucleotídeos trifosfato (dNTPs) — os substratos energéticos. Limitações: só sintetiza no sentido 5'→3'; não consegue iniciar uma nova fita sem primer.",
+      "erro_critico": "Afirmar que a DNA polimerase pode iniciar a síntese sem um primer. Dizer que a energia vem de outra fonte. Omitir a importância do molde.",
       "pontuacao": 2,
       "dificuldade": "intermediário"
     },
     {
-      "id": "q7_5_3_line",
-      "pergunta": "O que representam as denominações 5' e 3' de uma cadeia polinucleotídica?",
-      "componentes_conhecimento": ["Organização da dupla hélice"],
-      "resposta_esperada": "Uma extremidade termina em 5’-fosfato e a outra em 3’-hidroxila; sequências são sintetizadas com referência a 5’→3’.",
-      "pontuacao": 2,
-      "dificuldade": "intermediário"
-    },
-    {
-      "id": "q8_ligacao_fosfodiester",
-      "pergunta": "O que é a ligação fosfodiéster e qual é a consequência dela para a estrutura da fita de DNA?",
-      "componentes_conhecimento": ["Interações do DNA"],
-      "resposta_esperada": "Ligação covalente 3’–5’ entre nucleotídeos, formando o esqueleto açúcar-fosfato contínuo e conferindo estabilidade e polaridade à fita.",
-      "erro_critico": "Ligação fraca ou ligação de hidrogênio entre bases",
-      "pontuacao": 2,
-      "dificuldade": "intermediário"
-    },
-    {
-      "id": "q9_complementaridade",
-      "pergunta": "Explique o que é complementaridade de bases e dê um exemplo.",
-      "componentes_conhecimento": ["Interações do DNA"],
-      "resposta_esperada": "Cada base pareia preferencialmente com sua complementar (A com T; G com C) ou uma purina sempre com uma pirimidina.",
-      "erro_critico": "A pareia com C ou G pareia com T",
-      "pontuacao": 2,
-      "dificuldade": "intermediário"
-    },
-    {
-      "id": "q10_antiparalelismo",
-      "pergunta": "O que significa dizer que as fitas do DNA são antiparalelas?",
-      "componentes_conhecimento": ["Organização da dupla hélice"],
-      "resposta_esperada": "A extremidade 3' de uma fita está pareada à extremidade 5' da fita complementar; enquanto uma fita vai 5'→3', a outra está no sentido contrário.",
-      "pontuacao": 2,
-      "dificuldade": "intermediário"
-    },
-    {
-      "id": "q11_interacoes_fitas",
-      "pergunta": "Quais interações mantêm as duas fitas unidas na dupla hélice? Diferencie o que une na mesma fita vs entre fitas.",
-      "componentes_conhecimento": ["Interações do DNA"],
-      "resposta_esperada": "Na mesma fita: fosfodiéster (covalente). Entre fitas: ligações de hidrogênio e empilhamento de bases que estabilizam a hélice.",
-      "erro_critico": "As fitas são unidas por ligações peptídicas",
-      "pontuacao": 2,
-      "dificuldade": "intermediário"
-    },
-    {
-      "id": "q12_dna_armazenamento",
-      "pergunta": "Explique por que o DNA é adequado para armazenar informação por longos períodos.",
-      "componentes_conhecimento": ["Estrutura química do DNA", "Organização da dupla hélice"],
-      "resposta_esperada": "O backbone covalente é estável, a informação está na sequência, a dupla hélice protege as bases e a complementaridade permite cópia fiel e reparo.",
-      "erro_critico": "Porque o DNA tem desoxirribose, sendo menos reativo",
-      "pontuacao": 3,
-      "dificuldade": "avançado"
-    },
-    {
-      "id": "q13_complementaridade_func",
-      "pergunta": "Por que a complementaridade de bases permite que o DNA funcione como molde na replicação e transcrição?",
-      "componentes_conhecimento": ["Organização da dupla hélice", "Estrutura química do DNA"],
-      "resposta_esperada": "Uma fita contém a informação para gerar a outra por regras de pareamento; enzimas usam a fita molde para adicionar nucleotídeos complementares.",
-      "pontuacao": 3,
-      "dificuldade": "avançado"
-    },
-    {
-      "id": "q14_hidrogenio_vs_empilhamento",
-      "pergunta": "Compare o papel das ligações de hidrogênio com o empilhamento de bases na estabilidade do DNA.",
-      "componentes_conhecimento": ["Organização da dupla hélice"],
-      "resposta_esperada": "Ligações de hidrogênio definem o pareamento e contribuem para coesão; o empilhamento hidrofóbico/van der Waals contribui fortemente para estabilidade global.",
-      "erro_critico": "Apenas as ligações de hidrogênio são importantes",
-      "pontuacao": 3,
-      "dificuldade": "avançado"
-    },
-    {
-      "id": "q15_desnaturacao",
-      "pergunta": "O que acontece com a dupla hélice durante a desnaturação? O que se rompe e o que permanece intacto?",
-      "componentes_conhecimento": ["Organização da dupla hélice: complementaridade e antiparalelismo", "Interações que estabilizam e permitem dinâmica do DNA"],
-      "resposta_esperada": "Rompem-se principalmente as interações entre fitas (ligações de hidrogênio e empilhamento de bases); o backbone fosfodiéster permanece intacto (a fita de DNA continua íntegra). A desnaturação NÃO rompe a ligação fosfodiéster.",
-      "erro_critico": "Afirmar que a desnaturação rompe a ligação fosfodiéster",
-      "pontuacao": 3,
-      "dificuldade": "avançado"
-    },
-    {
-      "id": "q16_circular_vs_linear",
-      "pergunta": "Compare, do ponto de vista estrutural, DNA circular e DNA linear: que desafios de organização e manutenção cada um impõe para a célula?",
-      "componentes_conhecimento": ["Estrutura química do DNA como polímero de nucleotídeos", "Interações que estabilizam e permitem dinâmica do DNA"],
-      "resposta_esperada": "DNA circular: maior impacto de topologia (superenrolamento e necessidade de controle por topoisomerases). DNA linear: presença de extremidades (telômeros) exige estratégias específicas de proteção e replicação. Ambos precisam ser compactados e manter acessibilidade para transcrição e replicação.",
-      "erro_critico": "Não mencionar superenrolamento no circular ou não mencionar o problema das extremidades no linear",
-      "pontuacao": 3,
-      "dificuldade": "avançado"
-    },
-    {
-      "id": "q17_ions_ph_dna",
-      "pergunta": "Explique como mudanças no ambiente (íons, força iônica, pH) podem alterar a estrutura do DNA e, por consequência, afetar a expressão gênica ou a replicação.",
-      "componentes_conhecimento": ["Interações que estabilizam e permitem dinâmica do DNA", "Estrutura química do DNA como polímero de nucleotídeos"],
-      "resposta_esperada": "Íons (ex: Mg²⁺, Na⁺) estabilizam ao neutralizar a repulsão entre os fosfatos negativos do backbone. Variações de pH afetam o pareamento de bases (ionização das bases rompe pontes de hidrogênio). Queda de força iônica desestabiliza a hélice. Essas mudanças podem impedir o acesso de enzimas, alterar a conformação do DNA e comprometer a fidelidade da replicação ou transcrição.",
-      "erro_critico": "Não relacionar o efeito dos íons com a repulsão dos fosfatos, ou não mencionar que pH afeta as bases",
-      "pontuacao": 3,
-      "dificuldade": "avançado"
-    },
-    {
-      "id": "q18_absorbancia_260nm",
-      "pergunta": "Por que a absorbância a 260 nm é mais alta para um DNA fita simples do que para um DNA fita dupla? O que isso indica sobre a estrutura das bases?",
-      "componentes_conhecimento": ["Estrutura química do DNA como polímero de nucleotídeos", "Organização da dupla hélice: complementaridade e antiparalelismo"],
-      "resposta_esperada": "Na fita dupla, o empilhamento das bases nitrogenadas (stacking) e o pareamento reduzem a exposição delas ao solvente e diminuem a absorção de UV (efeito hipocrômico). Na fita simples, as bases ficam mais expostas ao UV, aumentando a absorbância. Quando o DNA se desnatura (separação das fitas), a absorbância a 260 nm aumenta — fenômeno chamado efeito hipercrômico — e pode ser usado para monitorar a temperatura de melting (Tm).",
-      "erro_critico": "Inverter e dizer que DNA fita dupla absorve mais, ou não mencionar o empilhamento de bases como causa",
+      "id": "q_direcionalidade_5_3",
+      "pergunta": "A síntese de DNA ocorre exclusivamente no sentido 5'→3'. Explique por que isso ocorre e quais são as consequências dessa direcionalidade para a síntese da fita lagging.",
+      "componentes_conhecimento": ["A direcionalidade da síntese de DNA (5'→3')", "As características e limitações funcionais da DNA polimerase"],
+      "resposta_esperada": "A direcionalidade 5'→3' está diretamente associada à adição de nucleotídeos ao 3'-OH livre da fita crescente — a DNA polimerase só catalisa essa reação nesse sentido. Durante a síntese 5'→3', o substrato da reação é o dNTP que entra na posição 5'. Como as duas fitas são antiparalelas, apenas a fita leading pode ser sintetizada continuamente; a fita lagging deve ser sintetizada em fragmentos (fragmentos de Okazaki), cada um com seu próprio primer, no sentido oposto ao da abertura da forquilha. Se a polimerase sintetizasse no sentido 3'→5', não haveria liberação do pirofosfato na direção correta e a reação seria energeticamente desfavorável.",
+      "erro_critico": "Não relacionar a direcionalidade ao 3'-OH livre. Confundir os sentidos das fitas. Não discutir o que acontece com a fita lagging.",
       "pontuacao": 3,
       "dificuldade": "avançado"
     }
@@ -225,6 +96,8 @@ LEVEL_MAP = {
     2: ["básico", "intermediário"],
     3: ["básico", "intermediário", "avançado"]
 }
+
+
 
 def evaluate_answer_with_ai(question_data: Dict, user_answer: str) -> Dict[str, Any]:
     prompt = f"""

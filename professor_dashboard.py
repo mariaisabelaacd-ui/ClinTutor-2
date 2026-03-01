@@ -19,6 +19,7 @@ from logic import get_case
 from admin_utils import (
     reset_student_analytics, clear_student_chat_interactions,
     reset_all_students_analytics, clear_all_chat_interactions,
+    reset_all_student_progress,
     log_admin_action, get_database_stats
 )
 from ui_helpers import icon, metric_card
@@ -1768,7 +1769,28 @@ def show_admin_tab(student_users: List[Dict]):
     
     st.markdown("---")
 
-    # Ação 4: Mudar a própria senha
+    # RESET COMPLETO — apaga analytics + chat + progresso dos alunos
+    st.markdown(f"### 🚨 Reset Completo (Início de Nova Rodada)")
+    st.caption("Apaga analytics, chats E o progresso salvo de todos os alunos. Use ao iniciar uma nova bateria de questões.")
+    confirm_full = st.checkbox("Confirmo que quero apagar TODOS os dados dos alunos", key="confirm_full_reset")
+    if st.button("RESET COMPLETO", key="full_reset_btn", type="primary", disabled=not confirm_full):
+        if 'confirm_full_reset_stage2' not in st.session_state:
+            st.session_state.confirm_full_reset_stage2 = True
+            st.error("⚠️ ÚLTIMA CONFIRMAÇÃO — Clique novamente para apagar TUDO!")
+        else:
+            with st.spinner("Apagando todos os dados..."):
+                r1 = reset_all_students_analytics()
+                r2 = clear_all_chat_interactions()
+                r3 = reset_all_student_progress()
+                log_admin_action("reset_completo", f"Analytics: {r1['deleted']} docs | Chat: {r2['deleted']} docs | Progress: {r3['updated']} alunos")
+                del st.session_state.confirm_full_reset_stage2
+                st.cache_data.clear()
+                st.success(f"✅ Reset completo! Analytics: {r1['deleted']} | Chat: {r2['deleted']} | Alunos resetados: {r3['updated']}")
+                st.rerun()
+
+    st.markdown("---")
+
+
     st.markdown(f"### {icon('password', '#f59e0b', 24)} Alterar Sua Senha", unsafe_allow_html=True)
     st.write("Aqui você pode alterar sua própria senha de acesso.")
     

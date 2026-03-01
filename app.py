@@ -252,37 +252,7 @@ def main():
     
     if st.sidebar.button("Pular Questão", use_container_width=True): start_new_case()
     
-    # --- SELETOR DE QUESTÃO ---
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("### <span class='material-icons-outlined'>format_list_numbered</span> Escolher Questão", unsafe_allow_html=True)
-    
-    diff_icons = {"básico": "🟢", "intermediário": "🟡", "avançado": "🔴"}
-    answered_ids = set(st.session_state.used_cases)
-    
-    for i, q in enumerate(QUESTIONS, 1):
-        qid = q["id"]
-        diff = q.get("dificuldade", "básico")
-        icon = diff_icons.get(diff.lower(), "⚪")
-        done = "✅" if qid in answered_ids else "  "
-        label = f"{done} {icon} Q{i} — {diff.title()}"
-        # Destaque se é a questão atual
-        is_current = (st.session_state.current_case_id == qid)
-        btn_type = "primary" if is_current else "secondary"
-        if st.sidebar.button(label, key=f"pick_q_{qid}", use_container_width=True, type=btn_type):
-            # Vai direto para esta questão
-            st.session_state.current_case_id = qid
-            if qid not in st.session_state.used_cases:
-                st.session_state.used_cases.append(qid)
-            try:
-                st.session_state.current_timer_id = start_case_timer(user["id"], qid)
-            except:
-                pass
-            st.session_state.case_counter += 1
-            st.session_state.case_scored = False
-            st.session_state.last_result = None
-            st.session_state.chat = []
-            st.session_state.show_next_case_btn = False
-            st.rerun()
+
 
     # --- MAIN CONTENT ---
     if st.session_state.current_case_id is None: start_new_case()
