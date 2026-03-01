@@ -183,10 +183,37 @@ QUESTIONS: List[Dict[str, Any]] = [
     },
     {
       "id": "q15_desnaturacao",
-      "pergunta": "O que acontece com a dupla hélice durante a desnaturação?",
-      "componentes_conhecimento": ["Organização da dupla hélice", "Interações do DNA"],
-      "resposta_esperada": "Rompem-se interações entre fitas (ligações de hidrogênio e empilhamento), mas o backbone fosfodiéster geralmente permanece intacto.",
-      "erro_critico": "Desnaturação rompe ligação fosfodiéster",
+      "pergunta": "O que acontece com a dupla hélice durante a desnaturação? O que se rompe e o que permanece intacto?",
+      "componentes_conhecimento": ["Organização da dupla hélice: complementaridade e antiparalelismo", "Interações que estabilizam e permitem dinâmica do DNA"],
+      "resposta_esperada": "Rompem-se principalmente as interações entre fitas (ligações de hidrogênio e empilhamento de bases); o backbone fosfodiéster permanece intacto (a fita de DNA continua íntegra). A desnaturação NÃO rompe a ligação fosfodiéster.",
+      "erro_critico": "Afirmar que a desnaturação rompe a ligação fosfodiéster",
+      "pontuacao": 3,
+      "dificuldade": "avançado"
+    },
+    {
+      "id": "q16_circular_vs_linear",
+      "pergunta": "Compare, do ponto de vista estrutural, DNA circular e DNA linear: que desafios de organização e manutenção cada um impõe para a célula?",
+      "componentes_conhecimento": ["Estrutura química do DNA como polímero de nucleotídeos", "Interações que estabilizam e permitem dinâmica do DNA"],
+      "resposta_esperada": "DNA circular: maior impacto de topologia (superenrolamento e necessidade de controle por topoisomerases). DNA linear: presença de extremidades (telômeros) exige estratégias específicas de proteção e replicação. Ambos precisam ser compactados e manter acessibilidade para transcrição e replicação.",
+      "erro_critico": "Não mencionar superenrolamento no circular ou não mencionar o problema das extremidades no linear",
+      "pontuacao": 3,
+      "dificuldade": "avançado"
+    },
+    {
+      "id": "q17_ions_ph_dna",
+      "pergunta": "Explique como mudanças no ambiente (íons, força iônica, pH) podem alterar a estrutura do DNA e, por consequência, afetar a expressão gênica ou a replicação.",
+      "componentes_conhecimento": ["Interações que estabilizam e permitem dinâmica do DNA", "Estrutura química do DNA como polímero de nucleotídeos"],
+      "resposta_esperada": "Íons (ex: Mg²⁺, Na⁺) estabilizam ao neutralizar a repulsão entre os fosfatos negativos do backbone. Variações de pH afetam o pareamento de bases (ionização das bases rompe pontes de hidrogênio). Queda de força iônica desestabiliza a hélice. Essas mudanças podem impedir o acesso de enzimas, alterar a conformação do DNA e comprometer a fidelidade da replicação ou transcrição.",
+      "erro_critico": "Não relacionar o efeito dos íons com a repulsão dos fosfatos, ou não mencionar que pH afeta as bases",
+      "pontuacao": 3,
+      "dificuldade": "avançado"
+    },
+    {
+      "id": "q18_absorbancia_260nm",
+      "pergunta": "Por que a absorbância a 260 nm é mais alta para um DNA fita simples do que para um DNA fita dupla? O que isso indica sobre a estrutura das bases?",
+      "componentes_conhecimento": ["Estrutura química do DNA como polímero de nucleotídeos", "Organização da dupla hélice: complementaridade e antiparalelismo"],
+      "resposta_esperada": "Na fita dupla, o empilhamento das bases nitrogenadas (stacking) e o pareamento reduzem a exposição delas ao solvente e diminuem a absorção de UV (efeito hipocrômico). Na fita simples, as bases ficam mais expostas ao UV, aumentando a absorbância. Quando o DNA se desnatura (separação das fitas), a absorbância a 260 nm aumenta — fenômeno chamado efeito hipercrômico — e pode ser usado para monitorar a temperatura de melting (Tm).",
+      "erro_critico": "Inverter e dizer que DNA fita dupla absorve mais, ou não mencionar o empilhamento de bases como causa",
       "pontuacao": 3,
       "dificuldade": "avançado"
     }
