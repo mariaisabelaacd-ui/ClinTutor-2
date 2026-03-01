@@ -180,10 +180,18 @@ button[kind="primary"]:hover {
 /* ==========================================================================
    6. SIDEBAR & TEXT ELEMENTS
    ========================================================================== */
-[data-testid="stSidebar"] {
-    background-color: var(--background-color);
-    border-right: 1px solid rgba(128, 128, 128, 0.15);
-    z-index: 999999 !important;
+[data-testid="stSidebar"],
+section[data-testid="stSidebar"],
+[data-testid="stSidebar"]>div,
+.stSidebar {
+    background-color: var(--background-color) !important;
+    border-right: 1px solid rgba(128, 128, 128, 0.15) !important;
+    z-index: 9999999 !important;
+}
+
+/* Force main content to stay below the sidebar overlay on mobile */
+.block-container {
+    z-index: 1 !important;
 }
 
 /* Metric Value */
