@@ -9,7 +9,7 @@ import json
 import os
 
 # Segredo para assinatura de cookies (em produção, usar env var)
-SECRET_KEY = "clintutor-secure-key-2026"
+SECRET_KEY = "auth_cookie_signature_fallback_key"
 
 # Configurações do banco de dados local (fallback)
 USERS_DB_PATH = os.path.join(os.path.expanduser("~"), ".clintutor", "users.json")
@@ -545,6 +545,16 @@ def logout_user():
     st.session_state.user_email = None
     st.session_state.user_type = None
     st.session_state.is_logged_in = False
+    
+    # Limpa estados de progresso
+    keys_to_clear = [
+        "score", "streak", "unlocked_level", "current_case_id", "case_scored",
+        "last_result", "chat", "show_next_case_btn", "used_cases",
+        "current_timer_id", "case_counter", "progress_loaded"
+    ]
+    for key in keys_to_clear:
+        if key in st.session_state:
+            del st.session_state[key]
 
 def is_logged_in() -> bool:
     """Verifica se usuário está logado"""

@@ -95,8 +95,17 @@ def reset_all_student_progress() -> Dict[str, int]:
     Usado ao trocar de conjunto de questões.
     """
     try:
+        # Limpa o arquivo local de fallback (progress.json)
+        try:
+            import os
+            from logic import SAVE_PATH
+            if os.path.exists(SAVE_PATH):
+                os.remove(SAVE_PATH)
+        except Exception as local_err:
+            print(f"Erro ao limpar fallback local: {local_err}")
+
         if not is_firebase_connected():
-            st.error("Firebase não está conectado.")
+            st.error("Firebase não está conectado, limpou apenas fallback local.")
             return {'updated': 0, 'errors': 0}
         db = get_firestore_db()  # Usuários ficam sempre no Firebase primário
         docs = db.collection('users').where('user_type', '==', 'aluno').get()
