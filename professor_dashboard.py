@@ -509,25 +509,33 @@ def generate_global_interactions_pdf(student_users: List[Dict], all_analytics: D
             else:                          status_color = (220, 38, 38)
 
             # Cabecalho da questao
+            pdf.set_x(10)
             pdf.set_fill_color(230, 230, 235)
             pdf.set_font('Helvetica', 'B', 9)
-            pdf.cell(W, 6, safe(f'  [{idx}] {date_str}  |  Dificuldade: {q_info.get("dificuldade","N/A").title()}  |  Componente: {", ".join(q_info.get("componentes_conhecimento",[]))}'), 1, 1, 'L', True)
+            comps = ', '.join(q_info.get('componentes_conhecimento', []))
+            diff = q_info.get('dificuldade', 'N/A').title()
+            header_txt = safe(f'  [{idx}] {date_str}  |  {diff}  |  {comps}')
+            pdf.cell(W, 6, header_txt, 1, 1, 'L', True)
 
+            pdf.set_x(10)
             pdf.set_font('Helvetica', '', 8)
             pdf.multi_cell(W, 5, safe(q_info.get('pergunta', 'N/A')))
 
             # Barra status
+            pdf.set_x(10)
             pdf.set_fill_color(*status_color)
             pdf.set_text_color(255, 255, 255)
             pdf.set_font('Helvetica', 'B', 8)
-            pdf.cell(W, 6, safe(f'  Status: {status_txt}   |   Pontos ganhos: {pts}   |   Max pontos: {q_info.get("pontuacao",1)}'), 0, 1, 'L', True)
+            pdf.cell(W, 6, safe(f'  Status: {status_txt}   |   Pontos ganhos: {pts}'), 0, 1, 'L', True)
             pdf.set_text_color(0, 0, 0)
 
             # Resposta do aluno
             ans = result.get('user_answer', 'N/A')
+            pdf.set_x(10)
             pdf.set_fill_color(237, 242, 255)
             pdf.set_font('Helvetica', 'B', 8)
             pdf.cell(W, 5, '  Resposta do Aluno:', 0, 1, 'L', True)
+            pdf.set_x(10)
             pdf.set_font('Helvetica', '', 8)
             pdf.multi_cell(W, 5, safe(str(ans) if ans else 'Nao respondeu'))
 
@@ -539,6 +547,7 @@ def generate_global_interactions_pdf(student_users: List[Dict], all_analytics: D
                 except Exception:
                     pass
 
+                pdf.set_x(10)
                 pdf.set_fill_color(253, 242, 248)
                 pdf.set_font('Helvetica', 'B', 8)
                 pdf.cell(W, 5, safe(f'  Chat com o Tutor ({len(chats)} mensagens):'), 0, 1, 'L', True)
@@ -547,17 +556,23 @@ def generate_global_interactions_pdf(student_users: List[Dict], all_analytics: D
                     u_msg = safe(chat.get('user_message', ''))
                     b_msg = safe(chat.get('bot_response',  ''))
 
+                    # Aluno
+                    pdf.set_x(10)
                     pdf.set_fill_color(219, 234, 254)
                     pdf.set_font('Helvetica', 'B', 7)
-                    pdf.cell(18, 5, '  Aluno:', 0, 0, 'L', True)
+                    pdf.cell(W, 5, '  Aluno:', 0, 1, 'L', True)
+                    pdf.set_x(14)
                     pdf.set_font('Helvetica', '', 7)
-                    pdf.multi_cell(W - 18, 5, u_msg)
+                    pdf.multi_cell(W - 4, 5, u_msg)
 
+                    # Tutor
+                    pdf.set_x(10)
                     pdf.set_fill_color(240, 253, 244)
                     pdf.set_font('Helvetica', 'B', 7)
-                    pdf.cell(18, 5, '  Tutor:', 0, 0, 'L', True)
+                    pdf.cell(W, 5, '  Tutor:', 0, 1, 'L', True)
+                    pdf.set_x(14)
                     pdf.set_font('Helvetica', 'I', 7)
-                    pdf.multi_cell(W - 18, 5, b_msg)
+                    pdf.multi_cell(W - 4, 5, b_msg)
                     pdf.ln(1)
 
             pdf.ln(5)
