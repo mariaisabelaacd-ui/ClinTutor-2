@@ -1,7 +1,7 @@
 import streamlit as st
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
-from firebase_config import get_firestore_db, is_firebase_connected
+from firebase_config import get_firestore_db, is_firebase_connected, get_db_for_user, get_all_dbs
 import json
 import os
 
@@ -242,15 +242,16 @@ def save_case_analytics(case_analytics: Dict):
         save_case_analytics_local(case_analytics)
 
 def save_case_analytics_firebase(case_analytics: Dict):
-    """Salva analytics de caso no Firebase"""
+    """Salva analytics de caso no Firebase do usuário (roteamento dual)"""
     try:
-        db = get_firestore_db()
+        user_id = case_analytics.get('user_id', '')
+        db = get_db_for_user(user_id)
         analytics_ref = db.collection('case_analytics')
         doc_ref = analytics_ref.add(case_analytics)
-        print(f"SUCESSO: Analytics salvo no Firebase: {doc_ref[1].id}")
+        print(f"SUCESSO: Analytics salvo no Firebase para user {user_id}: {doc_ref[1].id}")
         return True
     except Exception as e:
-        print(f"ERRO: Erro ao salvar analytics no Firebase: {e}")
+        print(f"ERRO ao salvar analytics: {e}")
         st.error(f"Erro ao salvar analytics no Firebase: {e}")
         return False
 
@@ -270,15 +271,16 @@ def save_chat_interaction(interaction: Dict):
         save_chat_interaction_local(interaction)
 
 def save_chat_interaction_firebase(interaction: Dict):
-    """Salva interação do chat no Firebase"""
+    """Salva interação do chat no Firebase do usuário (roteamento dual)"""
     try:
-        db = get_firestore_db()
+        user_id = interaction.get('user_id', '')
+        db = get_db_for_user(user_id)
         chat_ref = db.collection('chat_interactions')
         doc_ref = chat_ref.add(interaction)
-        print(f"SUCESSO: Interação do chat salva no Firebase: {doc_ref[1].id}")
+        print(f"SUCESSO: Chat salvo no Firebase para user {user_id}: {doc_ref[1].id}")
         return True
     except Exception as e:
-        print(f"ERRO: Erro ao salvar interação do chat no Firebase: {e}")
+        print(f"ERRO ao salvar chat: {e}")
         st.error(f"Erro ao salvar interação do chat no Firebase: {e}")
         return False
 
@@ -305,32 +307,25 @@ def get_user_case_analytics(user_id: str) -> List[Dict]:
 
 @st.cache_data(ttl=300, show_spinner=False)
 def get_user_case_analytics_firebase(user_id: str) -> List[Dict]:
-    """Recupera analytics de casos do Firebase"""
+    """Recupera analytics de casos do Firebase correto para este usuário."""
     try:
-        db = get_firestore_db()
+        db = get_db_for_user(user_id)
         analytics_ref = db.collection('case_analytics')
-        
-        # Busca sem order_by para evitar necessidade de índice composto
         query = analytics_ref.where('user_id', '==', user_id)
         docs = query.get()
-        
         analytics = []
         for doc in docs:
             data = doc.to_dict()
             data['id'] = doc.id
             analytics.append(data)
-        
-        # Ordena no código por timestamp (mais recente primeiro)
         try:
             analytics.sort(key=get_timestamp_sort_key, reverse=True)
-        except Exception as e:
-            st.warning(f"⚠️ Erro ao ordenar analytics: {e}")
+        except Exception:
             pass
-        
         print(f"DEBUG: Encontrados {len(analytics)} analytics para usuário {user_id}")
         return analytics
     except Exception as e:
-        print(f"ERRO: Erro ao buscar analytics no Firebase: {e}")
+        print(f"ERRO ao buscar analytics: {e}")
         st.error(f"Erro ao buscar analytics no Firebase: {e}")
         return []
 
@@ -351,25 +346,20 @@ def get_user_chat_interactions(user_id: str, case_id: str = None) -> List[Dict]:
 
 @st.cache_data(ttl=300, show_spinner=False)
 def get_user_chat_interactions_firebase(user_id: str, case_id: str = None) -> List[Dict]:
-    """Recupera interações do chat do Firebase - compatível com formato antigo e novo (agregado)"""
+    """Recupera interações do chat do Firebase correto para este usuário."""
     try:
-        db = get_firestore_db()
+        db = get_db_for_user(user_id)
         chat_ref = db.collection('chat_interactions')
         query = chat_ref.where('user_id', '==', user_id)
-        
         if case_id:
             query = query.where('case_id', '==', case_id)
-        
         docs = query.get()
-        
         interactions = []
         for doc in docs:
             data = doc.to_dict()
-            
-            # NOVO FORMATO: documento tem lista de mensagens (otimizado)
             if 'messages' in data and isinstance(data['messages'], list):
                 for msg in data['messages']:
-                    flat = {
+                    interactions.append({
                         'user_id': data.get('user_id'),
                         'case_id': data.get('case_id'),
                         'user_message': msg.get('user_message', ''),
@@ -377,19 +367,14 @@ def get_user_chat_interactions_firebase(user_id: str, case_id: str = None) -> Li
                         'response_time_seconds': msg.get('response_time_seconds'),
                         'timestamp': msg.get('timestamp', data.get('timestamp')),
                         'id': doc.id
-                    }
-                    interactions.append(flat)
+                    })
             else:
-                # FORMATO ANTIGO: um doc por mensagem - mantém compatibilidade
                 data['id'] = doc.id
                 interactions.append(data)
-        
-        # Ordena por timestamp (mais antigo primeiro para leitura no PDF/chat)
         try:
             interactions.sort(key=get_timestamp_sort_key, reverse=False)
         except Exception:
             pass
-        
         return interactions
     except Exception as e:
         st.error(f"Erro ao buscar interações do chat no Firebase: {e}")
@@ -418,50 +403,48 @@ def get_all_users_analytics() -> Dict[str, Dict]:
 
 @st.cache_data(ttl=300, show_spinner=False)
 def get_all_users_analytics_firebase() -> Dict[str, Dict]:
-    """Recupera analytics de todos os usuários do Firebase (apenas alunos)"""
+    """
+    Recupera analytics de todos os todos os alunos consultando TODOS os Firebases.
+    Mescla os resultados de ambos os projetos sem duplicatas.
+    """
     try:
-        db = get_firestore_db()
-        
-        # Obtém apenas IDs de alunos
         student_ids = get_students_only()
         if not student_ids:
             return {}
-        
-        # Busca todos os analytics de casos
-        case_analytics_ref = db.collection('case_analytics')
-        case_docs = case_analytics_ref.get()
-        
-        # Busca todas as interações do chat
-        chat_ref = db.collection('chat_interactions')
-        chat_docs = chat_ref.get()
-        
-        # Organiza por usuário (apenas alunos)
-        users_analytics = {}
-        
-        for doc in case_docs:
-            data = doc.to_dict()
-            user_id = data.get('user_id')
-            if user_id in student_ids:  # Filtra apenas alunos
-                if user_id not in users_analytics:
-                    users_analytics[user_id] = {
-                        'case_analytics': [],
-                        'chat_interactions': []
-                    }
-                users_analytics[user_id]['case_analytics'].append(data)
-        
-        for doc in chat_docs:
-            data = doc.to_dict()
-            user_id = data.get('user_id')
-            if user_id in student_ids:  # Filtra apenas alunos
-                if user_id not in users_analytics:
-                    users_analytics[user_id] = {
-                        'case_analytics': [],
-                        'chat_interactions': []
-                    }
-                users_analytics[user_id]['chat_interactions'].append(data)
-        
+
+        all_dbs = get_all_dbs()
+        users_analytics: Dict[str, Dict] = {}
+
+        for db in all_dbs:
+            # Busca casos
+            case_docs = db.collection('case_analytics').get()
+            for doc in case_docs:
+                data = doc.to_dict()
+                uid = data.get('user_id')
+                if uid not in student_ids:
+                    continue
+                if uid not in users_analytics:
+                    users_analytics[uid] = {'case_analytics': [], 'chat_interactions': []}
+                # Evita duplicatas (se secondary == primary)
+                if not any(e.get('id') == doc.id for e in users_analytics[uid]['case_analytics']):
+                    data['id'] = doc.id
+                    users_analytics[uid]['case_analytics'].append(data)
+
+            # Busca chats
+            chat_docs = db.collection('chat_interactions').get()
+            for doc in chat_docs:
+                data = doc.to_dict()
+                uid = data.get('user_id')
+                if uid not in student_ids:
+                    continue
+                if uid not in users_analytics:
+                    users_analytics[uid] = {'case_analytics': [], 'chat_interactions': []}
+                if not any(e.get('id') == doc.id for e in users_analytics[uid]['chat_interactions']):
+                    data['id'] = doc.id
+                    users_analytics[uid]['chat_interactions'].append(data)
+
         return users_analytics
-        
+
     except Exception as e:
         st.error(f"Erro ao buscar analytics no Firebase: {e}")
         return {}

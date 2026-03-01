@@ -1,179 +1,223 @@
 import os
 import json
+import hashlib
 import streamlit as st
 from firebase_admin import credentials, firestore, auth, initialize_app, get_app
 from typing import Optional
 
-class FirebaseConfig:
-    """Classe para gerenciar configuração do Firebase"""
-    
+# =============================
+# Dual Firebase Manager
+# =============================
+
+class DualFirebaseManager:
+    """
+    Gerencia dois projetos Firebase em paralelo.
+    - Autenticação (Firebase Auth) sempre no app primário (índice 0)
+    - Firestore é roteado por hash(user_id) % 2 para distribuir writes
+    - Todos os dados de um mesmo usuário ficam sempre no mesmo Firebase
+    """
+
     _instance = None
     _initialized = False
-    
+
     def __new__(cls):
         if cls._instance is None:
-            cls._instance = super(FirebaseConfig, cls).__new__(cls)
+            cls._instance = super().__new__(cls)
         return cls._instance
-    
+
     def __init__(self):
         if not self._initialized:
-            self.db = None
-            self.app = None
-            self._initialize_firebase()
-            FirebaseConfig._initialized = True
-    
-    def _initialize_firebase(self):
-        """Inicializa conexão com Firebase"""
+            self.dbs = [None, None]   # Dois Firebases
+            self.apps = [None, None]
+            self._init_primary()
+            self._init_secondary()
+            DualFirebaseManager._initialized = True
+
+    # ------------------------------------------------------------------
+    # Inicialização
+    # ------------------------------------------------------------------
+
+    def _load_cred_dict(self, secrets_key: str) -> Optional[dict]:
+        """Carrega credenciais de st.secrets pela chave informada."""
+        if secrets_key not in st.secrets:
+            return None
+        cred_dict = dict(st.secrets[secrets_key])
+        if 'private_key' in cred_dict and isinstance(cred_dict['private_key'], str):
+            cred_dict['private_key'] = cred_dict['private_key'].replace('\\n', '\n')
+        return cred_dict
+
+    def _init_primary(self):
+        """Inicializa Firebase primário (índice 0) — também contém Auth."""
         try:
-            # Verifica se já existe um app Firebase inicializado
+            # Tenta reutilizar app já inicializado
             try:
-                self.app = get_app()
-                self.db = firestore.client()
-                st.info("🔄 Firebase já estava inicializado")
-                return  # Já está inicializado
+                app = get_app('firebase-primary')
+                self.apps[0] = app
+                self.dbs[0] = firestore.client(app=app)
+                return
             except ValueError:
-                pass  # App não existe, continua com a inicialização
-            
-            # Debug: Verifica qual método de credenciais está sendo usado
-            st.info("🔍 Verificando credenciais do Firebase...")
-            
-            # Tenta carregar credenciais do Streamlit secrets (Streamlit Cloud)
-            if 'firebase_credentials' in st.secrets:
-                st.info("✅ Usando credenciais do Streamlit Secrets")
-                cred_dict = dict(st.secrets['firebase_credentials'])  # Cria uma cópia
-                
-                # Corrige a chave privada se necessário
-                if 'private_key' in cred_dict and isinstance(cred_dict['private_key'], str):
-                    # Garante que as quebras de linha estão corretas
-                    cred_dict['private_key'] = cred_dict['private_key'].replace('\\n', '\n')
-                
-                cred = credentials.Certificate(cred_dict)
-            # Tenta carregar credenciais de variáveis de ambiente (Streamlit Cloud)
-            elif os.getenv('FIREBASE_PROJECT_ID'):
-                st.info("✅ Usando credenciais de variáveis de ambiente")
-                cred_dict = {
-                    "type": "service_account",
-                    "project_id": os.getenv('FIREBASE_PROJECT_ID'),
-                    "private_key_id": os.getenv('FIREBASE_PRIVATE_KEY_ID'),
-                    "private_key": os.getenv('FIREBASE_PRIVATE_KEY').replace('\\n', '\n'),
-                    "client_email": os.getenv('FIREBASE_CLIENT_EMAIL'),
-                    "client_id": os.getenv('FIREBASE_CLIENT_ID'),
-                    "auth_uri": os.getenv('FIREBASE_AUTH_URI'),
-                    "token_uri": os.getenv('FIREBASE_TOKEN_URI'),
-                    "auth_provider_x509_cert_url": os.getenv('FIREBASE_AUTH_PROVIDER_X509_CERT_URL'),
-                    "client_x509_cert_url": os.getenv('FIREBASE_CLIENT_X509_CERT_URL')
-                }
-                cred = credentials.Certificate(cred_dict)
-            else:
+                pass
+
+            cred_dict = self._load_cred_dict('firebase_credentials')
+            if not cred_dict:
                 # Fallback para arquivo local
-                st.info("⚠️ Usando arquivo local (modo offline)")
                 cred_path = os.path.join(os.path.dirname(__file__), 'firebase-credentials.json')
                 if os.path.exists(cred_path):
                     cred = credentials.Certificate(cred_path)
                 else:
-                    st.error("""
-                    🔥 **Configuração do Firebase necessária!**
-                    
-                    Para usar o Firebase, você precisa:
-                    
-                    1. **Criar um projeto no Firebase Console** (https://console.firebase.google.com)
-                    2. **Habilitar Firestore Database**
-                    3. **Gerar uma chave de serviço** (Service Account Key)
-                    4. **Configurar as credenciais** de uma das formas:
-                    
-                    **Opção A - Arquivo local:**
-                    - Salve o arquivo JSON da chave como `firebase-credentials.json` na pasta do projeto
-                    
-                    **Opção B - Streamlit Secrets (Streamlit Cloud):**
-                    - Adicione as credenciais em `.streamlit/secrets.toml`:
-                    ```toml
-                    [firebase_credentials]
-                    type = "service_account"
-                    project_id = "seu-projeto-id"
-                    private_key_id = "sua-private-key-id"
-                    private_key = "sua-private-key"
-                    client_email = "seu-client-email"
-                    client_id = "seu-client-id"
-                    auth_uri = "https://accounts.google.com/o/oauth2/auth"
-                    token_uri = "https://oauth2.googleapis.com/token"
-                    auth_provider_x509_cert_url = "https://www.googleapis.com/oauth2/v1/certs"
-                    client_x509_cert_url = "sua-cert-url"
-                    ```
-                    
-                    **Opção C - Variáveis de Ambiente (Streamlit Cloud):**
-                    - Configure as variáveis no painel do Streamlit Cloud
-                    """)
+                    st.error("❌ Credenciais do Firebase primário não encontradas.")
                     return
-            
-            # Inicializa o app Firebase
-            self.app = initialize_app(cred)
-            self.db = firestore.client()
-            
-            st.success("✅ Firebase conectado com sucesso!")
-            
-        except Exception as e:
-            if "already exists" not in str(e):
-                st.error(f"❌ Erro ao conectar com Firebase: {e}")
-                st.info("💡 Verifique se as credenciais estão configuradas corretamente.")
             else:
-                # Firebase já foi inicializado, apenas conecta
-                try:
-                    self.app = get_app()
-                    self.db = firestore.client()
-                except Exception as e2:
-                    st.error(f"❌ Erro ao conectar com Firebase: {e2}")
-    
-    def get_database(self):
-        """Retorna instância do Firestore"""
-        return self.db
-    
-    def is_connected(self) -> bool:
-        """Verifica se está conectado ao Firebase"""
-        return self.db is not None
+                cred = credentials.Certificate(cred_dict)
 
-# Instância global do Firebase
-firebase_config = FirebaseConfig()
+            self.apps[0] = initialize_app(cred, name='firebase-primary')
+            self.dbs[0] = firestore.client(app=self.apps[0])
+
+        except Exception as e:
+            if 'already exists' in str(e):
+                try:
+                    self.apps[0] = get_app('firebase-primary')
+                    self.dbs[0] = firestore.client(app=self.apps[0])
+                except Exception:
+                    pass
+            else:
+                st.error(f"❌ Erro ao conectar Firebase primário: {e}")
+
+    def _init_secondary(self):
+        """Inicializa Firebase secundário (índice 1) — somente Firestore."""
+        try:
+            try:
+                app = get_app('firebase-secondary')
+                self.apps[1] = app
+                self.dbs[1] = firestore.client(app=app)
+                return
+            except ValueError:
+                pass
+
+            cred_dict = self._load_cred_dict('firebase_credentials_2')
+            if not cred_dict:
+                # Sem segundo Firebase configurado — usa o primário como fallback
+                self.apps[1] = self.apps[0]
+                self.dbs[1] = self.dbs[0]
+                return
+
+            cred = credentials.Certificate(cred_dict)
+            self.apps[1] = initialize_app(cred, name='firebase-secondary')
+            self.dbs[1] = firestore.client(app=self.apps[1])
+
+        except Exception as e:
+            if 'already exists' in str(e):
+                try:
+                    self.apps[1] = get_app('firebase-secondary')
+                    self.dbs[1] = firestore.client(app=self.apps[1])
+                except Exception:
+                    pass
+            else:
+                # Fallback silencioso: usa o primário
+                self.apps[1] = self.apps[0]
+                self.dbs[1] = self.dbs[0]
+
+    # ------------------------------------------------------------------
+    # API pública
+    # ------------------------------------------------------------------
+
+    def get_db_for_user(self, user_id: str):
+        """
+        Retorna o cliente Firestore correto para este user_id.
+        O roteamento é determinístico: mesmo user_id → mesmo Firebase sempre.
+        """
+        if not user_id:
+            return self.dbs[0]
+        idx = int(hashlib.md5(user_id.encode()).hexdigest(), 16) % 2
+        db = self.dbs[idx]
+        return db if db is not None else self.dbs[0]
+
+    def get_all_dbs(self):
+        """Retorna lista de todos os clientes Firestore disponíveis (sem duplicatas)."""
+        unique = []
+        seen = set()
+        for db in self.dbs:
+            if db is not None and id(db) not in seen:
+                unique.append(db)
+                seen.add(id(db))
+        return unique
+
+    def get_primary_db(self):
+        """Retorna Firestore do Firebase primário (índice 0)."""
+        return self.dbs[0]
+
+    def is_connected(self) -> bool:
+        return self.dbs[0] is not None
+
+    def secondary_is_configured(self) -> bool:
+        """True se o segundo Firebase foi configurado e é diferente do primário."""
+        return (
+            self.dbs[1] is not None and
+            id(self.dbs[1]) != id(self.dbs[0])
+        )
+
+
+# Instância global
+_manager = DualFirebaseManager()
+
+
+# =============================
+# Funções de compatibilidade
+# =============================
 
 def get_firestore_db():
-    """Retorna instância do Firestore ou None se não conectado"""
-    return firebase_config.get_database()
+    """Retorna Firestore primário (compatibilidade retroativa)."""
+    return _manager.get_primary_db()
+
+def get_db_for_user(user_id: str):
+    """Retorna o Firestore correto para este user_id (hash routing)."""
+    return _manager.get_db_for_user(user_id)
+
+def get_all_dbs():
+    """Retorna todos os Firestores ativos (para leituras globais do professor)."""
+    return _manager.get_all_dbs()
 
 def is_firebase_connected() -> bool:
-    """Verifica se Firebase está conectado"""
-    return firebase_config.is_connected()
+    return _manager.is_connected()
+
+def dual_firebase_active() -> bool:
+    """True quando o segundo Firebase está separado e operacional."""
+    return _manager.secondary_is_configured()
 
 def test_firebase_connection():
-    """Testa conexão com Firebase"""
+    """Testa conexão com Firebase primário."""
     if not is_firebase_connected():
         return False, "Firebase não está conectado"
-    
     try:
         db = get_firestore_db()
-        # Tenta fazer uma operação simples
         test_doc = db.collection('test').document('connection')
         test_doc.set({'test': True, 'timestamp': firestore.SERVER_TIMESTAMP})
         test_doc.delete()
-        return True, "Conexão com Firebase funcionando!"
+        return True, "Conexão com Firebase primário funcionando!"
     except Exception as e:
         return False, f"Erro na conexão: {e}"
 
+
 # =============================
 # Firebase Authentication Helpers
+# (sempre usa o app primário)
 # =============================
 
+def _auth():
+    """Retorna o módulo auth apontando para o app primário."""
+    return auth
+
 def create_firebase_user(email: str, password: str, display_name: str):
-    """Cria usuário no Firebase Authentication e envia email de verificação"""
+    """Cria usuário no Firebase Authentication e envia email de verificação."""
     try:
         user = auth.create_user(
             email=email,
             password=password,
             display_name=display_name,
-            email_verified=False
+            email_verified=False,
+            app=_manager.apps[0]
         )
-        
-        # Gera link de verificação
-        link = auth.generate_email_verification_link(email)
-        
+        link = auth.generate_email_verification_link(email, app=_manager.apps[0])
         return True, user.uid, link
     except auth.EmailAlreadyExistsError:
         return False, None, "Email já cadastrado"
@@ -181,56 +225,43 @@ def create_firebase_user(email: str, password: str, display_name: str):
         return False, None, f"Erro ao criar usuário: {e}"
 
 def verify_firebase_user(email: str, password: str):
-    """Verifica credenciais e status de verificação do email"""
+    """Verifica credenciais e status de verificação do email."""
     try:
-        # Firebase Admin SDK não tem método direto de login
-        # Precisamos usar a API REST do Firebase Auth
-        # Por enquanto, vamos apenas verificar se o usuário existe
-        user = auth.get_user_by_email(email)
-        
+        user = auth.get_user_by_email(email, app=_manager.apps[0])
         return True, user.uid, user.email_verified
     except auth.UserNotFoundError:
         return False, None, False
-    except Exception as e:
+    except Exception:
         return False, None, False
 
 def send_verification_email_firebase(email: str):
-    """Reenvia email de verificação usando Admin SDK + SMTP"""
+    """Reenvia email de verificação."""
     try:
-        # Gera link de verificação
-        link = auth.generate_email_verification_link(email)
-        
-        # Tenta enviar via SMTP
+        link = auth.generate_email_verification_link(email, app=_manager.apps[0])
         try:
             from email_service import send_verification_email_smtp
-            user = auth.get_user_by_email(email)
+            user = auth.get_user_by_email(email, app=_manager.apps[0])
             display_name = user.display_name or email.split('@')[0]
-            
             success, message = send_verification_email_smtp(email, link, display_name)
             if success:
                 return True, "Email de verificação enviado com sucesso!"
-            else:
-                # Se SMTP falhar, retorna o link para mostrar ao usuário
-                return True, f"Link gerado (SMTP falhou): {link}"
-        except Exception as smtp_error:
-            # Se SMTP falhar, retorna o link
+            return True, f"Link gerado (SMTP falhou): {link}"
+        except Exception:
             return True, f"Link de verificação: {link}"
-            
     except Exception as e:
         return False, f"Erro ao gerar link: {e}"
 
 def get_firebase_user_by_email(email: str):
-    """Busca usuário no Firebase Auth por email"""
+    """Busca usuário no Firebase Auth por email."""
     try:
-        user = auth.get_user_by_email(email)
-        return user
-    except:
+        return auth.get_user_by_email(email, app=_manager.apps[0])
+    except Exception:
         return None
 
 def delete_firebase_auth_user(uid: str):
-    """Remove usuário do Firebase Authentication"""
+    """Remove usuário do Firebase Authentication."""
     try:
-        auth.delete_user(uid)
+        auth.delete_user(uid, app=_manager.apps[0])
         return True
-    except Exception as e:
+    except Exception:
         return False
