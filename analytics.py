@@ -89,6 +89,9 @@ def end_case_timer(timer_id: str, case_result: Dict) -> Optional[Dict]:
     
     # Salva no Firebase ou local
     save_case_analytics(case_analytics)
+
+    # Flush do buffer de chat — salva todas as msgs do chat em 1 write
+    flush_chat_buffer(timer_data["user_id"], timer_data["case_id"])
     
     # Remove o timer da sessão
     del st.session_state.case_timers[timer_id]
@@ -111,17 +114,66 @@ def format_duration(seconds: float) -> str:
 # =============================
 
 def log_chat_interaction(user_id: str, case_id: str, user_message: str, bot_response: str, response_time: float = None):
-    """Registra uma interação com o chatbot"""
-    interaction = {
-        "user_id": user_id,
-        "case_id": case_id,
+    """
+    Registra uma interação com o chatbot.
+    OTIMIZADO: Agora armazena em buffer no session_state em vez de gravar
+    imediatamente. As mensagens são salvas em lote quando a questão é finalizada,
+    reduzindo writes de N*2 para 1 por sessão de chat.
+    """
+    import streamlit as st
+    
+    # Inicializa o buffer no session_state se ainda não existe
+    if 'chat_write_buffer' not in st.session_state:
+        st.session_state.chat_write_buffer = {}
+    
+    buffer_key = f"{user_id}_{case_id}"
+    if buffer_key not in st.session_state.chat_write_buffer:
+        st.session_state.chat_write_buffer[buffer_key] = {
+            "user_id": user_id,
+            "case_id": case_id,
+            "messages": [],
+            "timestamp": datetime.now().isoformat()
+        }
+    
+    # Adiciona a mensagem ao buffer (sem gravar no Firebase agora)
+    st.session_state.chat_write_buffer[buffer_key]["messages"].append({
         "user_message": user_message,
         "bot_response": bot_response,
         "response_time_seconds": response_time,
         "timestamp": datetime.now().isoformat()
-    }
+    })
+
+def flush_chat_buffer(user_id: str, case_id: str):
+    """
+    Grava o buffer de chat em um ÚNICO documento no Firebase.
+    Deve ser chamado quando o aluno submete a questão.
+    Retorna o número de mensagens que foram salvas.
+    """
+    import streamlit as st
     
-    save_chat_interaction(interaction)
+    buffer = getattr(st, 'session_state', {}).get('chat_write_buffer', {})
+    buffer_key = f"{user_id}_{case_id}"
+    
+    entry = buffer.get(buffer_key)
+    if not entry or not entry.get('messages'):
+        return 0  # Nada para salvar
+    
+    if is_firebase_connected():
+        try:
+            db = get_firestore_db()
+            chat_ref = db.collection('chat_interactions')
+            chat_ref.add(entry)  # 1 documento com todas as mensagens
+            print(f"SUCESSO: {len(entry['messages'])} msgs de chat salvas num unico doc Firebase")
+        except Exception as e:
+            print(f"ERRO ao salvar buffer de chat: {e}")
+    else:
+        save_chat_interaction_local(entry)
+    
+    n = len(entry['messages'])
+    # Limpa o buffer desta questão
+    if hasattr(st, 'session_state') and 'chat_write_buffer' in st.session_state:
+        st.session_state.chat_write_buffer.pop(buffer_key, None)
+    return n
 
 # =============================
 # Cálculo de Taxa de Acertos
@@ -299,7 +351,7 @@ def get_user_chat_interactions(user_id: str, case_id: str = None) -> List[Dict]:
 
 @st.cache_data(ttl=300, show_spinner=False)
 def get_user_chat_interactions_firebase(user_id: str, case_id: str = None) -> List[Dict]:
-    """Recupera interações do chat do Firebase"""
+    """Recupera interações do chat do Firebase - compatível com formato antigo e novo (agregado)"""
     try:
         db = get_firestore_db()
         chat_ref = db.collection('chat_interactions')
@@ -308,20 +360,34 @@ def get_user_chat_interactions_firebase(user_id: str, case_id: str = None) -> Li
         if case_id:
             query = query.where('case_id', '==', case_id)
         
-        # Remove order_by para evitar necessidade de índice composto
         docs = query.get()
         
         interactions = []
         for doc in docs:
             data = doc.to_dict()
-            data['id'] = doc.id
-            interactions.append(data)
+            
+            # NOVO FORMATO: documento tem lista de mensagens (otimizado)
+            if 'messages' in data and isinstance(data['messages'], list):
+                for msg in data['messages']:
+                    flat = {
+                        'user_id': data.get('user_id'),
+                        'case_id': data.get('case_id'),
+                        'user_message': msg.get('user_message', ''),
+                        'bot_response': msg.get('bot_response', ''),
+                        'response_time_seconds': msg.get('response_time_seconds'),
+                        'timestamp': msg.get('timestamp', data.get('timestamp')),
+                        'id': doc.id
+                    }
+                    interactions.append(flat)
+            else:
+                # FORMATO ANTIGO: um doc por mensagem - mantém compatibilidade
+                data['id'] = doc.id
+                interactions.append(data)
         
-        # Ordena no código por timestamp (mais recente primeiro)
+        # Ordena por timestamp (mais antigo primeiro para leitura no PDF/chat)
         try:
-            interactions.sort(key=get_timestamp_sort_key, reverse=True)
-        except Exception as e:
-            st.warning(f"⚠️ Erro ao ordenar interações: {e}")
+            interactions.sort(key=get_timestamp_sort_key, reverse=False)
+        except Exception:
             pass
         
         return interactions
