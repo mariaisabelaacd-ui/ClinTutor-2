@@ -428,12 +428,16 @@ def generate_global_interactions_pdf(student_users: List[Dict], all_analytics: D
                     pdf.set_font('Helvetica', 'B', 9)
                     pdf.cell(15, 5, "Aluno: ", 0, 0)
                     pdf.set_font('Helvetica', '', 9)
-                    pdf.multi_cell(0, 5, u_msg)
+                    # Instead of returning to the start with multi_cell immediately, 
+                    # we store current Y, move X past the label, and use a fixed width.
+                    x_start = pdf.get_x()
+                    y_start = pdf.get_y()
+                    pdf.multi_cell(160, 5, u_msg)
                     
                     pdf.set_font('Helvetica', 'B', 9)
                     pdf.cell(15, 5, "Tutor: ", 0, 0)
                     pdf.set_font('Helvetica', 'I', 9)
-                    pdf.multi_cell(0, 5, b_msg)
+                    pdf.multi_cell(160, 5, b_msg)
                     pdf.ln(2)
             pdf.ln(5)
 
