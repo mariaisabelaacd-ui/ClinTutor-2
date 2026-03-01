@@ -217,9 +217,10 @@ def generate_class_pdf(turma_name: str, student_users: List[Dict], global_stats:
     """Gera um PDF com a visao geral da turma - versao completa"""
     from fpdf import FPDF
     pdf = FPDF()
+    pdf.set_margins(10, 10, 10)
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
-    W = 190
+    W = 185
 
     def safe_text(txt):
         if not txt: return ""
@@ -382,8 +383,9 @@ def generate_global_interactions_pdf(student_users: List[Dict], all_analytics: D
     from logic import get_case, level_from_score
 
     pdf = FPDF()
+    pdf.set_margins(10, 10, 10)
     pdf.set_auto_page_break(auto=True, margin=15)
-    W = 190
+    W = 185
 
     def safe(txt):
         if txt is None: return ""
