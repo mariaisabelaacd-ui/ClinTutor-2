@@ -154,6 +154,8 @@ def init_state():
         firebase_progress = load_student_progress(user["id"])
         st.session_state.progress_loaded = True
 
+    valid_q_ids = {q["id"] for q in QUESTIONS}
+
     defaults = {
         "score": 0, "streak": 0, "unlocked_level": 1,
         "current_case_id": None, "case_scored": False, "last_result": None,
@@ -162,17 +164,19 @@ def init_state():
     }
     for k, v in defaults.items():
         if k not in st.session_state:
-            if k == "current_case_id" and firebase_progress.get("current_question_id"):
+            if k == "current_case_id" and firebase_progress.get("current_question_id") in valid_q_ids:
                 st.session_state[k] = firebase_progress["current_question_id"]
             elif k == "used_cases" and firebase_progress.get("used_cases"):
-                st.session_state[k] = firebase_progress["used_cases"]
+                st.session_state[k] = [uid for uid in firebase_progress["used_cases"] if uid in valid_q_ids]
             elif k == "score" and firebase_progress.get("score") is not None:
                 st.session_state[k] = firebase_progress["score"]
             elif k == "streak" and firebase_progress.get("streak") is not None:
                 st.session_state[k] = firebase_progress["streak"]
             else:
-                st.session_state[k] = user_progress.get(k, v) if k in ["score", "streak", "unlocked_level", "used_cases"] else v
-
+                val = user_progress.get(k, v) if k in ["score", "streak", "unlocked_level", "used_cases"] else v
+                if k == "used_cases":
+                    val = [uid for uid in val if uid in valid_q_ids]
+                st.session_state[k] = val
 def persist_now():
     user = get_current_user()
     save_progress({
