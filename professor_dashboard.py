@@ -295,6 +295,150 @@ def generate_class_pdf(turma_name: str, student_users: List[Dict], global_stats:
     
     return bytes(pdf.output())
 
+def generate_global_interactions_pdf(student_users: List[Dict], all_analytics: Dict) -> bytes:
+    """Gera um PDF completo com todas as interações e respostas de todos os alunos"""
+    from fpdf import FPDF
+    import textwrap
+    from logic import get_case
+    
+    pdf = FPDF()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    
+    def safe_text(txt):
+        if txt is None:
+            return ""
+        return str(txt).encode('latin-1', 'replace').decode('latin-1')
+
+    # Capa do Relatório
+    pdf.add_page()
+    pdf.set_fill_color(16, 185, 129)
+    pdf.rect(0, 0, 210, 297, 'F') # Preenche a página inteira
+    
+    pdf.set_y(100)
+    pdf.set_font('Helvetica', 'B', 32)
+    pdf.set_text_color(255, 255, 255)
+    pdf.cell(0, 20, 'Helix.AI', ln=True, align='C')
+    
+    pdf.set_font('Helvetica', '', 18)
+    pdf.cell(0, 15, 'Relatorio Completo de Interacoes', ln=True, align='C')
+    
+    pdf.set_font('Helvetica', '', 12)
+    pdf.cell(0, 10, f'Gerado em {datetime.now().strftime("%d/%m/%Y as %H:%M")}', ln=True, align='C')
+    
+    pdf.set_text_color(0, 0, 0)
+    
+    for student in student_users:
+        uid = student['id']
+        u_data = all_analytics.get(uid, {})
+        case_analytics = u_data.get('case_analytics', [])
+        
+        # Só inclui alunos que têm alguma atividade
+        if not case_analytics:
+            continue
+            
+        pdf.add_page()
+        
+        # Cabeçalho do Aluno
+        pdf.set_fill_color(240, 253, 244)
+        pdf.rect(10, 10, 190, 30, 'DF')
+        pdf.set_xy(15, 15)
+        
+        pdf.set_font('Helvetica', 'B', 14)
+        pdf.set_text_color(16, 185, 129)
+        pdf.cell(0, 8, safe_text(student.get('name', 'N/A')), ln=True)
+        
+        pdf.set_font('Helvetica', '', 10)
+        pdf.set_text_color(0, 0, 0)
+        turma = student.get('turma', 'Nao informada')
+        ra = student.get('ra', 'N/A')
+        email = student.get('email', 'N/A')
+        pdf.cell(0, 6, safe_text(f"Turma: {turma} | RA: {ra} | Email: {email}"), ln=True)
+        pdf.ln(10)
+        
+        # Ordena as respostas cronologicamente
+        try:
+            case_analytics.sort(key=lambda x: str(x.get('timestamp', '')), reverse=False)
+        except:
+            pass
+
+        for entry in case_analytics:
+            cid = entry.get('case_id')
+            q_info = get_case(cid)
+            result = entry.get('case_result', {})
+            
+            is_correct = result.get('is_correct', False)
+            classification = result.get('classification', '').upper()
+            is_partial = 'PARCIAL' in classification
+            
+            # Formata carimbo de tempo
+            timestamp_ts = entry.get('timestamp')
+            date_str = ""
+            if isinstance(timestamp_ts, str):
+                try:
+                    date_str = datetime.fromisoformat(timestamp_ts).strftime("%d/%m/%Y %H:%M")
+                except:
+                    date_str = timestamp_ts[:16]
+            
+            # Caixa da Questão
+            pdf.set_fill_color(248, 250, 252)
+            pdf.set_font('Helvetica', 'B', 11)
+            pdf.cell(0, 8, safe_text(f"Questao: {date_str}"), 0, 1, 'L', True)
+            
+            pdf.set_font('Helvetica', '', 10)
+            pdf.multi_cell(0, 5, safe_text(q_info.get('pergunta', '')))
+            
+            # Status e Pontos
+            status_txt = "Correto"
+            if is_partial:
+                status_txt = "Parcial"
+            elif not is_correct:
+                status_txt = "Incorreto"
+                
+            pts = result.get('points_gained', 0)
+            pdf.set_font('Helvetica', 'B', 9)
+            pdf.cell(0, 6, safe_text(f"Status: {status_txt} | Pontos: {pts}"), 0, 1)
+            
+            # Resposta do Aluno
+            pdf.set_font('Helvetica', 'I', 10)
+            pdf.set_text_color(50, 50, 200)
+            ans = result.get('user_answer', 'N/A')
+            pdf.multi_cell(0, 5, safe_text(f"Resposta do Aluno: {ans}"))
+            pdf.set_text_color(0, 0, 0)
+            
+            # Interações do Chat Linkadas
+            chat_interactions = get_user_chat_interactions(uid, cid)
+            if chat_interactions:
+                pdf.ln(2)
+                pdf.set_font('Helvetica', 'B', 9)
+                pdf.set_text_color(236, 72, 153) # Pinkish for chat
+                pdf.cell(0, 6, "--- Historico do Chat Tutor ---", 0, 1)
+                
+                # Sort chat by timestamp
+                try:
+                    chat_interactions.sort(key=lambda x: str(x.get('timestamp', '')), reverse=False)
+                except:
+                    pass
+                    
+                pdf.set_text_color(0, 0, 0)
+                pdf.set_font('Helvetica', '', 9)
+                for chat in chat_interactions:
+                    u_msg = safe_text(chat.get('user_message', ''))
+                    b_msg = safe_text(chat.get('bot_response', ''))
+                    
+                    pdf.set_font('Helvetica', 'B', 9)
+                    pdf.cell(15, 5, "Aluno: ", 0, 0)
+                    pdf.set_font('Helvetica', '', 9)
+                    pdf.multi_cell(0, 5, u_msg)
+                    
+                    pdf.set_font('Helvetica', 'B', 9)
+                    pdf.cell(15, 5, "Tutor: ", 0, 0)
+                    pdf.set_font('Helvetica', 'I', 9)
+                    pdf.multi_cell(0, 5, b_msg)
+                    pdf.ln(2)
+            pdf.ln(5)
+
+    return bytes(pdf.output())
+
 def show_advanced_professor_dashboard():
     """Dashboard redesenhado para professores com foco em insights acionáveis"""
     # Garante carregamento dos ícones
@@ -457,14 +601,28 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
     st.markdown("---")
     
     # PDF de Visão Geral
-    pdf_bytes_class = generate_class_pdf(turma_filter, student_users, global_stats, component_stats)
-    st.download_button(
-        label=f"📥 Baixar Relatório da Turma ({turma_filter}) - PDF",
-        data=pdf_bytes_class,
-        file_name=f"relatorio_turma_{turma_filter.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.pdf",
-        mime="application/pdf",
-        use_container_width=True
-    )
+    col_pdf1, col_pdf2 = st.columns(2)
+    with col_pdf1:
+        pdf_bytes_class = generate_class_pdf(turma_filter, student_users, global_stats, component_stats)
+        st.download_button(
+            label=f"📥 Baixar Relatório da Turma ({turma_filter}) - PDF",
+            data=pdf_bytes_class,
+            file_name=f"relatorio_turma_{turma_filter.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.pdf",
+            mime="application/pdf",
+            use_container_width=True
+        )
+        
+    with col_pdf2:
+        # Novo PDF Global com Interações
+        pdf_bytes_global = generate_global_interactions_pdf(student_users, all_analytics)
+        st.download_button(
+            label=f"📥 Baixar Relatório Completo (Interações e Respostas) - PDF",
+            data=pdf_bytes_global,
+            file_name=f"relatorio_completo_interacoes_{datetime.now().strftime('%Y%m%d')}.pdf",
+            mime="application/pdf",
+            use_container_width=True,
+            type="primary"
+        )
     st.markdown("---")
     
     # ===== VISUALIZAÇÕES =====

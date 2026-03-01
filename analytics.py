@@ -146,6 +146,8 @@ def calculate_accuracy_rate(user_id: str) -> Dict[str, Any]:
     correct_cases = sum(1 for case_data in case_analytics 
                        if case_data.get("case_result", {}).get("is_correct", False))
     
+    total_points = sum(case_data.get("case_result", {}).get("points_gained", 0) for case_data in case_analytics)
+
     accuracy_rate = (correct_cases / total_cases * 100) if total_cases > 0 else 0.0
     
     # Calcula tempo total usando duration_seconds diretamente
@@ -170,7 +172,8 @@ def calculate_accuracy_rate(user_id: str) -> Dict[str, Any]:
         "average_time": average_time,
         "total_time": total_time,
         "average_time_formatted": format_duration(average_time),
-        "total_time_formatted": format_duration(total_time)
+        "total_time_formatted": format_duration(total_time),
+        "total_points": total_points
     }
 
 # =============================
@@ -760,6 +763,18 @@ def get_student_advanced_stats(user_id: str) -> Dict[str, Any]:
             "tempo_medio": avg_time,
             "total": data['total']
         })
+
+    # Calcula o score total do aluno e infere o nível
+    # Note: Importa level_from_score aqui para evitar referência circular no topo
+    from logic import level_from_score
+    total_score = 0
+    for entry in unique_cases.values():
+        total_score += entry.get('case_result', {}).get('points_gained', 0)
+    
+    nivel_num = level_from_score(int(total_score))
+    nivel_map = {1: "Básico", 2: "Intermediário", 3: "Avançado"}
+    
+    final_stats["nivel_estimado"] = nivel_map.get(nivel_num, "Básico")
         
     return final_stats
 
