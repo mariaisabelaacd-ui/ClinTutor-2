@@ -315,3 +315,46 @@ CASES = QUESTIONS
 def correct_exam_name(n): return n, False
 def normalize_exam_name(n): return n
 def suggest_exam_corrections(n, a): return ""
+
+def generate_category_insights(category_name: str, sample_answers: List[str]) -> str:
+    """
+    Gera uma análise pedagógica focada em uma categoria de conhecimento, 
+    usando as piores respostas dos alunos como base.
+    """
+    answers_str = "\n\n".join([f"Exemplo {i+1}:\n\"{ans}\"" for i, ans in enumerate(sample_answers)])
+    
+    prompt = f"""
+Você é um Diretor Pedagógico sênior especialista em análise de aprendizagem.
+Sua tarefa é analisar as respostas incorretas ou parciais de uma turma para o tópico '{category_name}'.
+
+**Amostra Real das Respostas Incorretas dos Alunos neste Tópico:**
+{answers_str if sample_answers else "Nenhuma amostra disponível."}
+
+**O QUE VOCÊ DEVE FAZER:**
+1. Escreva um resumo direto e executivo (max 2 parágrafos) analisando o que exatamente os alunos não estão entendendo sobre este tópico com base na amostra recebida. Qual é a falha conceitual principal?
+2. Sugira 2 a 3 estratégias curtas e práticas que o professor pode usar em sala de aula para corrigir essa defasagem.
+3. Mantenha um tom profissional e encorajador.
+4. Escreva uma resposta curta e direta. Cuidado para não gerar um texto gigante.
+
+Não inclua saudações, vá direto para a análise.
+"""
+
+    import time
+    max_retries = 3
+    for attempt in range(max_retries):
+        client = get_groq_client()
+        if not client:
+            return "Erro: O assistente de leitura de IA não está configurado. Verifique as chaves."
+            
+        try:
+            response = client.chat.completions.create(
+                model=MODEL_NAME, 
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.3,
+            )
+            return response.choices[0].message.content.strip()
+        except Exception as e:
+            print(f"🔄 Tentativa {attempt+1}/{max_retries} falhou no Insight de PDF IA (Categoria): {e}")
+            if attempt == max_retries - 1:
+                return f"Não foi possível gerar a análise profunda devido a um erro de comunicação com a IA: {e}"
+            time.sleep(1)

@@ -12,10 +12,10 @@ from analytics import (
     get_global_knowledge_component_stats, get_average_user_level,
     get_hardest_categories, get_student_complete_profile,
     get_student_weakness_analysis, format_duration,
-    get_user_chat_interactions
+    get_user_chat_interactions, get_worst_answers_by_category
 )
 from auth_firebase import get_all_users, get_user_by_id, delete_user
-from logic import get_case
+from logic import get_case, generate_category_insights
 from admin_utils import (
     reset_student_analytics, clear_student_chat_interactions,
     reset_all_students_analytics, clear_all_chat_interactions,
@@ -585,6 +585,97 @@ def generate_global_interactions_pdf(student_users: List[Dict], all_analytics: D
 
     return bytes(pdf.output())
 
+
+def generate_ai_insights_pdf(hardest_categories: List[Dict]) -> bytes:
+    """Gera PDF com análise pedagógica profunda baseada em IA para as piores categorias"""
+    from fpdf import FPDF
+    
+    pdf = FPDF()
+    pdf.set_margins(15, 15, 15)
+    pdf.set_auto_page_break(auto=True, margin=15)
+    W = 180
+
+    def safe(txt):
+        if txt is None: return ""
+        return str(txt).encode('latin-1', 'replace').decode('latin-1')
+
+    # ── CAPA ─────────────────────────────────────────────────────
+    pdf.add_page()
+    pdf.set_fill_color(139, 92, 246) # Roxo (Cor da "IA")
+    pdf.rect(0, 0, 210, 297, 'F')
+    pdf.set_y(80)
+    
+    pdf.set_font('Helvetica', 'B', 32)
+    pdf.set_text_color(255, 255, 255)
+    pdf.cell(0, 15, 'Helix.AI', ln=True, align='C')
+    
+    pdf.set_font('Helvetica', '', 18)
+    pdf.cell(0, 12, 'Relatorio Pedagogico - Analise de IA', ln=True, align='C')
+    pdf.set_font('Helvetica', '', 10)
+    pdf.cell(0, 8, f'Gerado em {datetime.now().strftime("%d/%m/%Y as %H:%M")}', ln=True, align='C')
+    
+    pdf.set_y(150)
+    pdf.set_font('Helvetica', 'I', 11)
+    texto_capa = "Este relatorio contem uma analise automatizada gerada por Inteligencia Artificial " \
+                 "focada exclusivamente nos topicos onde a turma demonstrou maior dificuldade."
+    pdf.multi_cell(0, 6, safe(texto_capa), align='C')
+    pdf.set_text_color(0, 0, 0)
+    
+    # ── CONTEÚDO ──────────────────────────────────────────────────
+    
+    worst_answers_dict = get_worst_answers_by_category(limit_per_category=4)
+    categories_to_analyze = [c['componente'] for c in hardest_categories[:3]]
+    
+    pdf.add_page()
+    pdf.set_font('Helvetica', 'B', 16)
+    pdf.set_text_color(139, 92, 246)
+    pdf.cell(0, 10, 'Foco de Intervencao Recomendado', ln=True)
+    pdf.set_text_color(0, 0, 0)
+    pdf.ln(5)
+    
+    if not categories_to_analyze:
+         pdf.set_font('Helvetica', '', 11)
+         pdf.cell(0, 10, "Dados insuficientes para analise de dificuldades no momento.", ln=True)
+         return bytes(pdf.output())
+    
+    for idx, cat_name in enumerate(categories_to_analyze, 1):
+        samples = worst_answers_dict.get(cat_name, [])
+        insight_text = generate_category_insights(cat_name, samples)
+        
+        pdf.set_fill_color(243, 232, 255)
+        pdf.set_font('Helvetica', 'B', 12)
+        pdf.cell(0, 8, safe(f"  Top {idx} Dificuldade: {cat_name}"), ln=True, fill=True)
+        pdf.ln(3)
+        
+        pdf.set_font('Helvetica', '', 10)
+        pdf.set_text_color(80, 80, 80)
+        pdf.multi_cell(0, 5, safe(insight_text))
+        pdf.set_text_color(0, 0, 0)
+        pdf.ln(8)
+        
+        if samples:
+            pdf.set_font('Helvetica', 'B', 9)
+            pdf.set_text_color(150, 150, 150)
+            pdf.cell(0, 6, "Exemplos reais de respostas dos alunos:", ln=True)
+            pdf.set_text_color(0, 0, 0)
+            pdf.set_font('Helvetica', 'I', 9)
+            for i, ans in enumerate(samples[:2]):
+                pdf.set_x(20)
+                pdf.multi_cell(W-20, 5, safe(f'"{ans}"'))
+        
+        pdf.ln(10)
+        pdf.set_draw_color(220, 220, 220)
+        pdf.line(15, pdf.get_y(), 195, pdf.get_y())
+        pdf.ln(10)
+
+    pdf.set_y(-15)
+    pdf.set_font('Helvetica', 'I', 8)
+    pdf.set_text_color(150, 150, 150)
+    pdf.cell(0, 10, 'Helix.AI - Plataforma de Tutoria em Biologia Molecular', 0, 0, 'C')
+
+    return bytes(pdf.output())
+
+
 def show_advanced_professor_dashboard():
     """Dashboard redesenhado para professores com foco em insights acionáveis"""
     # Garante carregamento dos ícones
@@ -746,12 +837,12 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
     
     st.markdown("---")
     
-    # PDF de Visão Geral
-    col_pdf1, col_pdf2 = st.columns(2)
+    # PDF de Visão Geral (Agora em 3 colunas)
+    col_pdf1, col_pdf2, col_pdf3 = st.columns(3)
     with col_pdf1:
         pdf_bytes_class = generate_class_pdf(turma_filter, student_users, global_stats, component_stats)
         st.download_button(
-            label=f"📥 Baixar Relatório da Turma ({turma_filter}) - PDF",
+            label=f"📥 Relatório da Turma ({turma_filter})",
             data=pdf_bytes_class,
             file_name=f"relatorio_turma_{turma_filter.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.pdf",
             mime="application/pdf",
@@ -759,16 +850,31 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
         )
         
     with col_pdf2:
-        # Novo PDF Global com Interações
         pdf_bytes_global = generate_global_interactions_pdf(student_users, all_analytics)
         st.download_button(
-            label=f"📥 Baixar Relatório Completo (Interações e Respostas) - PDF",
+            label=f"📥 Relatório Completo",
             data=pdf_bytes_global,
             file_name=f"relatorio_completo_interacoes_{datetime.now().strftime('%Y%m%d')}.pdf",
             mime="application/pdf",
-            use_container_width=True,
-            type="primary"
+            use_container_width=True
         )
+        
+    with col_pdf3:
+        if st.button("✨ Gerar Insights Pedagógicos com IA (PDF)", use_container_width=True, type="primary"):
+            with st.spinner("A IA está analisando as piores respostas por categoria. Isso pode levar alguns segundos..."):
+                try:
+                    pdf_ia = generate_ai_insights_pdf(hardest_categories)
+                    st.download_button(
+                        label=f"📥 Baixar Insights com IA",
+                        data=pdf_ia,
+                        file_name=f"relatorio_ia_pedagogico_{datetime.now().strftime('%Y%m%d')}.pdf",
+                        mime="application/pdf",
+                        use_container_width=True,
+                        key="dl_btn_ia_pdf"
+                    )
+                except Exception as e:
+                    st.error(f"Erro ao gerar o PDF da IA: {e}")
+            
     st.markdown("---")
     
     # ===== VISUALIZAÇÕES =====

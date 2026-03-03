@@ -937,6 +937,60 @@ def get_global_knowledge_component_stats() -> List[Dict[str, Any]]:
     
     return results
 
+def get_worst_answers_by_category(limit_per_category: int = 3) -> Dict[str, List[str]]:
+    """
+    Agrupa as piores respostas (Incorretas ou Parciais com baixa pontuação) 
+    por categoria de conhecimento, para enviar à IA.
+    Returns:
+        Um dicionário: { "Nome da Categoria": ["Resposta ruim 1", "Resposta ruim 2"] }
+    """
+    from logic import QUESTIONS
+    
+    all_analytics = get_all_users_analytics()
+    
+    # Mapeamento rápido de ID da questão para suas categorias
+    q_cats = {q['id']: q.get('componentes_conhecimento', []) for q in QUESTIONS}
+    
+    # Coleta de respostas ruins por categoria
+    category_bad_answers = {}
+    
+    for user_id, user_data in all_analytics.items():
+        case_analytics = user_data.get('case_analytics', [])
+        for entry in case_analytics:
+            qid = entry.get('case_id')
+            if not qid or qid not in q_cats:
+                continue
+                
+            result = entry.get('case_result', {})
+            user_answer = result.get('user_answer')
+            is_correct = result.get('is_correct', False)
+            points = result.get('points_gained', 0)
+            
+            # Se for incorreto ou parcial com poucos pontos
+            if user_answer and (not is_correct or points < 0.8):
+                cats = q_cats[qid]
+                for cat in cats:
+                    if cat not in category_bad_answers:
+                        category_bad_answers[cat] = []
+                    category_bad_answers[cat].append({
+                        'answer': user_answer,
+                        'points': points
+                    })
+                    
+    # Pega as piores ordenando por pontos e trunca
+    result_dict = {}
+    for cat, answers in category_bad_answers.items():
+        # Ordena pelas piores (menor pontuação primeiro)
+        answers.sort(key=lambda x: x['points'])
+        
+        # Filtra repostas curtas ou inúteis como "nao sei", "nada" etc., se quiser, ou pega as X primeiras
+        valid_answers = [a['answer'] for a in answers if len(a['answer']) > 15]
+        
+        if valid_answers:
+            result_dict[cat] = valid_answers[:limit_per_category]
+            
+    return result_dict
+
 def get_average_user_level() -> Dict[str, Any]:
     """
     Calcula o nível médio de todos os alunos baseado em pontuação.
