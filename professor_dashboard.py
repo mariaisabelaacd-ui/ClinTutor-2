@@ -623,7 +623,7 @@ def generate_ai_insights_pdf(hardest_categories: List[Dict]) -> bytes:
     
     # ── CONTEÚDO ──────────────────────────────────────────────────
     
-    worst_answers_dict = get_worst_answers_by_category(limit_per_category=4)
+    worst_answers_dict = get_worst_answers_by_category(limit_per_category=10)
     categories_to_analyze = [c['componente'] for c in hardest_categories[:3]]
     
     pdf.add_page()
