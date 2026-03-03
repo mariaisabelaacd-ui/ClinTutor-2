@@ -1222,3 +1222,57 @@ def get_student_complete_profile(user_id: str) -> Dict[str, Any]:
         }
     }
 
+def get_top_error_tags_for_question(question_id: str, limit: int = 5) -> List[Dict[str, Any]]:
+    """
+    Agrega as `error_tag`s geradas pela IA para uma questão específica
+    e retorna as mais comuns. Custo-zero pois usa os dados de analytics locais/Firebase.
+    """
+    all_analytics = get_all_users_analytics()
+    error_counts = {}
+    
+    for user_id, user_data in all_analytics.items():
+        case_analytics = user_data.get('case_analytics', [])
+        for entry in case_analytics:
+            if entry.get('case_id') == question_id:
+                result = entry.get('case_result', {})
+                error_tag = result.get('error_tag')
+                if error_tag and error_tag != "Nenhum erro":
+                    if error_tag not in error_counts:
+                        error_counts[error_tag] = 0
+                    error_counts[error_tag] += 1
+                    
+    # Formata e ordena por frequência
+    tags_list = [{'tag': k, 'count': v} for k, v in error_counts.items()]
+    tags_list.sort(key=lambda x: x['count'], reverse=True)
+    
+    return tags_list[:limit]
+
+def get_worst_answers_for_question(question_id: str, limit: int = 3) -> List[str]:
+    """
+    Recupera as piores respostas dos alunos (aquelas avaliadas como incorretas e com menos pontos)
+    para enviar como amostra para a IA analisar profundamente.
+    """
+    all_analytics = get_all_users_analytics()
+    answers = []
+    
+    for user_id, user_data in all_analytics.items():
+        case_analytics = user_data.get('case_analytics', [])
+        for entry in case_analytics:
+            if entry.get('case_id') == question_id:
+                result = entry.get('case_result', {})
+                user_answer = result.get('user_answer')
+                is_correct = result.get('is_correct', False)
+                
+                if user_answer and not is_correct:
+                    answers.append({
+                        'answer': user_answer,
+                        'points': result.get('points_gained', 0),
+                        'timestamp': entry.get('timestamp')
+                    })
+    
+    # Ordena para pegar as com menos pontos primeiro (as "piores")
+    answers.sort(key=lambda x: x['points'])
+    
+    # Pega só o texto das respostas
+    return [a['answer'] for a in answers[:limit]]
+

@@ -8,10 +8,11 @@ from analytics import (
     get_all_users_analytics, get_global_stats,
     get_global_knowledge_component_stats, get_average_user_level,
     get_hardest_categories, get_student_complete_profile,
-    get_student_weakness_analysis, format_duration, get_user_chat_interactions
+    get_student_weakness_analysis, format_duration, get_user_chat_interactions,
+    get_top_error_tags_for_question, get_worst_answers_for_question
 )
 from auth_firebase import get_all_users, get_user_by_id
-from logic import get_case
+from logic import get_case, generate_pedagogical_insights, QUESTIONS
 
 def show_advanced_professor_dashboard():
     """Dashboard redesenhado para professores com foco em insights acionáveis"""
@@ -211,6 +212,55 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
     
     st.markdown("---")
     
+    # ===== NOVA SEÇÃO: Análise Aprofundada com IA =====
+    st.markdown("### 🤖 Análise Pedagógica por Questão (IA)")
+    st.write("Identifique instantaneamente os principais erros da turma em uma questão e gere insights pedagógicos profundos.")
+    
+    # Prepara lista de questões para o selectbox
+    qt_options = {q['id']: q['pergunta'][:80] + "..." for q in QUESTIONS}
+    selected_qid = st.selectbox(
+        "Selecione uma questão para analisar:",
+        options=list(qt_options.keys()),
+        format_func=lambda x: qt_options[x]
+    )
+    
+    if selected_qid:
+        colA, colB = st.columns([1, 2])
+        
+        with colA:
+            st.markdown("#### 🚫 Principais Dificuldades (Tags do Gemini/Groq)")
+            st.caption("Resumo dinâmico baseado em todas as tentativas incorretas.")
+            
+            top_tags = get_top_error_tags_for_question(selected_qid, limit=5)
+            if top_tags:
+                for t in top_tags:
+                    st.error(f"**{t['tag']}**: {t['count']} ocorrências")
+            else:
+                st.info("Nenhum erro registrado com tag para esta questão ainda.")
+                
+        with colB:
+            st.markdown("#### 🧠 Insight Pedagógico Profundo")
+            st.caption("A IA analisará as piores respostas e fornecerá um plano de ação.")
+            
+            if top_tags:
+                if st.button("✨ Gerar Análise Profunda com IA", key=f"btn_ai_{selected_qid}"):
+                    with st.spinner("Analisando padrões de erro e gerando insights... Isso pode levar alguns segundos."):
+                        question_data = get_case(selected_qid)
+                        sample_answers = get_worst_answers_for_question(selected_qid, limit=3)
+                        
+                        insights = generate_pedagogical_insights(question_data, top_tags, sample_answers)
+                        
+                        st.session_state[f"insights_{selected_qid}"] = insights
+                
+                # Exibe o insight se já estiver na sessão
+                if f"insights_{selected_qid}" in st.session_state:
+                    st.success("✅ **Análise Concluída!**")
+                    st.markdown(st.session_state[f"insights_{selected_qid}"])
+            else:
+                st.write("É necessário ter dados de erros (tags) para gerar a análise profunda.")
+
+    st.markdown("---")
+
     # Linha 3: Ranking de Alunos
     st.markdown("### 🏆 Ranking de Alunos")
     

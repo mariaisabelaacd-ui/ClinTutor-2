@@ -116,11 +116,12 @@ DIRETRIZES DE AVALIAÇÃO:
 2. PARCIALMENTE CORRETA: O aluno acertou parte da resposta ou demonstrou conhecimento válido, mas **COMETEU PEQUENOS ERROS, FOI IMPRECISO OU DEIXOU A RESPOSTA INCOMPLETA**. Se faltar qualquer informação importante que está no gabarito, você DEVE classificar como PARCIALMENTE CORRETA.
 3. INCORRETA: O aluno errou completamente, demonstrou desconhecimento ou cometeu o "Erro Crítico" supracitado.
 
-Avalie a resposta do aluno e retorne SUA AVALIAÇÃO ESTRITAMENTE NESTE FORMATO JSON VÁLIDO:
+Ao avaliar a resposta do aluno e retornar SUA AVALIAÇÃO ESTRITAMENTE NESTE FORMATO JSON VÁLIDO:
 {{
   "correct": true ou false,
   "classification": "CORRETA" ou "PARCIALMENTE CORRETA" ou "INCORRETA",
-  "feedback": "Um texto claro indicando o que ele acertou e o que faltou ou errou."
+  "feedback": "Um texto claro indicando o que ele acertou e o que faltou ou errou.",
+  "error_tag": "Uma frase muito curta (max 5 palavras) resumindo o erro principal. Se a resposta for CORRETA, retorne 'Nenhum erro'."
 }}
 NÃO RETORNE TEXTO FORA DO JSON.
 """
@@ -158,13 +159,14 @@ NÃO RETORNE TEXTO FORA DO JSON.
                 return {
                     "correct": is_correct,
                     "classification": classification, 
-                    "feedback": text
+                    "feedback": text,
+                    "error_tag": "Erro de formatação IA" if not is_correct else "Nenhum erro"
                 }
                 
         except Exception as e:
             print(f"🔄 Tentativa {attempt+1}/{max_retries} falhou no Avaliador IA: {e}")
             if attempt == max_retries - 1:
-                return {"correct": False, "feedback": f"Erro IA após tentar múltiplas chaves: {e}", "evaluation_type": "error"}
+                return {"correct": False, "feedback": f"Erro IA após tentar múltiplas chaves: {e}", "evaluation_type": "error", "error_tag": "Erro de API"}
             time.sleep(1) # Espera antes de tentar de novo com uma CHAVE DIFERENTE
 
 def _construir_contexto_para_ia(question: Dict[str, Any], chat_history: List[Dict[str, str]]) -> str:
@@ -307,6 +309,7 @@ def finalize_question_response(question: Dict[str, Any], user_answer: str, ai_ev
         "classification": classification,
         "outcome": outcome,
         "feedback": ai_evaluation.get("feedback", ""),
+        "error_tag": ai_evaluation.get("error_tag", "Erro não classificado"),
         "user_answer": user_answer
     }
 
@@ -315,3 +318,53 @@ CASES = QUESTIONS
 def correct_exam_name(n): return n, False
 def normalize_exam_name(n): return n
 def suggest_exam_corrections(n, a): return ""
+
+def generate_pedagogical_insights(question: Dict[str, Any], top_tags: List[Dict[str, Any]], sample_answers: List[str]) -> str:
+    """
+    Gera uma análise pedagógica profunda baseada nas piores respostas e nas tags de erro mais comuns.
+    """
+    tags_str = ", ".join([f"{t['tag']} ({t['count']} vezes)" for t in top_tags])
+    answers_str = "\n\n".join([f"Exemplo {i+1}:\n\"{ans}\"" for i, ans in enumerate(sample_answers)])
+    
+    prompt = f"""
+Você é um Diretor Pedagógico sênior especialista em análise de aprendizagem.
+Sua tarefa é analisar os padrões de erro de uma turma em uma questão específica e fornecer insights acionáveis para o professor.
+
+**A Questão Original:**
+{question.get('pergunta')}
+
+**Gabarito Esperado:**
+{question.get('resposta_esperada')}
+
+**Principais Dificuldades Mapeadas (Tags geradas automaticamente):**
+{tags_str if top_tags else "Dados insuficientes ou nenhum erro registrado."}
+
+**Amostra Real das Piores Respostas dos Alunos:**
+{answers_str if sample_answers else "Nenhuma amostra disponível."}
+
+**O QUE VOCÊ DEVE FAZER:**
+1. Escreva um resumo direto e executivo (max 2 parágrafos) analisando *onde* exatamente está a falha de raciocínio lógico dos alunos com base nessas respostas.
+2. Sugira 2 a 3 pontos específicos que o professor DEVE abordar na próxima aula para corrigir essa defasagem.
+3. Mantenha um tom profissional, encorajador e focado em ação prática para o professor em sala de aula.
+4. Use formatação Markdown (negrito, bullet points) para facilitar a leitura.
+"""
+
+    import time
+    max_retries = 3
+    for attempt in range(max_retries):
+        client = get_groq_client()
+        if not client:
+            return "Erro: Cliente IA não configurado. Verifique as chaves."
+            
+        try:
+            response = client.chat.completions.create(
+                model=MODEL_NAME, 
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.3,
+            )
+            return response.choices[0].message.content.strip()
+        except Exception as e:
+            print(f"🔄 Tentativa {attempt+1}/{max_retries} falhou no Insight Pedagógico IA: {e}")
+            if attempt == max_retries - 1:
+                return f"Erro ao gerar análise profunda após tentar múltiplas chaves: {e}"
+            time.sleep(1)
