@@ -22,7 +22,7 @@ from analytics import (
     save_student_progress, load_student_progress
 )
 from admin_dashboard import show_admin_dashboard
-from professor_dashboard import show_advanced_professor_dashboard
+from professor_dashboard_new import show_advanced_professor_dashboard
 
 # --- GERENCIADOR DE COOKIES (SINGLETON) ---
 def get_cookie_manager():
