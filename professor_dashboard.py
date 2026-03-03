@@ -659,7 +659,7 @@ def generate_ai_insights_pdf(hardest_categories: List[Dict]) -> bytes:
             pdf.cell(0, 6, "Exemplos reais de respostas dos alunos:", ln=True)
             pdf.set_text_color(0, 0, 0)
             pdf.set_font('Helvetica', 'I', 9)
-            for i, ans in enumerate(samples[:2]):
+            for i, ans in enumerate(samples[:5]):
                 pdf.set_x(20)
                 pdf.multi_cell(W-20, 5, safe(f'"{ans}"'))
         
