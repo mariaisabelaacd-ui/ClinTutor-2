@@ -853,10 +853,11 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
                 recent_answers = []
                 for uid, data in all_analytics.items():
                     if uid in [s['id'] for s in student_users]:
-                        history = data.get('history', [])
-                        for h in history[-5:]: # ultimas 5 de cada aluno
-                            if h.get('user_answer'):
-                                recent_answers.append(h['user_answer'])
+                        cases = data.get('case_analytics', [])
+                        for c in cases[-5:]: # ultimas 5 tentantivas de cada aluno
+                            ans = c.get('case_result', {}).get('user_answer')
+                            if ans:
+                                recent_answers.append(ans)
                 
                 # Embaralha e pega 15
                 import random
@@ -875,9 +876,11 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
                 for uid, data in all_analytics.items():
                     if uid in [s['id'] for s in student_users]:
                         chats = data.get('chat_interactions', [])
-                        for c in chats[-3:]:
-                            if c.get('user_message'):
-                                chat_samples.append(c['user_message'])
+                        for chat_doc in chats[-3:]:
+                            messages = chat_doc.get('messages', [])
+                            for msg in messages:
+                                if msg.get('user_message'):
+                                    chat_samples.append(msg['user_message'])
                 
                 if chat_samples:
                     random.shuffle(chat_samples)
