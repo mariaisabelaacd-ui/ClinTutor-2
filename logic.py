@@ -300,23 +300,26 @@ def get_case(cid: str) -> Dict[str, Any]:
 
 def finalize_question_response(question: Dict[str, Any], user_answer: str, ai_evaluation: Dict[str, Any]) -> Dict[str, Any]:
     classification = ai_evaluation.get("classification", "INCORRETA").upper()
-    max_points = question.get("pontuacao", 1)  # Default to 1 if not set (Level 1)
+    criterios = ai_evaluation.get("criterios", {})
+    
+    # Nova pontuação baseada estritamente nos 5 critérios
+    points = 0.0
+    for crit, status in criterios.items():
+        if "Completa" in status:
+            points += 1.0
+        elif "Parcial" in status:
+            points += 0.5
+            
+    # Trava de segurança para não passar de 5
+    if points > 5.0: points = 5.0
     
     if "PARCIAL" in classification:
-        points = max_points * 0.5
-        is_correct = True # Counts as correct/progress for streak purposes? Or maybe distinct?
+        is_correct = True # Counts as correct/progress for streak purposes
         outcome = "partial"
-    elif "INCORRETA" in classification and "PARCIAL" not in classification: # Strict check
-        points = 0
-        is_correct = False
-        outcome = "incorrect"
-    elif "CORRETA" in classification:
-        points = max_points
+    elif "CORRETA" in classification and "PARCIAL" not in classification:
         is_correct = True
         outcome = "correct"
     else:
-        # Fallback if AI gave something weird
-        points = 0
         is_correct = False
         outcome = "incorrect"
         
