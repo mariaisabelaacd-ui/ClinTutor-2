@@ -171,7 +171,7 @@ NÃO RETORNE TEXTO FORA DO JSON.
                     is_correct = True
                     classification = "PARCIALMENTE CORRETA"
                 else:
-                    is_correct = "true" in lower_text or "correta" in lower_text
+                    is_correct = "true" in lower_text or ("correta" in lower_text and "incorreta" not in lower_text)
                     classification = "CORRETA" if is_correct else "INCORRETA"
                     
                 return {
@@ -313,10 +313,13 @@ def finalize_question_response(question: Dict[str, Any], user_answer: str, ai_ev
     # Trava de segurança para não passar de 5
     if points > 5.0: points = 5.0
     
-    if "PARCIAL" in classification:
+    if "INCORRETA" in classification:
+        is_correct = False
+        outcome = "incorrect"
+    elif "PARCIAL" in classification:
         is_correct = True # Counts as correct/progress for streak purposes
         outcome = "partial"
-    elif "CORRETA" in classification and "PARCIAL" not in classification:
+    elif "CORRETA" in classification:
         is_correct = True
         outcome = "correct"
     else:
