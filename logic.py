@@ -358,3 +358,82 @@ Não inclua saudações, vá direto para a análise.
             if attempt == max_retries - 1:
                 return f"Não foi possível gerar a análise profunda devido a um erro de comunicação com a IA: {e}"
             time.sleep(1)
+
+def generate_difficulty_preview(category_name: str, sample_answers: List[str]) -> str:
+    """
+    Gera um preview curto e direto (1-2 frases) sobre a principal dificuldade
+    dos alunos em uma categoria específica.
+    """
+    answers_str = "\n".join([f"- \"{ans}\"" for ans in sample_answers[:5]]) # Pega até 5 respostas
+    
+    prompt = f"""
+Sua tarefa é ler as respostas incorretas dos alunos sobre o tópico '{category_name}' e identificar a principal falha conceitual.
+
+**Amostras de Respostas Incorretas:**
+{answers_str if sample_answers else "Nenhuma amostra disponível."}
+
+**O QUE VOCÊ DEVE FAZER:**
+Escreva UMA frase curta e direta resumindo o que os alunos não estão entendendo. 
+Exemplo de formato: "Os alunos estão confundindo X com Y, esquecendo a etapa Z."
+NÃO dê sugestões pedagógicas, NÃO use saudações. Vá direto ao ponto.
+"""
+
+    import time
+    max_retries = 2
+    for attempt in range(max_retries):
+        client = get_groq_client()
+        if not client:
+            return "Assistente de IA não configurado."
+            
+        try:
+            response = client.chat.completions.create(
+                model=MODEL_NAME, 
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.2,
+                max_tokens=100
+            )
+            return response.choices[0].message.content.strip()
+        except Exception as e:
+            if attempt == max_retries - 1:
+                return "Erro ao gerar preview com a IA."
+            time.sleep(1)
+
+def generate_ai_usage_preview(chat_samples: List[str]) -> str:
+    """
+    Gera um preview curto (1-2 frases) analisando como os alunos
+    estão utilizando a IA (ex: buscando respostas diretas, pedindo revisão, etc).
+    """
+    chat_str = "\n".join([f"- Aluno: \"{ans}\"" for ans in chat_samples[:10]])
+    
+    prompt = f"""
+Analise o histórico de perguntas recentes que os alunos fizeram para a inteligência artificial (Tutor).
+
+**Mensagens recentes dos alunos:**
+{chat_str if chat_samples else "Nenhuma interação registrada."}
+
+**O QUE VOCÊ DEVE FAZER:**
+Escreva UMA frase curta e direta resumindo o padrão principal de uso da IA pelos alunos.
+Exemplo de formato: "A maioria dos alunos está usando o tutor para confirmar respostas antes de enviar." ou "Os alunos estão frequentemente pedindo dicas conceituais sem solicitar a resposta completa."
+NÃO use saudações. Vá direto ao ponto.
+"""
+
+    import time
+    max_retries = 2
+    for attempt in range(max_retries):
+        client = get_groq_client()
+        if not client:
+            return "Assistente de IA não configurado."
+            
+        try:
+            response = client.chat.completions.create(
+                model=MODEL_NAME, 
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.2,
+                max_tokens=100
+            )
+            return response.choices[0].message.content.strip()
+        except Exception as e:
+            if attempt == max_retries - 1:
+                return "Erro ao gerar preview com a IA."
+            time.sleep(1)
+

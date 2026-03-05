@@ -837,6 +837,61 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
     
     st.markdown("---")
     
+    # ===== INSIGHTS RÁPIDOS COM IA =====
+    st.markdown(f"### {icon('auto_awesome', '#8b5cf6', 24)} Insights Rápidos com IA", unsafe_allow_html=True)
+    
+    # 1. Preview da Maior Dificuldade
+    col_insight1, col_insight2 = st.columns(2)
+    
+    with col_insight1:
+        if hardest_categories:
+            hardest_cat = hardest_categories[0]['componente']
+            
+            @st.cache_data(ttl=300)
+            def get_cached_difficulty_preview(category):
+                from logic import generate_difficulty_preview
+                # Busca as piores respostas dessa categoria
+                worst_dict = get_worst_answers_by_category(limit_per_category=5)
+                samples = worst_dict.get(category, [])
+                if not samples:
+                    return "Não há respostas suficientes para analisar."
+                return generate_difficulty_preview(category, samples)
+            
+            with st.spinner("Analisando dificuldade..."):
+                dif_preview = get_cached_difficulty_preview(hardest_cat)
+            
+            st.info(f"**Principal Dificuldade ({hardest_cat}):**\n\n{dif_preview}")
+        else:
+            st.info("Aguardando dados para analisar dificuldades.")
+            
+    with col_insight2:
+        @st.cache_data(ttl=300)
+        def get_cached_ai_usage_preview():
+            from logic import generate_ai_usage_preview
+            # Coleta amostras recentes de uso do chat
+            chat_samples = []
+            for uid, data in all_analytics.items():
+                if uid in [s['id'] for s in student_users]: # Apenas da turma filtrada
+                    chats = data.get('chat_interactions', [])
+                    for c in chats[-3:]: # Pega os 3 mais recentes de cada aluno
+                        if c.get('user_message'):
+                            chat_samples.append(c['user_message'])
+            
+            if len(chat_samples) < 3:
+                return "Poucas interações com a IA registradas até o momento."
+                
+            # Embaralha e pega 10 exemplos pra mandar pra IA
+            import random
+            random.shuffle(chat_samples)
+            return generate_ai_usage_preview(chat_samples[:10])
+            
+        with st.spinner("Analisando uso do tutor..."):
+            ai_usage = get_cached_ai_usage_preview()
+            
+        st.success(f"**Como os alunos usam o Tutor AI:**\n\n{ai_usage}")
+
+    st.markdown("---")
+    
     # PDF de Visão Geral (Agora em 3 colunas)
     col_pdf1, col_pdf2, col_pdf3 = st.columns(3)
     with col_pdf1:

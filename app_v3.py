@@ -49,7 +49,7 @@ def show_login_page():
     col_left, col_center, col_right = st.columns([1, 1.5, 1])
     with col_center:
         st.markdown("<div style='text-align: center; margin-bottom: 2rem;'>", unsafe_allow_html=True)
-        st.markdown(f"<h1 class='login-title'>🧬 {APP_NAME}</h1>", unsafe_allow_html=True)
+        st.markdown(f"<h1 class='login-title'>{APP_NAME}</h1>", unsafe_allow_html=True)
         st.markdown("<p style='color: #94a3b8;'>Plataforma de Aprendizado Interativo</p>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
         
@@ -175,7 +175,7 @@ def start_new_case():
     st.rerun()
 
 def main():
-    st.set_page_config(page_title="BioTutor v3", page_icon="🧬", layout="wide", initial_sidebar_state="expanded")
+    st.set_page_config(page_title="Helix.AI", layout="wide", initial_sidebar_state="expanded")
     global cookie_manager
     cookie_manager = get_cookie_manager()
     # st.toast("Versão V3 Carregada!", icon="✅")
