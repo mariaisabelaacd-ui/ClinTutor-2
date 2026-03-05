@@ -476,8 +476,10 @@ Sua tarefa é analisar uma amostra de respostas recentes da turma para a questã
 {answers_str}
 
 **O QUE VOCÊ DEVE FAZER:**
-Analise o desempenho da turma (mesmo que haja apenas UMA única resposta na amostra) em relação aos 5 critérios de avaliação abaixo.
-Para cada critério, escreva UMA FRASE CURTA resumindo o nível de compreensão (Exemplo: "O aluno entende que os sentidos são opostos" ou "Faltou citar a primase").
+1. Leia ESTRITAMENTE as respostas acima.
+2. Analise o desempenho da turma em relação aos 5 critérios de avaliação abaixo.
+3. ATENÇÃO MÁXIMA: Se a resposta for vaga (ex: "não sei"), incompleta ou apresentar falha grave, VOCÊ DEVE apontar o erro ou a ausência de conhecimento. Não invente que o aluno compreende algo se ele não escreveu isso na resposta.
+4. Para cada critério, escreva UMA FRASE CURTA resumindo o nível de compreensão real. (Exemplo de acerto: "A maioria entende que os sentidos são opostos", Exemplo de erro: "Nenhum aluno demonstrou compreender a função do primer", Exemplo geral: "Respostas genéricas ou em branco não abordaram este critério").
 
 Critérios:
 1. Compreensão do antiparalelismo
