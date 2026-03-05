@@ -879,8 +879,11 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
                             if c.get('user_message'):
                                 chat_samples.append(c['user_message'])
                 
-                random.shuffle(chat_samples)
-                ai_usage = generate_ai_usage_preview(chat_samples[:10])
+                if chat_samples:
+                    random.shuffle(chat_samples)
+                    ai_usage = generate_ai_usage_preview(chat_samples[:10])
+                else:
+                    ai_usage = "Ainda não há interações suficientes com o Tutor IA para gerar uma análise."
                 
                 st.markdown("#### Padrão de Uso do Tutor")
                 st.success(f"{ai_usage}")

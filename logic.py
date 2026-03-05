@@ -467,11 +467,11 @@ def generate_class_criteria_analysis(answers_list: List[str]) -> Dict[str, str]:
 Sua tarefa é analisar uma amostra de respostas recentes da turma para a questão sobre "Antiparalelismo e Limitações da DNA Polimerase".
 
 **Amostra de Respostas Recentes:**
-{answers_str if answers_list else "Nenhuma amostra disponível."}
+{answers_str}
 
 **O QUE VOCÊ DEVE FAZER:**
-Analise o desempenho geral dos alunos em relação aos 5 critérios de avaliação abaixo.
-Para cada critério, escreva UMA FRASE CURTA resumindo o nível de compreensão da turma (Exemplo: "A maioria entende que os sentidos são opostos" ou "Muitos esqueceram de citar a primase").
+Analise o desempenho da turma (mesmo que haja apenas UMA única resposta na amostra) em relação aos 5 critérios de avaliação abaixo.
+Para cada critério, escreva UMA FRASE CURTA resumindo o nível de compreensão (Exemplo: "O aluno entende que os sentidos são opostos" ou "Faltou citar a primase").
 
 Critérios:
 1. Compreensão do antiparalelismo
