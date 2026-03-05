@@ -195,9 +195,27 @@ def calculate_accuracy_rate(user_id: str) -> Dict[str, Any]:
         }
     
     total_cases = len(case_analytics)
-    correct_cases = sum(1 for case_data in case_analytics 
-                       if case_data.get("case_result", {}).get("is_correct", False))
     
+    correct_cases = 0.0
+    for case_data in case_analytics:
+        result = case_data.get("case_result", {})
+        outcome = result.get("outcome")
+        is_corr = result.get("is_correct", False)
+        
+        if outcome == "correct":
+            correct_cases += 1.0
+        elif outcome == "partial":
+            correct_cases += 0.5
+        elif outcome == "incorrect":
+            correct_cases += 0.0
+        else:
+            # Fallback backward compatibility
+            is_partial = "PARCIAL" in result.get("classification", "").upper()
+            if is_corr and not is_partial:
+                correct_cases += 1.0
+            elif is_partial:
+                correct_cases += 0.5
+                
     total_points = sum(case_data.get("case_result", {}).get("points_gained", 0) for case_data in case_analytics)
 
     accuracy_rate = (correct_cases / total_cases * 100) if total_cases > 0 else 0.0
@@ -810,24 +828,25 @@ def get_student_advanced_stats(user_id: str) -> Dict[str, Any]:
         q_data = q_map.get(cid)
         if not q_data: continue
         
-        is_correct = result.get('is_correct', False)
+        outcome = result.get('outcome')
+        cwd = 1.0 if outcome == 'correct' else 0.5 if outcome == 'partial' else 0.0 if outcome == 'incorrect' else (1.0 if result.get('is_correct') and "PARCIAL" not in result.get("classification", "").upper() else 0.5 if "PARCIAL" in result.get("classification", "").upper() else 0.0)
         
         # 1. Componentes
         comps = q_data.get('componentes_conhecimento', ['Geral'])
         for comp in comps:
             if comp not in stats['componentes']:
-                stats['componentes'][comp] = {'total': 0, 'correct': 0}
-            stats['componentes'][comp]['total'] += 1
-            if is_correct: stats['componentes'][comp]['correct'] += 1
+                stats['componentes'][comp] = {'total': 0, 'correct': 0.0}
+            stats['componentes'][comp]['total'] += 1.0
+            stats['componentes'][comp]['correct'] += cwd
             
         # 2. Dificuldade
         diff = q_data.get('dificuldade', 'Não Classificado')
         if diff not in stats['dificuldade']:
-            stats['dificuldade'][diff] = {'total': 0, 'correct': 0}
+            stats['dificuldade'][diff] = {'total': 0, 'correct': 0.0}
             stats['tempo_por_dificuldade'][diff] = []
             
-        stats['dificuldade'][diff]['total'] += 1
-        if is_correct: stats['dificuldade'][diff]['correct'] += 1
+        stats['dificuldade'][diff]['total'] += 1.0
+        stats['dificuldade'][diff]['correct'] += cwd
         stats['tempo_por_dificuldade'][diff].append(duration)
         
     # Processa médias
@@ -900,20 +919,20 @@ def get_global_knowledge_component_stats() -> List[Dict[str, Any]]:
             if not q_data:
                 continue
             
-            is_correct = result.get('is_correct', False)
+            outcome = result.get('outcome')
+            cwd = 1.0 if outcome == 'correct' else 0.5 if outcome == 'partial' else 0.0 if outcome == 'incorrect' else (1.0 if result.get('is_correct') and "PARCIAL" not in result.get("classification", "").upper() else 0.5 if "PARCIAL" in result.get("classification", "").upper() else 0.0)
             components = q_data.get('componentes_conhecimento', ['Geral'])
             
             for comp in components:
                 if comp not in component_stats:
                     component_stats[comp] = {
                         'total': 0,
-                        'correct': 0,
+                        'correct': 0.0,
                         'times': []
                     }
                 
                 component_stats[comp]['total'] += 1
-                if is_correct:
-                    component_stats[comp]['correct'] += 1
+                component_stats[comp]['correct'] += cwd
                 if duration > 0:
                     component_stats[comp]['times'].append(duration)
     
@@ -1097,23 +1116,22 @@ def get_student_weakness_analysis(user_id: str) -> Dict[str, Any]:
         if not q_data:
             continue
         
-        is_correct = result.get('is_correct', False)
+        outcome = result.get('outcome')
+        cwd = 1.0 if outcome == 'correct' else 0.5 if outcome == 'partial' else 0.0 if outcome == 'incorrect' else (1.0 if result.get('is_correct') and "PARCIAL" not in result.get("classification", "").upper() else 0.5 if "PARCIAL" in result.get("classification", "").upper() else 0.0)
         components = q_data.get('componentes_conhecimento', ['Geral'])
         difficulty = q_data.get('dificuldade', 'básico')
         
         # Análise por componente
         for comp in components:
             if comp not in component_performance:
-                component_performance[comp] = {'total': 0, 'correct': 0}
+                component_performance[comp] = {'total': 0, 'correct': 0.0}
             component_performance[comp]['total'] += 1
-            if is_correct:
-                component_performance[comp]['correct'] += 1
+            component_performance[comp]['correct'] += cwd
         
         # Análise por dificuldade
         if difficulty in difficulty_performance:
             difficulty_performance[difficulty]['total'] += 1
-            if is_correct:
-                difficulty_performance[difficulty]['correct'] += 1
+            difficulty_performance[difficulty]['correct'] += cwd
     
     # Identifica componente mais difícil
     worst_component = None
