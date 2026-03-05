@@ -62,38 +62,26 @@ SAVE_PATH = os.path.join(DATA_DIR, "progresso_gamificado.json")
 # =============================
 QUESTIONS: List[Dict[str, Any]] = [
     {
-      "id": "q_meselson_stahl",
-      "pergunta": "O experimento de Meselson e Stahl demonstrou que a replicação do DNA é semiconservativa. Explique o que significa esse mecanismo e por que ele é biologicamente relevante para a manutenção da informação genética.",
-      "componentes_conhecimento": ["Mecanismo semiconservativo de replicação"],
-      "resposta_esperada": "Na replicação semiconservativa, a dupla-fita de DNA parental é separada, e cada fita serve como molde para a síntese de uma nova fita complementar. O resultado são duas moléculas-filhas, cada uma contendo uma fita original (parental) e uma fita recém-sintetizada. Esse mecanismo garante que a informação genética seja fielmente copiada e transmitida às células-filhas, pois a fita parental serve como gabarito altamente preciso para a montagem da nova fita.",
-      "erro_critico": "Confundir com replicação conservativa (molde permanece intacto) ou dispersiva. Afirmar que ambas as fitas são completamente novas. Não mencionar que cada fita parental serve como molde.",
-      "pontuacao": 1,
-      "dificuldade": "básico"
-    },
-    {
-      "id": "q_dna_polimerase_requisitos",
-      "pergunta": "A DNA polimerase requer condições especiais para sintetizar DNA. Quais são os componentes obrigatórios para sua ação e quais são suas principais limitações funcionais?",
-      "componentes_conhecimento": ["As características e limitações funcionais da DNA polimerase"],
-      "resposta_esperada": "A DNA polimerase possui os seguintes requisitos: Molde (template) — uma fita de DNA simples para servir de base; Primer — um oligonucleotídeo (geralmente de RNA) com extremidade 3'-OH livre, pois a DNA polimerase não consegue iniciar síntese do zero; Desoxirribonucleotídeos trifosfato (dNTPs) — os substratos energéticos. Limitações: só sintetiza no sentido 5'→3'; não consegue iniciar uma nova fita sem primer.",
-      "erro_critico": "Afirmar que a DNA polimerase pode iniciar a síntese sem um primer. Dizer que a energia vem de outra fonte. Omitir a importância do molde.",
-      "pontuacao": 2,
-      "dificuldade": "intermediário"
-    },
-    {
-      "id": "q_direcionalidade_5_3",
-      "pergunta": "A síntese de DNA ocorre exclusivamente no sentido 5'→3'. Explique por que isso ocorre e quais são as consequências dessa direcionalidade para a síntese da fita lagging.",
-      "componentes_conhecimento": ["A direcionalidade da síntese de DNA (5'→3')", "As características e limitações funcionais da DNA polimerase"],
-      "resposta_esperada": "A direcionalidade 5'→3' está diretamente associada à adição de nucleotídeos ao 3'-OH livre da fita crescente — a DNA polimerase só catalisa essa reação nesse sentido. Durante a síntese 5'→3', o substrato da reação é o dNTP que entra na posição 5'. Como as duas fitas são antiparalelas, apenas a fita leading pode ser sintetizada continuamente; a fita lagging deve ser sintetizada em fragmentos (fragmentos de Okazaki), cada um com seu próprio primer, no sentido oposto ao da abertura da forquilha. Se a polimerase sintetizasse no sentido 3'→5', não haveria liberação do pirofosfato na direção correta e a reação seria energeticamente desfavorável.",
-      "erro_critico": "Não relacionar a direcionalidade ao 3'-OH livre. Confundir os sentidos das fitas. Não discutir o que acontece com a fita lagging.",
-      "pontuacao": 3,
+      "id": "q_dna_replicacao_multicriterio",
+      "pergunta": "A dupla fita do DNA é antiparalela. Defina antiparalelismo e explique, considerando os mecanismos de funcionamento da DNA polimerase, de que forma essa característica impõe limitações à replicação do DNA e quais mecanismos moleculares a célula utiliza para contorná-las.",
+      "componentes_conhecimento": [
+          "1. Compreensão do antiparalelismo",
+          "2. Limitação da direcionalidade da polimerase",
+          "3. Mecanismo da fita lagging",
+          "4. Papel do primer e da primase",
+          "5. Integração entre as limitações"
+      ],
+      "resposta_esperada": "O antiparalelismo da dupla fita do DNA significa que as duas fitas correm em direções opostas — uma no sentido 5'→3' e a outra no sentido 3'→5'. Isso impõe duas limitações fundamentais à replicação.\nPrimeira limitação: a DNA polimerase só sintetiza no sentido 5'→3'\nComo a enzima só consegue adicionar nucleotídeos na extremidade 3' da fita em crescimento, ela consegue acompanhar a forquilha de replicação continuamente em apenas uma das fitas — a fita leading — que já está orientada no sentido favorável. Na fita complementar, a fita lagging, a orientação é oposta à direção de abertura da forquilha, o que impede a síntese contínua. A célula resolve isso sintetizando a fita lagging em pequenos segmentos no sentido contrário ao avanço da forquilha — os fragmentos de Okazaki — que posteriormente são unidos pela DNA ligase após remoção dos primers.\nSegunda limitação: a DNA polimerase não consegue iniciar a síntese do zero\nA enzima exige uma extremidade 3'-OH livre para começar a trabalhar, ou seja, ela só estende uma fita existente, nunca inicia uma. Para contornar isso, a primase sintetiza pequenos segmentos de RNA chamados primers, que fornecem a extremidade 3'-OH necessária para que a DNA polimerase inicie a síntese em ambas as fitas — e em cada novo fragmento de Okazaki na fita lagging. Após a síntese, os primers são removidos, substituídos por DNA e as lacunas resultantes são seladas pela ligase.\nConsequência integradora\nAs duas limitações estão conectadas: é justamente porque a polimerase não inicia do zero e só trabalha em um sentido que a fita lagging precisa de múltiplos primers e é sintetizada de forma descontínua. O antiparalelismo, portanto, não gera um único problema — gera uma cadeia de necessidades mecanísticas.",
+      "erro_critico": "Afirmar que as fitas são sintetizadas na mesma direção (3'->5') ou omitir que a DNA Polimerase só sintetiza no sentido 5'->3'.",
+      "pontuacao": 10,
       "dificuldade": "avançado"
     }
 ]
 
 # Mapping de nivel para filtrar perguntas
 LEVEL_MAP = {
-    1: ["básico"],
-    2: ["básico", "intermediário"],
+    1: ["básico", "intermediário", "avançado"],
+    2: ["básico", "intermediário", "avançado"],
     3: ["básico", "intermediário", "avançado"]
 }
 
@@ -102,25 +90,56 @@ LEVEL_MAP = {
 def evaluate_answer_with_ai(question_data: Dict, user_answer: str) -> Dict[str, Any]:
     prompt = f"""
 Você é um avaliador acadêmico preciso para uma plataforma de ensino de Genética e Biologia Molecular.
-Sua tarefa é avaliar a resposta do aluno em relação ao gabarito esperado.
+Sua tarefa é avaliar a resposta do aluno em relação ao gabarito esperado, focando ESTRITAMENTE em 5 critérios.
 
 Pergunta: {question_data.get('pergunta')}
-Conceitos-chave: {', '.join(question_data.get('componentes_conhecimento', []))}
 Resposta Esperada / Gabarito: {question_data.get('resposta_esperada')}
-Erro Crítico a penalizar com nota zero (se houver aplicável): {question_data.get('erro_critico', 'Nenhum')}
 
 Resposta do Aluno: {user_answer}
 
-DIRETRIZES DE AVALIAÇÃO:
-1. CORRETA: O aluno acertou **perfeitamente** o cerne da questão e **NÃO OMITIU** nenhum detalhe relevante do gabarito esperado. A resposta deve ser completa, precisa e cobrir todos os pontos principais.
-2. PARCIALMENTE CORRETA: O aluno acertou parte da resposta ou demonstrou conhecimento válido, mas **COMETEU PEQUENOS ERROS, FOI IMPRECISO OU DEIXOU A RESPOSTA INCOMPLETA**. Se faltar qualquer informação importante que está no gabarito, você DEVE classificar como PARCIALMENTE CORRETA.
-3. INCORRETA: O aluno errou completamente, demonstrou desconhecimento ou cometeu o "Erro Crítico" supracitado.
+AVALIE CADA UM DOS 5 CRITÉRIOS ABAIXO com as notas: "Completa", "Parcial" ou "Ausente".
+1. Compreensão do antiparalelismo:
+   - Completa: Explica 5'→3' e 3'→5' e identifica isso como origem das limitações
+   - Parcial: Menciona que as fitas têm direções opostas mas não conecta ao problema
+   - Ausente: Não explica o que é antiparalelismo ou usa o termo sem definição
 
-Avalie a resposta do aluno e retorne SUA AVALIAÇÃO ESTRITAMENTE NESTE FORMATO JSON VÁLIDO:
+2. Limitação da direcionalidade da polimerase:
+   - Completa: Conecta a direcionalidade (5'→3') ao problema específico da fita lagging e à necessidade de síntese descontínua
+   - Parcial: Menciona que a polimerase tem uma direção preferencial sem explicar a consequência
+   - Ausente: Não menciona a restrição direcional da enzima
+
+3. Mecanismo da fita lagging:
+   - Completa: Descreve fragmentos de Okazaki, direção de síntese e necessidade de ligação posterior
+   - Parcial: Menciona síntese descontínua mas não explica por quê ocorre
+   - Ausente: Não distingue fita leading de lagging
+
+4. Papel do primer e da primase:
+   - Completa: Explica que a polimerase não inicia do zero, que a primase sintetiza o primer de RNA e que ele fornece a extremidade 3'-OH necessária
+   - Parcial: Cita o primer mas não explica sua função ou origem
+   - Ausente: Não menciona a necessidade de primer
+
+5. Integração entre as limitações:
+   - Completa: Articula que a necessidade de múltiplos primers na fita lagging é consequência simultânea da direcionalidade da polimerase e do antiparalelismo
+   - Parcial: Percebe que há mais de um problema mas não os conecta mecanisticamente
+   - Ausente: Trata as limitações como problemas independentes e sem relação ou não cita.
+
+DIRETRIZES FINAIS:
+- Se TODOS ou quase todos (4 ou 5) critérios forem "Completa", a "classification" deve ser "CORRETA".
+- Se houver mescla de Parcial/Completa ou alguns Ausentes, a "classification" deve ser "PARCIALMENTE CORRETA".
+- Se quase tudo for Ausente ou houver erros conceituais graves, a "classification" é "INCORRETA".
+
+Retorne SUA AVALIAÇÃO ESTRITAMENTE NESTE FORMATO JSON VÁLIDO:
 {{
   "correct": true ou false,
-  "classification": "CORRETA" ou "PARCIALMENTE CORRETA" ou "INCORRETA",
-  "feedback": "Um texto claro indicando o que ele acertou e o que faltou ou errou."
+  "classification": "CORRETA", "PARCIALMENTE CORRETA" ou "INCORRETA",
+  "criterios": {{
+       "antiparalelismo": "Completa|Parcial|Ausente",
+       "direcionalidade": "Completa|Parcial|Ausente",
+       "lagging": "Completa|Parcial|Ausente",
+       "primer": "Completa|Parcial|Ausente",
+       "integracao": "Completa|Parcial|Ausente"
+  }},
+  "feedback": "Um texto claro indicando o que ele acertou e o que faltou, baseando-se nos 5 critérios."
 }}
 NÃO RETORNE TEXTO FORA DO JSON.
 """
@@ -437,3 +456,69 @@ NÃO use saudações. Vá direto ao ponto.
                 return "Erro ao gerar preview com a IA."
             time.sleep(1)
 
+def generate_class_criteria_analysis(answers_list: List[str]) -> Dict[str, str]:
+    """
+    Analisa uma amostra de respostas da turma e gera um feedback curto
+    sobre como a turma foi em cada um dos 5 critérios estabelecidos.
+    """
+    answers_str = "\n".join([f"- Resposta de Aluno: \"{ans}\"" for ans in answers_list[:15]])
+    
+    prompt = f"""
+Sua tarefa é analisar uma amostra de respostas recentes da turma para a questão sobre "Antiparalelismo e Limitações da DNA Polimerase".
+
+**Amostra de Respostas Recentes:**
+{answers_str if answers_list else "Nenhuma amostra disponível."}
+
+**O QUE VOCÊ DEVE FAZER:**
+Analise o desempenho geral dos alunos em relação aos 5 critérios de avaliação abaixo.
+Para cada critério, escreva UMA FRASE CURTA resumindo o nível de compreensão da turma (Exemplo: "A maioria entende que os sentidos são opostos" ou "Muitos esqueceram de citar a primase").
+
+Critérios:
+1. Compreensão do antiparalelismo
+2. Limitação da direcionalidade da polimerase
+3. Mecanismo da fita lagging
+4. Papel do primer e da primase
+5. Integração entre as limitações
+
+Devolva ESTRITAMENTE um JSON no formato abaixo, sem nenhum texto extra fora do JSON.
+{{
+    "Compreensão do antiparalelismo": "frase de análise",
+    "Limitação da direcionalidade da polimerase": "frase de análise",
+    "Mecanismo da fita lagging": "frase de análise",
+    "Papel do primer e da primase": "frase de análise",
+    "Integração entre as limitações": "frase de análise"
+}}
+"""
+
+    import time
+    import json
+    max_retries = 2
+    default_resp = {
+        "Compreensão do antiparalelismo": "Não foi possível analisar adequadamente.",
+        "Limitação da direcionalidade da polimerase": "Não avaliado.",
+        "Mecanismo da fita lagging": "Não avaliado.",
+        "Papel do primer e da primase": "Não avaliado.",
+        "Integração entre as limitações": "Não avaliado."
+    }
+
+    if not answers_list:
+        return {k: "Sem dados suficientes na turma." for k in default_resp.keys()}
+
+    for attempt in range(max_retries):
+        client = get_groq_client()
+        if not client:
+            return default_resp
+            
+        try:
+            response = client.chat.completions.create(
+                model=MODEL_NAME, 
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.2,
+                response_format={"type": "json_object"}
+            )
+            text = response.choices[0].message.content.strip()
+            return json.loads(text)
+        except Exception as e:
+            if attempt == max_retries - 1:
+                return default_resp
+            time.sleep(1)

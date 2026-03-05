@@ -840,55 +840,52 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
     # ===== INSIGHTS RÁPIDOS COM IA =====
     st.markdown(f"### {icon('auto_awesome', '#8b5cf6', 24)} Insights Rápidos com IA", unsafe_allow_html=True)
     
-    # 1. Preview da Maior Dificuldade
-    col_insight1, col_insight2 = st.columns(2)
+    st.markdown("Gere um resumo instantâeno do desempenho da turma nos 5 critérios de avaliação e do padrão de uso do Tutor IA.")
     
-    with col_insight1:
-        if hardest_categories:
-            hardest_cat = hardest_categories[0]['componente']
+    if st.button("🔄 Atualizar Análises com IA", type="primary"):
+        with st.spinner("Analisando respostas e conversas com a IA... Isso pode levar alguns segundos."):
             
-            @st.cache_data(ttl=300)
-            def get_cached_difficulty_preview(category):
-                from logic import generate_difficulty_preview
-                # Busca as piores respostas dessa categoria
-                worst_dict = get_worst_answers_by_category(limit_per_category=5)
-                samples = worst_dict.get(category, [])
-                if not samples:
-                    return "Não há respostas suficientes para analisar."
-                return generate_difficulty_preview(category, samples)
+            col_insight1, col_insight2 = st.columns([1.5, 1])
             
-            with st.spinner("Analisando dificuldade..."):
-                dif_preview = get_cached_difficulty_preview(hardest_cat)
-            
-            st.info(f"**Principal Dificuldade ({hardest_cat}):**\n\n{dif_preview}")
-        else:
-            st.info("Aguardando dados para analisar dificuldades.")
-            
-    with col_insight2:
-        @st.cache_data(ttl=300)
-        def get_cached_ai_usage_preview():
-            from logic import generate_ai_usage_preview
-            # Coleta amostras recentes de uso do chat
-            chat_samples = []
-            for uid, data in all_analytics.items():
-                if uid in [s['id'] for s in student_users]: # Apenas da turma filtrada
-                    chats = data.get('chat_interactions', [])
-                    for c in chats[-3:]: # Pega os 3 mais recentes de cada aluno
-                        if c.get('user_message'):
-                            chat_samples.append(c['user_message'])
-            
-            if len(chat_samples) < 3:
-                return "Poucas interações com a IA registradas até o momento."
+            with col_insight1:
+                from logic import generate_class_criteria_analysis
+                # Busca amostras recentes globais
+                recent_answers = []
+                for uid, data in all_analytics.items():
+                    if uid in [s['id'] for s in student_users]:
+                        history = data.get('history', [])
+                        for h in history[-5:]: # ultimas 5 de cada aluno
+                            if h.get('user_answer'):
+                                recent_answers.append(h['user_answer'])
                 
-            # Embaralha e pega 10 exemplos pra mandar pra IA
-            import random
-            random.shuffle(chat_samples)
-            return generate_ai_usage_preview(chat_samples[:10])
-            
-        with st.spinner("Analisando uso do tutor..."):
-            ai_usage = get_cached_ai_usage_preview()
-            
-        st.success(f"**Como os alunos usam o Tutor AI:**\n\n{ai_usage}")
+                # Embaralha e pega 15
+                import random
+                random.shuffle(recent_answers)
+                
+                criteria_analysis = generate_class_criteria_analysis(recent_answers[:15])
+                
+                st.markdown("#### Desempenho nos 5 Critérios")
+                for crit_name, crit_text in criteria_analysis.items():
+                    st.info(f"**{crit_name}:**\n{crit_text}")
+                    
+            with col_insight2:
+                from logic import generate_ai_usage_preview
+                # Coleta amostras recentes de uso do chat
+                chat_samples = []
+                for uid, data in all_analytics.items():
+                    if uid in [s['id'] for s in student_users]:
+                        chats = data.get('chat_interactions', [])
+                        for c in chats[-3:]:
+                            if c.get('user_message'):
+                                chat_samples.append(c['user_message'])
+                
+                random.shuffle(chat_samples)
+                ai_usage = generate_ai_usage_preview(chat_samples[:10])
+                
+                st.markdown("#### Padrão de Uso do Tutor")
+                st.success(f"{ai_usage}")
+    else:
+        st.info("👆 Clique no botão acima para carregar as análises em tempo real.")
 
     st.markdown("---")
     
