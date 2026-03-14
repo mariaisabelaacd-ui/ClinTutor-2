@@ -49,8 +49,10 @@ def get_groq_client():
     print(f"🤖 [IA LOGGER] Requisição enviada. Usando chave Groq: {safe_key}", flush=True)
     return Groq(api_key=key)
 
-# Modelo Padrão do Groq (Versão 8B para limite muito maior de tokens por minuto)
+# Modelo Padrão do Groq (8B para chat rápido e tutoria)
 MODEL_NAME = "llama-3.1-8b-instant"
+# Modelo mais capaz para avaliações precisas de critérios (diferencia Parcial vs Ausente)
+EVAL_MODEL_NAME = "llama-3.3-70b-versatile"
 
 APP_NAME = "Helix.AI"
 DATA_DIR = os.path.join(os.path.expanduser("~"), ".clintutor")
@@ -161,7 +163,7 @@ NÃO RETORNE TEXTO FORA DO JSON.
             
         try:
             response = client.chat.completions.create(
-                model=MODEL_NAME, 
+                model=EVAL_MODEL_NAME, 
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.1,
                 response_format={"type": "json_object"}
@@ -472,49 +474,59 @@ NÃO use saudações. Vá direto ao ponto.
 
 def generate_class_criteria_analysis(answers_list: List[str]) -> Dict[str, str]:
     """
-    Analisa uma amostra de respostas da turma e gera um feedback curto
-    sobre como a turma foi em cada um dos 5 critérios estabelecidos.
+    Analisa uma amostra de respostas da turma e gera uma análise DETALHADA
+    por tópico, com pontos positivos, pontos de atenção e sugestões.
     """
-    answers_str = "\n".join([f"- Resposta de Aluno: \"{ans}\"" for ans in answers_list[:15]])
+    answers_str = "\n\n".join([f"Resposta do Aluno {i+1}:\n\"{ans}\"" for i, ans in enumerate(answers_list[:20])])
     
     prompt = f"""
-Sua tarefa é analisar uma amostra de respostas recentes da turma para a questão sobre "Antiparalelismo e Limitações da DNA Polimerase".
+Você é um Diretor Pedagógico sênior especialista em Biologia Molecular, com experiência em análise de aprendizagem.
 
-**Amostra de Respostas Recentes:**
+Sua tarefa é analisar DETALHADAMENTE as respostas dos alunos abaixo sobre "Antiparalelismo e Limitações da DNA Polimerase".
+
+**Respostas dos Alunos:**
 {answers_str}
 
-**O QUE VOCÊ DEVE FAZER:**
-1. Leia ESTRITAMENTE as respostas acima.
-2. Analise o desempenho da turma em relação aos 5 critérios de avaliação abaixo.
-3. ATENÇÃO MÁXIMA: Se a resposta for vaga (ex: "não sei"), incompleta ou apresentar falha grave, VOCÊ DEVE apontar o erro ou a ausência de conhecimento. Não invente que o aluno compreende algo se ele não escreveu isso na resposta.
-4. Para cada critério, escreva UMA FRASE CURTA resumindo o nível de compreensão real. (Exemplo de acerto: "A maioria entende que os sentidos são opostos", Exemplo de erro: "Nenhum aluno demonstrou compreender a função do primer", Exemplo geral: "Respostas genéricas ou em branco não abordaram este critério").
+**INSTRUÇÕES DETALHADAS:**
 
-Critérios:
-1. Compreensão do antiparalelismo
-2. Limitação da direcionalidade da polimerase
-3. Mecanismo da fita lagging
-4. Papel do primer e da primase
-5. Integração entre as limitações
+Para CADA um dos 5 tópicos abaixo, escreva uma análise RICA e DETALHADA contendo:
+- **Ponto positivo:** O que a maioria dos alunos acertou ou compreendeu
+- **Ponto de atenção:** Onde está a dificuldade principal, com exemplos concretos do que os alunos escreveram
+- **Lacunas:** Quais conceitos foram omitidos ou tratados de forma superficial
+- Se poucos ou nenhum aluno abordou aquele tópico, diga isso CLARAMENTE
 
-Devolva ESTRITAMENTE um JSON no formato abaixo, sem nenhum texto extra fora do JSON.
+REGRAS ABSOLUTAS:
+- NÃO invente que os alunos mencionaram algo se eles não mencionaram.
+- Se um tópico não foi abordado por nenhum aluno, diga: "Nenhum aluno abordou este tópico de forma explícita."
+- Seja honesto e preciso. Cada análise deve ter 3-5 frases.
+
+Os 5 tópicos:
+1. Compreensão do antiparalelismo (definição de 5'→3' e 3'→5')
+2. Limitação da direcionalidade da polimerase (só sintetiza 5'→3')
+3. Mecanismo da fita lagging (fragmentos de Okazaki, síntese descontínua)
+4. Papel do primer e da primase (necessidade de extremidade 3'-OH)
+5. Integração entre as limitações (conexão entre os problemas)
+
+Devolva ESTRITAMENTE um JSON com as 5 chaves abaixo. Cada valor deve ter 3-5 frases ricas de análise.
 {{
-    "Compreensão do antiparalelismo": "frase de análise",
-    "Limitação da direcionalidade da polimerase": "frase de análise",
-    "Mecanismo da fita lagging": "frase de análise",
-    "Papel do primer e da primase": "frase de análise",
-    "Integração entre as limitações": "frase de análise"
+    "1. Compreensão do antiparalelismo": "análise detalhada aqui",
+    "2. Limitação da direcionalidade da polimerase": "análise detalhada aqui",
+    "3. Mecanismo da fita lagging": "análise detalhada aqui",
+    "4. Papel do primer e da primase": "análise detalhada aqui",
+    "5. Integração entre as limitações": "análise detalhada aqui"
 }}
+NÃO RETORNE TEXTO FORA DO JSON.
 """
 
     import time
     import json
-    max_retries = 2
+    max_retries = 3
     default_resp = {
-        "Compreensão do antiparalelismo": "Não foi possível analisar adequadamente.",
-        "Limitação da direcionalidade da polimerase": "Não avaliado.",
-        "Mecanismo da fita lagging": "Não avaliado.",
-        "Papel do primer e da primase": "Não avaliado.",
-        "Integração entre as limitações": "Não avaliado."
+        "1. Compreensão do antiparalelismo": "Não foi possível analisar adequadamente.",
+        "2. Limitação da direcionalidade da polimerase": "Não avaliado.",
+        "3. Mecanismo da fita lagging": "Não avaliado.",
+        "4. Papel do primer e da primase": "Não avaliado.",
+        "5. Integração entre as limitações": "Não avaliado."
     }
 
     if not answers_list:
@@ -527,14 +539,15 @@ Devolva ESTRITAMENTE um JSON no formato abaixo, sem nenhum texto extra fora do J
             
         try:
             response = client.chat.completions.create(
-                model=MODEL_NAME, 
+                model=EVAL_MODEL_NAME,
                 messages=[{"role": "user", "content": prompt}],
-                temperature=0.2,
+                temperature=0.3,
                 response_format={"type": "json_object"}
             )
             text = response.choices[0].message.content.strip()
             return json.loads(text)
         except Exception as e:
+            print(f"🔄 Tentativa {attempt+1}/{max_retries} falhou no Class Criteria Analysis: {e}")
             if attempt == max_retries - 1:
                 return default_resp
             time.sleep(1)
