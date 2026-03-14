@@ -36,10 +36,8 @@ def run_migration():
             data = doc.to_dict()
             result = data.get("case_result", {})
             
-            # Pula casos que já foram avaliados com os novos critérios detalhados
-            if "criterios" in result and result["criterios"]:
-                pulados += 1
-                continue
+            # Re-avalia TODOS os registros com o prompt atualizado (mais rigoroso)
+            # Se já tem criterios, força reavaliação para aplicar o novo prompt
                 
             cid = data.get("case_id")
             q_data = q_map.get(cid)

@@ -98,6 +98,12 @@ Resposta Esperada / Gabarito: {question_data.get('resposta_esperada')}
 Resposta do Aluno: {user_answer}
 
 AVALIE CADA UM DOS 5 CRITÉRIOS ABAIXO com as notas: "Completa", "Parcial" ou "Ausente".
+
+**REGRA CRÍTICA DE CLASSIFICAÇÃO:**
+- "Ausente" = O aluno NÃO MENCIONOU o conceito. Se o texto do aluno não contém NENHUMA referência ao tópico, a nota é OBRIGATORIAMENTE "Ausente". NÃO dê "Parcial" para algo que o aluno simplesmente não abordou.
+- "Parcial" = O aluno MENCIONOU o conceito MAS de forma incompleta ou imprecisa. Exige evidência textual explícita na resposta.
+- "Completa" = O aluno explicou o conceito de forma correta e completa.
+
 1. Compreensão do antiparalelismo:
    - Completa: Explica 5'→3' e 3'→5' e identifica isso como origem das limitações
    - Parcial: Menciona que as fitas têm direções opostas mas não conecta ao problema
@@ -127,6 +133,7 @@ DIRETRIZES FINAIS:
 - Se TODOS ou quase todos (4 ou 5) critérios forem "Completa", a "classification" deve ser "CORRETA".
 - Se houver mescla de Parcial/Completa ou alguns Ausentes, a "classification" deve ser "PARCIALMENTE CORRETA".
 - Se quase tudo for Ausente ou houver erros conceituais graves, a "classification" é "INCORRETA".
+- IMPORTANTE: Se o aluno não abordou um tópico, ele DEVE receber "Ausente" naquele critério. "Parcial" exige que o aluno tenha TENTADO abordar o tema, mesmo que de forma incompleta.
 
 Retorne SUA AVALIAÇÃO ESTRITAMENTE NESTE FORMATO JSON VÁLIDO:
 {{
