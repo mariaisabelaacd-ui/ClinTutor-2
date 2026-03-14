@@ -652,13 +652,55 @@ def generate_ai_insights_pdf(hardest_categories: List[Dict]) -> bytes:
     
     # ── CONTEÚDO ──────────────────────────────────────────────────
     
-    all_answers_dict = get_all_answers_by_category(limit_per_category=20)
+    # Coleta respostas COM dados de critérios para análise detalhada
+    # all_answers_dict = get_all_answers_by_category(limit_per_category=20) # This line is replaced by the new logic below
+    
+    # Coleta respostas com critérios individuais para exemplos específicos
+    from analytics import get_all_users_analytics_firebase
+    all_analytics_raw = get_all_users_analytics_firebase()
+    
+    # Organiza respostas com seus critérios para mostrar exemplos concretos
+    answers_with_criteria = []
+    all_answers_dict = {} # New dictionary to store answers by category, similar to the original get_all_answers_by_category
+    for uid, data in all_analytics_raw.items():
+        for case in data.get('case_analytics', []):
+            result = case.get('case_result', {})
+            user_answer = result.get('user_answer', '')
+            criterios = result.get('criterios', {})
+            
+            # Extract category from case_info if available
+            case_info = case.get('case_info', {})
+            components = case_info.get('componentes_conhecimento', [])
+            
+            if user_answer and criterios:
+                entry = {
+                    'answer': user_answer,
+                    'criterios': criterios,
+                    'feedback': result.get('feedback', '')
+                }
+                answers_with_criteria.append(entry)
+                
+                # Populate all_answers_dict for generate_category_insights
+                for comp in components:
+                    if comp not in all_answers_dict:
+                        all_answers_dict[comp] = []
+                    all_answers_dict[comp].append(user_answer)
+    
+    # Ensure hardest_categories is sorted by 'taxa_acerto' ascending (lowest accuracy first)
+    # Assuming get_hardest_categories returns a list of dicts with 'componente' and 'taxa_acerto'
+    # and that it's already sorted by difficulty (lowest accuracy first).
+    # If not, add: hardest_categories.sort(key=lambda x: x.get('taxa_acerto', 100))
     categories_to_analyze = [c['componente'] for c in hardest_categories]
     
     pdf.add_page()
     pdf.set_font('Helvetica', 'B', 16)
     pdf.set_text_color(139, 92, 246)
-    pdf.cell(0, 10, 'Analise Completa por Categoria', ln=True)
+    pdf.cell(0, 10, 'Analise Detalhada por Topico', ln=True)
+    pdf.set_text_color(0, 0, 0)
+    pdf.ln(3)
+    pdf.set_font('Helvetica', 'I', 9)
+    pdf.set_text_color(120, 120, 120)
+    pdf.multi_cell(0, 5, safe('Cada topico e analisado individualmente com base nos criterios da IA. Exemplos de respostas que nao atingiram pontuacao completa sao incluidos para referencia pedagogica.'))
     pdf.set_text_color(0, 0, 0)
     pdf.ln(5)
     
@@ -667,40 +709,96 @@ def generate_ai_insights_pdf(hardest_categories: List[Dict]) -> bytes:
          pdf.cell(0, 10, "Dados insuficientes para analise de dificuldades no momento.", ln=True)
          return bytes(pdf.output())
     
+    # Mapeamento de componente -> chave do criterio no banco
+    comp_to_crit_key = {
+        '1. Compreensão do antiparalelismo': 'antiparalelismo',
+        '2. Limitação da direcionalidade da polimerase': 'direcionalidade',
+        '3. Mecanismo da fita lagging': 'lagging',
+        '4. Papel do primer e da primase': 'primer',
+        '5. Integração entre as limitações': 'integracao'
+    }
+    
     for idx, cat_name in enumerate(categories_to_analyze, 1):
         samples = all_answers_dict.get(cat_name, [])
         insight_text = generate_category_insights(cat_name, samples)
         
+        # Encontra a chave de critério correspondente
+        crit_key = None
+        for comp, key in comp_to_crit_key.items():
+            if key in cat_name.lower() or cat_name.lower() in comp.lower():
+                crit_key = key
+                break
+        # Fallback por substring
+        if not crit_key:
+            import unicodedata
+            cat_norm = unicodedata.normalize('NFKD', cat_name.lower()).encode('ASCII', 'ignore').decode('utf-8')
+            for comp, key in comp_to_crit_key.items():
+                if key in cat_norm:
+                    crit_key = key
+                    break
+        
         pdf.set_fill_color(243, 232, 255)
         pdf.set_font('Helvetica', 'B', 12)
-        pdf.cell(0, 8, safe(f"  Top {idx} Dificuldade: {cat_name}"), ln=True, fill=True)
+        pdf.cell(0, 8, safe(f"  Topico {idx}: {cat_name}"), ln=True, fill=True)
         pdf.ln(3)
         
-        pdf.set_font('Helvetica', '', 10)
+        # Estatísticas rápidas do tópico
+        if crit_key and answers_with_criteria:
+            completa_count = sum(1 for a in answers_with_criteria if str(a['criterios'].get(crit_key, '')).upper() in ['COMPLETA', 'CORRETA'])
+            parcial_count = sum(1 for a in answers_with_criteria if 'PARCIAL' in str(a['criterios'].get(crit_key, '')).upper())
+            ausente_count = sum(1 for a in answers_with_criteria if 'AUSENTE' in str(a['criterios'].get(crit_key, '')).upper())
+            total = completa_count + parcial_count + ausente_count
+            
+            pdf.set_font('Helvetica', 'B', 9)
+            pdf.set_text_color(100, 100, 100)
+            if total > 0:
+                pdf.cell(0, 5, safe(f'  Completa: {completa_count}/{total} ({completa_count/total*100:.0f}%) | Parcial: {parcial_count}/{total} ({parcial_count/total*100:.0f}%) | Ausente: {ausente_count}/{total} ({ausente_count/total*100:.0f}%)'), ln=True)
+            pdf.set_text_color(0, 0, 0)
+            pdf.ln(2)
+        
+        # Análise da IA
+        pdf.set_font('Helvetica', 'B', 10)
+        pdf.set_text_color(139, 92, 246)
+        pdf.cell(0, 6, 'Analise Pedagogica:', ln=True)
         pdf.set_text_color(80, 80, 80)
+        pdf.set_font('Helvetica', '', 10)
         pdf.multi_cell(0, 5, safe(insight_text))
         pdf.set_text_color(0, 0, 0)
-        pdf.ln(8)
+        pdf.ln(5)
         
-        if samples:
-            pdf.set_font('Helvetica', 'B', 9)
-            pdf.set_text_color(150, 150, 150)
-            pdf.cell(0, 6, "Exemplos reais de respostas dos alunos:", ln=True)
-            pdf.set_text_color(0, 0, 0)
-            pdf.set_font('Helvetica', 'I', 9)
-            for i, ans in enumerate(samples[:5]):
-                pdf.set_x(20)
-                pdf.multi_cell(W-20, 5, safe(f'"{ans}"'))
+        # Exemplos de respostas com falhas neste tópico
+        if crit_key and answers_with_criteria:
+            failing_examples = [a for a in answers_with_criteria 
+                                if str(a['criterios'].get(crit_key, '')).upper() in ['AUSENTE', 'PARCIAL']]
+            
+            if failing_examples:
+                pdf.set_font('Helvetica', 'B', 9)
+                pdf.set_text_color(220, 38, 38)
+                pdf.cell(0, 6, safe(f'Exemplos de respostas com falha neste topico ({min(len(failing_examples), 3)} de {len(failing_examples)}):'), ln=True)
+                pdf.set_text_color(0, 0, 0)
+                
+                for i, ex in enumerate(failing_examples[:3]):
+                    status = str(ex['criterios'].get(crit_key, 'N/A')).upper()
+                    status_label = 'PARCIAL' if 'PARCIAL' in status else 'AUSENTE'
+                    
+                    # Status badge
+                    if 'AUSENTE' in status:
+                        pdf.set_fill_color(254, 226, 226)
+                    else:
+                        pdf.set_fill_color(254, 249, 195)
+                    
+                    pdf.set_font('Helvetica', 'B', 8)
+                    pdf.set_x(20)
+                    pdf.cell(25, 5, safe(f' [{status_label}]'), 0, 0, 'L', True)
+                    pdf.set_font('Helvetica', 'I', 8)
+                    answer_preview = ex['answer'][:200] + ('...' if len(ex['answer']) > 200 else '')
+                    pdf.set_x(47)
+                    pdf.multi_cell(W - 35, 4, safe(f'"{answer_preview}"'))
+                    pdf.ln(2)
         
-        pdf.ln(10)
+        pdf.ln(5)
         pdf.set_draw_color(220, 220, 220)
         pdf.line(15, pdf.get_y(), 195, pdf.get_y())
-        pdf.ln(10)
-
-    pdf.set_y(-15)
-    pdf.set_font('Helvetica', 'I', 8)
-    pdf.set_text_color(150, 150, 150)
-    pdf.cell(0, 10, 'Helix.AI - Plataforma de Tutoria em Biologia Molecular', 0, 0, 'C')
 
     return bytes(pdf.output())
 
@@ -1140,10 +1238,8 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
         
         with col2:
             st.markdown(f"#### {icon('priority_high', '#ef4444', 20)} Alunos que Precisam de Atenção", unsafe_allow_html=True)
-            # Alunos com taxa de acerto < 50% ou menos de 3 questões respondidas
-            need_attention = df_ranking[
-                (df_ranking['Taxa de Acerto'] < 50) | (df_ranking['Questões'] < 3)
-            ].head(10).copy()
+            # Alunos com menor taxa de acerto (ordenados do pior para o melhor)
+            need_attention = df_ranking.sort_values('Taxa de Acerto', ascending=True).head(10).copy()
             
             if not need_attention.empty:
                 need_attention['Taxa de Acerto'] = need_attention['Taxa de Acerto'].apply(lambda x: f"{x:.1f}%")
