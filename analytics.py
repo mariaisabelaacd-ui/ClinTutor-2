@@ -776,21 +776,27 @@ def _get_criterion_score(comp_name: str, criterios: dict) -> float:
         return -1.0
         
     comp_name_lower = comp_name.lower()
-    matched_key = None
     
-    if "antiparalel" in comp_name_lower: matched_key = "antiparalelismo"
-    elif "direcionalidade" in comp_name_lower: matched_key = "direcionalidade"
-    elif "lagging" in comp_name_lower or "descontínua" in comp_name_lower: matched_key = "lagging"
-    elif "primer" in comp_name_lower or "primase" in comp_name_lower: matched_key = "primer"
-    elif "integra" in comp_name_lower: matched_key = "integracao"
+    # Determinar a "raiz" do componente que estamos buscando
+    root = ""
+    if "antiparalel" in comp_name_lower: root = "antiparalel"
+    elif "direcionalidade" in comp_name_lower: root = "direcionalidade"
+    elif "lagging" in comp_name_lower or "descontínua" in comp_name_lower: root = "lagging"
+    elif "primer" in comp_name_lower or "primase" in comp_name_lower: root = "primer"
+    elif "integra" in comp_name_lower: root = "integra"
+    else: return -1.0
     
-    if matched_key and matched_key in criterios:
-        val = str(criterios[matched_key]).upper()
-        if "COMPLETA" in val: return 1.0
-        if "PARCIAL" in val: return 0.5
-        return 0.0
-        
-    return -1.0 # fallback
+    # Normalizar chaves do dicionário para ignorar acentos/cedilhas ao buscar a raiz
+    for raw_k, raw_v in criterios.items():
+        import unicodedata
+        normalized_k = unicodedata.normalize('NFKD', str(raw_k).lower()).encode('ASCII', 'ignore').decode('utf-8')
+        if root in normalized_k:
+            val = str(raw_v).upper()
+            if "COMPLETA" in val or "CORRETA" in val or val == "1" or val == "1.0": return 1.0
+            if "PARCIAL" in val or val == "0.5": return 0.5
+            return 0.0
+            
+    return -1.0 # fallback caso a IA tenha engolido o critério
 
 def get_student_advanced_stats(user_id: str) -> Dict[str, Any]:
     """
