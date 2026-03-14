@@ -233,7 +233,7 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
             'Nome': user['name'],
             'Email': user['email'],
             'Questões': total_cases,
-            'Acertos': correct_cases,
+            'Pontos Totais': total_points,
             'Taxa de Acerto': acc_rate
         })
     
@@ -247,6 +247,8 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
             st.markdown("#### 🌟 Top 10 Melhores Desempenhos")
             top_10 = df_ranking.head(10).copy()
             top_10['Taxa de Acerto'] = top_10['Taxa de Acerto'].apply(lambda x: f"{x:.1f}%")
+            # Format points
+            top_10['Pontos Totais'] = top_10['Pontos Totais'].apply(lambda x: f"{x:.1f}")
             st.dataframe(top_10, use_container_width=True, hide_index=True)
         
         with col2:
