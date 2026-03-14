@@ -348,9 +348,14 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
     
     with col2:
         acc = basic_stats['case_stats']['accuracy_rate']
+        total_pts = basic_stats['case_stats']['total_points']
+        total_cases = basic_stats['case_stats']['total_cases']
+        avg_pts = (total_pts / total_cases) if total_cases > 0 else 0
+        
         st.metric(
-            "🎯 Taxa de Acertos",
-            f"{acc:.1f}%"
+            "🎯 Pontuação Média (0 - 5)",
+            f"{avg_pts:.1f} / 5.0",
+            help=f"Equivalente a {acc:.1f}% de taxa de acerto"
         )
     
     with col3:

@@ -87,7 +87,7 @@ def generate_student_pdf(student: Dict, basic_stats: Dict, advanced_stats: Dict,
     pdf.set_font('Helvetica', 'B', 9)
     pdf.set_fill_color(241, 245, 249)
     col_w = 38
-    headers = ['Questoes', 'Taxa Acertos', 'Nivel', 'Tempo Medio', 'Pontos']
+    headers = ['Questoes', 'Pontos (Media)', 'Nivel', 'Tempo Medio', 'Pontos Totais']
     for h in headers:
         pdf.cell(col_w, 8, h, 1, 0, 'C', True)
     pdf.ln()
@@ -97,8 +97,9 @@ def generate_student_pdf(student: Dict, basic_stats: Dict, advanced_stats: Dict,
     acc = case_stats.get('accuracy_rate', 0)
     nivel = advanced_stats.get('nivel_estimado', 'N/A') if advanced_stats else 'N/A'
     avg_time = format_duration(case_stats.get('avg_time_per_case', 0))
-    points = case_stats.get('total_points', 0)
-    values = [str(total), f'{acc:.1f}%', str(nivel), avg_time, str(points)]
+    # Calcular media de pontos (0 a 5 por questao)
+    avg_points = (points / total) if total > 0 else 0
+    values = [str(total), f'{avg_points:.1f} / 5.0', str(nivel), avg_time, str(points)]
     for v in values:
         pdf.cell(col_w, 8, v, 1, 0, 'C')
     pdf.ln(12)
@@ -128,7 +129,10 @@ def generate_student_pdf(student: Dict, basic_stats: Dict, advanced_stats: Dict,
             pdf.cell(80, 7, display_name, 1, 0, 'L')
             pdf.cell(30, 7, str(total_c), 1, 0, 'C')
             pdf.cell(30, 7, str(correct_c), 1, 0, 'C')
-            pdf.cell(30, 7, f'{rate:.0f}%', 1, 0, 'C')
+            # Media local do componente: 'correct_c' já é a soma de acertos. Dividido pelas questoes desse comp.
+            # Cada componente avalia de 0.0 a 1.0 (Ausente a Completa). Entao a media ali ja e uma nota fracionada do componente especifico
+            comp_avg = (correct_c / total_c) if total_c > 0 else 0
+            pdf.cell(30, 7, f'{comp_avg:.1f} / 1.0', 1, 0, 'C')
             pdf.ln()
         pdf.ln(8)
     
@@ -142,8 +146,9 @@ def generate_student_pdf(student: Dict, basic_stats: Dict, advanced_stats: Dict,
         pdf.set_font('Helvetica', '', 9)
         for i, comp in enumerate(weak_comps[:5], 1):
             name = comp.get('component', 'N/A')
-            rate = comp.get('accuracy_rate', 0)
-            pdf.cell(0, 6, f'  {i}. {name} (acerto: {rate:.0f}%)', ln=True)
+            # Mostrando a defasagem (quantos pontos perderam de 1.0)
+            avg_lost = 1.0 - (rate / 100)
+            pdf.cell(0, 6, f'  {i}. {name} (perde em media {avg_lost:.2f} pts por questao)', ln=True)
         pdf.ln(5)
     
     # ---- HISTÓRICO DE RESPOSTAS ----
@@ -177,7 +182,8 @@ def generate_student_pdf(student: Dict, basic_stats: Dict, advanced_stats: Dict,
             status = safe_text(item.get('Status', ''))
             tempo = safe_text(item.get('Tempo', ''))
             pts = safe_text(item.get('Pontos', 0))
-            ans_text = safe_text(item.get('Resposta_Aluno', ''))
+            ans_text = safe_text(item.get('Resposta do Aluno', '')) # A chave mudou em professor_dashboard_new.py
+            ia_feedback = safe_text(item.get('Feedback da IA', ''))
             
             # Cor por status
             if status == 'Correto' or status == 'Correta':
@@ -201,10 +207,18 @@ def generate_student_pdf(student: Dict, basic_stats: Dict, advanced_stats: Dict,
                 pdf.set_text_color(80, 80, 80)
                 pdf.set_x(40) # margin is at 10, shift right by 30
                 pdf.multi_cell(160, 5, f'Resposta do Aluno: {ans_text}', border=0, fill=False)
-                pdf.set_text_color(0, 0, 0)
-                pdf.set_font('Helvetica', '', 7)
-                # FIX: reset X to default margin (10) so the next table row is not offset
-                pdf.set_x(10)
+                
+            # Sub-linha do Feedback da IA
+            if ia_feedback and ia_feedback.lower() != 'n/a':
+                pdf.set_font('Helvetica', 'I', 7)
+                pdf.set_text_color(139, 92, 246) # Roxo IA
+                pdf.set_x(40)
+                pdf.multi_cell(160, 5, f'Avaliacao da IA: {ia_feedback}', border=0, fill=False)
+                
+            pdf.set_text_color(0, 0, 0)
+            pdf.set_font('Helvetica', '', 7)
+            # FIX: reset X to default margin (10) so the next table row is not offset
+            pdf.set_x(10)
     
     # Rodapé
     pdf.set_y(-15)
@@ -532,8 +546,9 @@ def generate_global_interactions_pdf(student_users: List[Dict], all_analytics: D
             pdf.cell(W, 6, safe(f'  Status: {status_txt}   |   Pontos ganhos: {pts}'), 0, 1, 'L', True)
             pdf.set_text_color(0, 0, 0)
 
-            # Resposta do aluno
+            # Resposta do aluno e Feedback da IA
             ans = result.get('user_answer', 'N/A')
+            fbk = result.get('feedback', '')
             pdf.set_x(10)
             pdf.set_fill_color(237, 242, 255)
             pdf.set_font('Helvetica', 'B', 8)
@@ -541,6 +556,17 @@ def generate_global_interactions_pdf(student_users: List[Dict], all_analytics: D
             pdf.set_x(10)
             pdf.set_font('Helvetica', '', 8)
             pdf.multi_cell(W, 5, safe(str(ans) if ans else 'Nao respondeu'))
+
+            if fbk and fbk.upper() != 'N/A':
+                pdf.set_x(10)
+                pdf.set_fill_color(243, 232, 255)
+                pdf.set_font('Helvetica', 'B', 8)
+                pdf.cell(W, 5, '  Feedback da IA:', 0, 1, 'L', True)
+                pdf.set_x(10)
+                pdf.set_font('Helvetica', 'I', 8)
+                pdf.set_text_color(139, 92, 246)
+                pdf.multi_cell(W, 5, safe(fbk))
+                pdf.set_text_color(0, 0, 0)
 
             # Chat desta questao
             chats = get_user_chat_interactions(uid, cid)
