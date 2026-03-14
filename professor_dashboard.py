@@ -813,11 +813,11 @@ def show_advanced_professor_dashboard():
         st.markdown(f"# {icon('dashboard', '#10b981', 32)} Dashboard do Professor", unsafe_allow_html=True)
     with col_b:
         st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("🔄 Atualizar Dados", help="Limpar cache e buscar dados em tempo real", use_container_width=True):
+        if st.button("Atualizar Dados", icon=":material/refresh:", help="Limpar cache e buscar dados em tempo real", use_container_width=True):
             st.cache_data.clear()
             st.rerun()
     
-    st.caption("ℹ️ Os dados do painel são mantidos em cache por 5 minutos para alta velocidade. Use o botão acima se precisar dos últimos dados exatos.")
+    st.caption(f"{icon('info', '#64748b', 16)} Os dados do painel são mantidos em cache por 5 minutos para alta velocidade. Use o botão acima se precisar dos últimos dados exatos.", unsafe_allow_html=True)
     st.markdown("---")
     
     try:
@@ -969,7 +969,7 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
     
     st.markdown("Gere um resumo instantâeno do desempenho da turma nos 5 critérios de avaliação e do padrão de uso do Tutor IA.")
     
-    if st.button("🔄 Atualizar Análises com IA", type="primary"):
+    if st.button("Atualizar Análises com IA", icon=":material/psychology:", type="primary"):
         with st.spinner("Analisando respostas e conversas com a IA... Isso pode levar alguns segundos."):
             
             col_insight1, col_insight2 = st.columns([1.5, 1])
@@ -1018,7 +1018,7 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
                 st.markdown("#### Padrão de Uso do Tutor")
                 st.success(f"{ai_usage}")
     else:
-        st.info("👆 Clique no botão acima para carregar as análises em tempo real.")
+            st.info(f"{icon('arrow_upward', '#0c4a6e', 18)} Clique no botão acima para carregar as análises em tempo real.", unsafe_allow_html=True)
 
     st.markdown("---")
     
@@ -1027,30 +1027,35 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
     with col_pdf1:
         pdf_bytes_class = generate_class_pdf(turma_filter, student_users, global_stats, component_stats)
         st.download_button(
-            label=f"📥 Relatório da Turma ({turma_filter})",
+            label=f"Relatório da Turma ({turma_filter})",
+            icon=":material/download:",
             data=pdf_bytes_class,
-            file_name=f"relatorio_turma_{turma_filter.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.pdf",
+            file_name=f"relatorio_biotutor_{turma_filter.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.pdf",
             mime="application/pdf",
-            use_container_width=True
+            use_container_width=True,
+            key=f"download_class_report_{turma_filter}"
         )
         
     with col_pdf2:
         pdf_bytes_global = generate_global_interactions_pdf(student_users, all_analytics)
         st.download_button(
-            label=f"📥 Relatório Completo",
+            label=f"Relatório Completo",
+            icon=":material/download:",
             data=pdf_bytes_global,
-            file_name=f"relatorio_completo_interacoes_{datetime.now().strftime('%Y%m%d')}.pdf",
+            file_name=f"relatorio_geral_interacoes_{datetime.now().strftime('%Y%m%d')}.pdf",
             mime="application/pdf",
-            use_container_width=True
+            use_container_width=True,
+            key="download_global_report"
         )
         
     with col_pdf3:
-        if st.button("✨ Gerar Insights Pedagógicos com IA (PDF)", use_container_width=True, type="primary"):
+        if st.button("Gerar Insights Pedagógicos com IA (PDF)", icon=":material/auto_awesome:", use_container_width=True, type="primary"):
             with st.spinner("A IA está analisando todas as respostas por categoria. Isso pode levar alguns segundos..."):
                 try:
                     pdf_ia = generate_ai_insights_pdf(hardest_categories)
                     st.download_button(
-                        label=f"📥 Baixar Insights com IA",
+                        label=f"Baixar Insights com IA",
+                        icon=":material/download:",
                         data=pdf_ia,
                         file_name=f"relatorio_ia_pedagogico_{datetime.now().strftime('%Y%m%d')}.pdf",
                         mime="application/pdf",
@@ -1650,19 +1655,20 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
             for item in filtered_entries:
                 item_date = item['timestamp'].date()
                 if item_date == today:
-                    key = "📅 Hoje"
+                    key = "Hoje"
                 elif item_date == yesterday:
-                    key = "📅 Ontem"
+                    key = "Ontem"
                 else:
-                    key = f"📅 {item_date.strftime('%d/%m/%Y')}"
+                    key = f"{item_date.strftime('%d/%m/%Y')}"
                 
+                label_icon = icon('calendar_today', '#64748b', 24)
                 if key not in grouped_entries:
                     grouped_entries[key] = []
                 grouped_entries[key].append(item)
             
             # Exibe Timeline
             for date_label, items in grouped_entries.items():
-                st.markdown(f"### {date_label}")
+                st.markdown(f"### {icon('event', '#64748b', 28)} {date_label}", unsafe_allow_html=True)
                 
                 for item in items:
                     entry = item['entry']
@@ -1857,25 +1863,37 @@ def show_admin_tab(student_users: List[Dict]):
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.metric(
-            "📚 Total de Questões Respondidas",
-            db_stats['total_analytics'],
-            help="Total de registros de case_analytics no banco"
-        )
+        st.markdown(f"""
+            <div style='background: rgba(59, 130, 246, 0.05); padding: 1rem; border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.2);'>
+                <div style='color: #64748b; font-size: 0.875rem; margin-bottom: 0.5rem;'>
+                    {icon('library_books', '#3b82f6', 18)} Total de Questões Respondidas
+                </div>
+                <div style='color: #3b82f6; font-size: 1.5rem; font-weight: 600;'>{db_stats['total_analytics']}</div>
+                <div style='color: #94a3b8; font-size: 0.75rem; margin-top: 0.25rem;'>Registros de case_analytics</div>
+            </div>
+        """, unsafe_allow_html=True)
     
     with col2:
-        st.metric(
-            "Total de Interações Chat",
-            db_stats['total_chat_interactions'],
-            help="Total de registros de chat_interactions no banco"
-        )
+        st.markdown(f"""
+            <div style='background: rgba(236, 72, 153, 0.05); padding: 1rem; border-radius: 12px; border: 1px solid rgba(236, 72, 153, 0.2);'>
+                <div style='color: #64748b; font-size: 0.875rem; margin-bottom: 0.5rem;'>
+                    {icon('forum', '#ec4899', 18)} Total de Interações Chat
+                </div>
+                <div style='color: #ec4899; font-size: 1.5rem; font-weight: 600;'>{db_stats['total_chat_interactions']}</div>
+                <div style='color: #94a3b8; font-size: 0.75rem; margin-top: 0.25rem;'>Interações vinculadas</div>
+            </div>
+        """, unsafe_allow_html=True)
     
     with col3:
-        st.metric(
-            "👥 Total de Usuários",
-            db_stats['total_users'],
-            help="Total de usuários cadastrados"
-        )
+        st.markdown(f"""
+            <div style='background: rgba(16, 185, 129, 0.05); padding: 1rem; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.2);'>
+                <div style='color: #64748b; font-size: 0.875rem; margin-bottom: 0.5rem;'>
+                    {icon('group', '#10b981', 18)} Total de Usuários
+                </div>
+                <div style='color: #10b981; font-size: 1.5rem; font-weight: 600;'>{db_stats['total_users']}</div>
+                <div style='color: #94a3b8; font-size: 0.75rem; margin-top: 0.25rem;'>Usuários cadastrados</div>
+            </div>
+        """, unsafe_allow_html=True)
     
     st.markdown("---")
     
@@ -2081,13 +2099,13 @@ def show_admin_tab(student_users: List[Dict]):
     st.markdown("---")
 
     # RESET COMPLETO — apaga analytics + chat + progresso dos alunos
-    st.markdown(f"### 🚨 Reset Completo (Início de Nova Rodada)")
-    st.caption("Apaga analytics, chats E o progresso salvo de todos os alunos. Use ao iniciar uma nova bateria de questões.")
+    st.markdown(f"### {icon('report_problem', '#ef4444', 24)} Reset Completo (Início de Nova Rodada)", unsafe_allow_html=True)
+    st.caption(f"{icon('info_outline', '#3b82f6', 16)} Apaga analytics, chats E o progresso salvo de todos os alunos. Use ao iniciar uma nova bateria de questões.", unsafe_allow_html=True)
     confirm_full = st.checkbox("Confirmo que quero apagar TODOS os dados dos alunos", key="confirm_full_reset")
     if st.button("RESET COMPLETO", key="full_reset_btn", type="primary", disabled=not confirm_full):
         if 'confirm_full_reset_stage2' not in st.session_state:
             st.session_state.confirm_full_reset_stage2 = True
-            st.error("⚠️ ÚLTIMA CONFIRMAÇÃO — Clique novamente para apagar TUDO!")
+            st.error(f"{icon('warning', '#ffffff', 18)} ÚLTIMA CONFIRMAÇÃO — Clique novamente para apagar TUDO!", unsafe_allow_html=True)
         else:
             with st.spinner("Apagando todos os dados..."):
                 r1 = reset_all_students_analytics()
@@ -2096,7 +2114,7 @@ def show_admin_tab(student_users: List[Dict]):
                 log_admin_action("reset_completo", f"Analytics: {r1['deleted']} docs | Chat: {r2['deleted']} docs | Progress: {r3['updated']} alunos")
                 del st.session_state.confirm_full_reset_stage2
                 st.cache_data.clear()
-                st.success(f"✅ Reset completo! Analytics: {r1['deleted']} | Chat: {r2['deleted']} | Alunos resetados: {r3['updated']}")
+                st.success(f"{icon('check_circle', '#ffffff', 18)} Reset completo! Analytics: {r1['deleted']} | Chat: {r2['deleted']} | Alunos resetados: {r3['updated']}", unsafe_allow_html=True)
                 st.rerun()
 
     st.markdown("---")
