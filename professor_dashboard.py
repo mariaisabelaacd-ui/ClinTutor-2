@@ -12,7 +12,7 @@ from analytics import (
     get_global_knowledge_component_stats, get_average_user_level,
     get_hardest_categories, get_student_complete_profile,
     get_student_weakness_analysis, format_duration,
-    get_user_chat_interactions, get_worst_answers_by_category
+    get_user_chat_interactions, get_all_answers_by_category
 )
 from auth_firebase import get_all_users, get_user_by_id, delete_user
 from logic import get_case, generate_category_insights
@@ -619,19 +619,20 @@ def generate_ai_insights_pdf(hardest_categories: List[Dict]) -> bytes:
     pdf.set_y(150)
     pdf.set_font('Helvetica', 'I', 11)
     texto_capa = "Este relatorio contem uma analise automatizada gerada por Inteligencia Artificial " \
-                 "focada exclusivamente nos topicos onde a turma demonstrou maior dificuldade."
+                 "cobrindo o desempenho geral da turma em todas as categorias de conhecimento, " \
+                 "baseado em amostras de todas as respostas enviadas."
     pdf.multi_cell(0, 6, safe(texto_capa), align='C')
     pdf.set_text_color(0, 0, 0)
     
     # ── CONTEÚDO ──────────────────────────────────────────────────
     
-    worst_answers_dict = get_worst_answers_by_category(limit_per_category=10)
-    categories_to_analyze = [c['componente'] for c in hardest_categories[:3]]
+    all_answers_dict = get_all_answers_by_category(limit_per_category=20)
+    categories_to_analyze = [c['componente'] for c in hardest_categories]
     
     pdf.add_page()
     pdf.set_font('Helvetica', 'B', 16)
     pdf.set_text_color(139, 92, 246)
-    pdf.cell(0, 10, 'Foco de Intervencao Recomendado', ln=True)
+    pdf.cell(0, 10, 'Analise Completa por Categoria', ln=True)
     pdf.set_text_color(0, 0, 0)
     pdf.ln(5)
     
@@ -641,7 +642,7 @@ def generate_ai_insights_pdf(hardest_categories: List[Dict]) -> bytes:
          return bytes(pdf.output())
     
     for idx, cat_name in enumerate(categories_to_analyze, 1):
-        samples = worst_answers_dict.get(cat_name, [])
+        samples = all_answers_dict.get(cat_name, [])
         insight_text = generate_category_insights(cat_name, samples)
         
         pdf.set_fill_color(243, 232, 255)
@@ -921,7 +922,7 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
         
     with col_pdf3:
         if st.button("✨ Gerar Insights Pedagógicos com IA (PDF)", use_container_width=True, type="primary"):
-            with st.spinner("A IA está analisando as piores respostas por categoria. Isso pode levar alguns segundos..."):
+            with st.spinner("A IA está analisando todas as respostas por categoria. Isso pode levar alguns segundos..."):
                 try:
                     pdf_ia = generate_ai_insights_pdf(hardest_categories)
                     st.download_button(

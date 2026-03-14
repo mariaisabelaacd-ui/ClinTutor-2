@@ -968,9 +968,9 @@ def get_global_knowledge_component_stats() -> List[Dict[str, Any]]:
     
     return results
 
-def get_worst_answers_by_category(limit_per_category: int = 3) -> Dict[str, List[str]]:
+def get_all_answers_by_category(limit_per_category: int = 20) -> Dict[str, List[str]]:
     """
-    Agrupa as piores respostas (Incorretas ou Parciais com baixa pontuação) 
+    Agrupa todas as respostas (corretas, parciais e incorretas) 
     por categoria de conhecimento, para enviar à IA.
     Returns:
         Um dicionário: { "Nome da Categoria": ["Resposta ruim 1", "Resposta ruim 2"] }
@@ -997,8 +997,8 @@ def get_worst_answers_by_category(limit_per_category: int = 3) -> Dict[str, List
             is_correct = result.get('is_correct', False)
             points = result.get('points_gained', 0)
             
-            # Se for incorreto ou parcial com poucos pontos
-            if user_answer and (not is_correct or points < 0.8):
+            # Pega todas as respostas (validando apenas se existe texto)
+            if user_answer:
                 cats = q_cats[qid]
                 for cat in cats:
                     if cat not in category_bad_answers:
@@ -1011,7 +1011,8 @@ def get_worst_answers_by_category(limit_per_category: int = 3) -> Dict[str, List
     # Pega as piores ordenando por pontos e trunca
     result_dict = {}
     for cat, answers in category_bad_answers.items():
-        # Ordena pelas piores (menor pontuação primeiro)
+        # OPCIONAL: Se quiser dar foco a respostas ruins misturadas com as boas, mantemos a ordenação por pontos (crescente). 
+        # Assim ele pega os piores casos primeiro caso estoure o 'limit_per_category'.
         answers.sort(key=lambda x: x['points'])
         
         # Filtra repostas curtas ou inúteis como "nao sei", "nada" etc., se quiser, ou pega as X primeiras
