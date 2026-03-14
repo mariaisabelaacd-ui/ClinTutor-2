@@ -817,7 +817,7 @@ def show_advanced_professor_dashboard():
             st.cache_data.clear()
             st.rerun()
     
-    st.caption(f"{icon('info', '#64748b', 16)} Os dados do painel são mantidos em cache por 5 minutos para alta velocidade. Use o botão acima se precisar dos últimos dados exatos.", unsafe_allow_html=True)
+    st.markdown(f"<div style='color: #64748b; font-size: 0.85rem; margin-top: -1rem; margin-bottom: 1rem;'>{icon('info', '#64748b', 16)} Os dados do painel são mantidos em cache por 5 minutos para alta velocidade. Use o botão acima se precisar dos últimos dados exatos.</div>", unsafe_allow_html=True)
     st.markdown("---")
     
     try:
@@ -1018,7 +1018,7 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
                 st.markdown("#### Padrão de Uso do Tutor")
                 st.success(f"{ai_usage}")
     else:
-            st.info(f"{icon('arrow_upward', '#0c4a6e', 18)} Clique no botão acima para carregar as análises em tempo real.", unsafe_allow_html=True)
+            st.info("Clique no botão acima para carregar as análises em tempo real.", icon=":material/arrow_upward:")
 
     st.markdown("---")
     
@@ -1105,7 +1105,7 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
             st.plotly_chart(fig_comp, use_container_width=True)
             
             # Tooltip explicativo
-            st.caption(f"{icon('lightbulb', '#eab308', 16)} Componentes no topo têm menor taxa de acerto (mais difíceis)", unsafe_allow_html=True)
+            st.markdown(f"<div style='color: #64748b; font-size: 0.85rem; margin-bottom: 1rem;'>{icon('lightbulb', '#eab308', 16)} Componentes no topo têm menor taxa de acerto (mais difíceis)</div>", unsafe_allow_html=True)
         else:
             st.info("Dados insuficientes para análise por componente")
     
@@ -2100,12 +2100,12 @@ def show_admin_tab(student_users: List[Dict]):
 
     # RESET COMPLETO — apaga analytics + chat + progresso dos alunos
     st.markdown(f"### {icon('report_problem', '#ef4444', 24)} Reset Completo (Início de Nova Rodada)", unsafe_allow_html=True)
-    st.caption(f"{icon('info_outline', '#3b82f6', 16)} Apaga analytics, chats E o progresso salvo de todos os alunos. Use ao iniciar uma nova bateria de questões.", unsafe_allow_html=True)
+    st.markdown(f"<div style='color: #64748b; font-size: 0.85rem; margin-bottom: 0.5rem;'>{icon('info_outline', '#3b82f6', 16)} Apaga analytics, chats E o progresso salvo de todos os alunos. Use ao iniciar uma nova bateria de questões.</div>", unsafe_allow_html=True)
     confirm_full = st.checkbox("Confirmo que quero apagar TODOS os dados dos alunos", key="confirm_full_reset")
     if st.button("RESET COMPLETO", key="full_reset_btn", type="primary", disabled=not confirm_full):
         if 'confirm_full_reset_stage2' not in st.session_state:
             st.session_state.confirm_full_reset_stage2 = True
-            st.error(f"{icon('warning', '#ffffff', 18)} ÚLTIMA CONFIRMAÇÃO — Clique novamente para apagar TUDO!", unsafe_allow_html=True)
+            st.error("ÚLTIMA CONFIRMAÇÃO — Clique novamente para apagar TUDO!", icon=":material/warning:")
         else:
             with st.spinner("Apagando todos os dados..."):
                 r1 = reset_all_students_analytics()
@@ -2114,7 +2114,7 @@ def show_admin_tab(student_users: List[Dict]):
                 log_admin_action("reset_completo", f"Analytics: {r1['deleted']} docs | Chat: {r2['deleted']} docs | Progress: {r3['updated']} alunos")
                 del st.session_state.confirm_full_reset_stage2
                 st.cache_data.clear()
-                st.success(f"{icon('check_circle', '#ffffff', 18)} Reset completo! Analytics: {r1['deleted']} | Chat: {r2['deleted']} | Alunos resetados: {r3['updated']}", unsafe_allow_html=True)
+                st.success(f"Reset completo! Analytics: {r1['deleted']} | Chat: {r2['deleted']} | Alunos resetados: {r3['updated']}", icon=":material/check_circle:")
                 st.rerun()
 
     st.markdown("---")
