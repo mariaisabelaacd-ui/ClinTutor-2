@@ -196,29 +196,10 @@ def calculate_accuracy_rate(user_id: str) -> Dict[str, Any]:
     
     total_cases = len(case_analytics)
     
-    correct_cases = 0.0
-    for case_data in case_analytics:
-        result = case_data.get("case_result", {})
-        outcome = result.get("outcome")
-        is_corr = result.get("is_correct", False)
-        
-        if outcome == "correct":
-            correct_cases += 1.0
-        elif outcome == "partial":
-            correct_cases += 0.5
-        elif outcome == "incorrect":
-            correct_cases += 0.0
-        else:
-            # Fallback backward compatibility
-            is_partial = "PARCIAL" in result.get("classification", "").upper()
-            if is_corr and not is_partial:
-                correct_cases += 1.0
-            elif is_partial:
-                correct_cases += 0.5
-                
     total_points = sum(case_data.get("case_result", {}).get("points_gained", 0) for case_data in case_analytics)
 
-    accuracy_rate = (correct_cases / total_cases * 100) if total_cases > 0 else 0.0
+    correct_cases = total_points / 5.0
+    accuracy_rate = (total_points / (total_cases * 5.0) * 100) if total_cases > 0 else 0.0
     
     # Calcula tempo total usando duration_seconds diretamente
     total_time = 0
@@ -789,6 +770,28 @@ def get_global_stats() -> Dict[str, Any]:
                                   if any(_is_today(case.get('timestamp', datetime.min.isoformat())) 
                                         for case in data['case_analytics'] + data['chat_interactions'])])
     }
+def _get_criterion_score(comp_name: str, criterios: dict) -> float:
+    """Extrai a nota exata de TUDO ou PARCIAL a partir do JSON de critérios da IA"""
+    if not criterios or not isinstance(criterios, dict):
+        return -1.0
+        
+    comp_name_lower = comp_name.lower()
+    matched_key = None
+    
+    if "antiparalel" in comp_name_lower: matched_key = "antiparalelismo"
+    elif "direcionalidade" in comp_name_lower: matched_key = "direcionalidade"
+    elif "lagging" in comp_name_lower or "descontínua" in comp_name_lower: matched_key = "lagging"
+    elif "primer" in comp_name_lower or "primase" in comp_name_lower: matched_key = "primer"
+    elif "integra" in comp_name_lower: matched_key = "integracao"
+    
+    if matched_key and matched_key in criterios:
+        val = str(criterios[matched_key]).upper()
+        if "COMPLETA" in val: return 1.0
+        if "PARCIAL" in val: return 0.5
+        return 0.0
+        
+    return -1.0 # fallback
+
 def get_student_advanced_stats(user_id: str) -> Dict[str, Any]:
     """
     Gera estatísticas avançadas para o aluno:
@@ -830,14 +833,19 @@ def get_student_advanced_stats(user_id: str) -> Dict[str, Any]:
         
         outcome = result.get('outcome')
         cwd = 1.0 if outcome == 'correct' else 0.5 if outcome == 'partial' else 0.0 if outcome == 'incorrect' else (1.0 if result.get('is_correct') and "PARCIAL" not in result.get("classification", "").upper() else 0.5 if "PARCIAL" in result.get("classification", "").upper() else 0.0)
+        criterios = result.get('criterios', {})
         
         # 1. Componentes
         comps = q_data.get('componentes_conhecimento', ['Geral'])
         for comp in comps:
             if comp not in stats['componentes']:
                 stats['componentes'][comp] = {'total': 0, 'correct': 0.0}
+            
+            crit_score = _get_criterion_score(comp, criterios)
+            comp_cwd = cwd if crit_score == -1.0 else crit_score
+            
             stats['componentes'][comp]['total'] += 1.0
-            stats['componentes'][comp]['correct'] += cwd
+            stats['componentes'][comp]['correct'] += comp_cwd
             
         # 2. Dificuldade
         diff = q_data.get('dificuldade', 'Não Classificado')
@@ -922,6 +930,7 @@ def get_global_knowledge_component_stats() -> List[Dict[str, Any]]:
             outcome = result.get('outcome')
             cwd = 1.0 if outcome == 'correct' else 0.5 if outcome == 'partial' else 0.0 if outcome == 'incorrect' else (1.0 if result.get('is_correct') and "PARCIAL" not in result.get("classification", "").upper() else 0.5 if "PARCIAL" in result.get("classification", "").upper() else 0.0)
             components = q_data.get('componentes_conhecimento', ['Geral'])
+            criterios = result.get('criterios', {})
             
             for comp in components:
                 if comp not in component_stats:
@@ -931,8 +940,11 @@ def get_global_knowledge_component_stats() -> List[Dict[str, Any]]:
                         'times': []
                     }
                 
+                crit_score = _get_criterion_score(comp, criterios)
+                comp_cwd = cwd if crit_score == -1.0 else crit_score
+                
                 component_stats[comp]['total'] += 1
-                component_stats[comp]['correct'] += cwd
+                component_stats[comp]['correct'] += comp_cwd
                 if duration > 0:
                     component_stats[comp]['times'].append(duration)
     

@@ -332,7 +332,8 @@ def finalize_question_response(question: Dict[str, Any], user_answer: str, ai_ev
         "classification": classification,
         "outcome": outcome,
         "feedback": ai_evaluation.get("feedback", ""),
-        "user_answer": user_answer
+        "user_answer": user_answer,
+        "criterios": criterios
     }
 
 # Compatibilidade para analytics

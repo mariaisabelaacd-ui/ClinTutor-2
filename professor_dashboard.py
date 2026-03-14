@@ -345,8 +345,9 @@ def generate_class_pdf(turma_name: str, student_users: List[Dict], global_stats:
         cas = all_analytics.get(uid, {}).get('case_analytics', [])
         if not cas: continue
         total_q = len(cas)
-        corr_q = sum(1 for e in cas if e.get('case_result', {}).get('is_correct', False))
-        acc = (corr_q / total_q * 100) if total_q > 0 else 0
+        total_pts = sum(e.get('case_result', {}).get('points_gained', 0) for e in cas)
+        corr_q = total_pts / 5.0
+        acc = (total_pts / (total_q * 5.0) * 100) if total_q > 0 else 0
         ranking.append((s, total_q, corr_q, acc))
 
     ranking.sort(key=lambda x: x[3], reverse=True)
@@ -420,11 +421,12 @@ def generate_global_interactions_pdf(student_users: List[Dict], all_analytics: D
 
         # ── Calcula stats do aluno ───────────────────────────────
         total_q  = len(case_list)
-        correct_q = sum(1 for e in case_list if e.get('case_result', {}).get('is_correct', False))
+        correct_full_q = sum(1 for e in case_list if e.get('case_result', {}).get('outcome') == 'correct' or (e.get('case_result', {}).get('is_correct', False) and 'PARCIAL' not in e.get('case_result', {}).get('classification', '').upper()))
         parcial_q = sum(1 for e in case_list if 'PARCIAL' in e.get('case_result', {}).get('classification', '').upper())
-        errado_q  = total_q - correct_q
+        errado_q  = total_q - (correct_full_q + parcial_q)
         total_pts = sum(e.get('case_result', {}).get('points_gained', 0) for e in case_list)
-        accuracy  = (correct_q / total_q * 100) if total_q > 0 else 0.0
+        accuracy  = (total_pts / (total_q * 5.0) * 100) if total_q > 0 else 0.0
+        correct_q = total_pts / 5.0
         nivel_txt = nivel_map.get(level_from_score(int(total_pts)), 'Basico')
         total_ch  = len(u_data.get('chat_interactions', []))
 

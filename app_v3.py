@@ -158,7 +158,7 @@ def persist_now():
 def start_new_case():
     new_case = pick_new_case(st.session_state.unlocked_level, st.session_state.used_cases)
     st.session_state.current_case_id = new_case["id"]
-    if new_case["id"] not in st.session_state.used_cases: st.session_state.used_cases.append(new_case["id"])
+    # Removed premature append to used_cases here.
     
     # Timer
     user = get_current_user()
@@ -253,6 +253,9 @@ def main():
                     st.session_state.score += result["points_gained"]
                     if result["is_correct"]: st.session_state.streak += 1
                     else: st.session_state.streak = 0
+                    
+                    if st.session_state.current_case_id not in st.session_state.used_cases:
+                        st.session_state.used_cases.append(st.session_state.current_case_id)
                     
                     nl = level_from_score(st.session_state.score)
                     if nl > st.session_state.unlocked_level: st.session_state.unlocked_level = nl; st.balloons()

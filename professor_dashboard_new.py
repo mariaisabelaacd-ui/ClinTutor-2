@@ -225,9 +225,9 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
             continue
         
         total_cases = len(case_analytics)
-        correct_cases = sum(1 for c in case_analytics 
-                           if c.get("case_result", {}).get("is_correct", False))
-        acc_rate = (correct_cases / total_cases * 100) if total_cases > 0 else 0.0
+        total_points = sum(c.get("case_result", {}).get("points_gained", 0) for c in case_analytics)
+        correct_cases = total_points / 5.0
+        acc_rate = (total_points / (total_cases * 5.0) * 100) if total_cases > 0 else 0.0
         
         ranking_data.append({
             'Nome': user['name'],
@@ -557,7 +557,9 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
                 'Dificuldade': diff.title(),
                 'Status': '✅ Correto' if is_correct else '❌ Incorreto',
                 'Tempo': format_duration(entry.get('duration_seconds', 0)),
-                'Pontos': result.get('points_gained', 0)
+                'Pontos': result.get('points_gained', 0),
+                'Resposta do Aluno': result.get('user_answer', 'N/A'),
+                'Feedback da IA': result.get('feedback', 'N/A')
             })
         
         if history:
