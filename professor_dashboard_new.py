@@ -225,8 +225,30 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
             continue
         
         total_cases = len(case_analytics)
-        total_points = sum(c.get("case_result", {}).get("points_gained", 0) for c in case_analytics)
-        correct_cases = total_points / 5.0
+        
+        # Recalcula pontos dos critérios em tempo real (não confia em points_gained salvo)
+        total_points = 0.0
+        for c in case_analytics:
+            result = c.get("case_result", {})
+            criterios = result.get("criterios", {})
+            if criterios and isinstance(criterios, dict):
+                pts = 0.0
+                for crit, status in criterios.items():
+                    s = str(status).upper()
+                    if "COMPLETA" in s or "CORRETA" in s:
+                        pts += 1.0
+                    elif "PARCIAL" in s:
+                        pts += 0.5
+                total_points += min(pts, 5.0)
+            else:
+                # Fallback: usa outcome se não tem criterios
+                outcome = result.get("outcome", "")
+                if outcome == "correct":
+                    total_points += 5.0
+                elif outcome == "partial":
+                    total_points += 2.5
+                # incorrect = 0
+        
         acc_rate = (total_points / (total_cases * 5.0) * 100) if total_cases > 0 else 0.0
         
         ranking_data.append({
