@@ -1141,11 +1141,16 @@ def get_student_weakness_analysis(user_id: str) -> Dict[str, Any]:
         difficulty = q_data.get('dificuldade', 'básico')
         
         # Análise por componente
+        criterios = result.get('criterios', {})
         for comp in components:
             if comp not in component_performance:
                 component_performance[comp] = {'total': 0, 'correct': 0.0}
+            
+            crit_score = _get_criterion_score(comp, criterios)
+            comp_cwd = cwd if crit_score == -1.0 else crit_score
+                
             component_performance[comp]['total'] += 1
-            component_performance[comp]['correct'] += cwd
+            component_performance[comp]['correct'] += comp_cwd
         
         # Análise por dificuldade
         if difficulty in difficulty_performance:
