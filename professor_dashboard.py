@@ -1,5 +1,5 @@
 import streamlit as st
-# Force redeploy
+# Force redeploy v3
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -913,7 +913,11 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
     
     # Carrega estatísticas globais
     global_stats = get_global_stats()
-    q_stats_data = get_question_stats()
+    q_stats_data = []
+    try:
+        q_stats_data = get_question_stats()
+    except Exception:
+        q_stats_data = []
     level_stats = get_average_user_level()
     hardest_questions = get_hardest_questions(top_n=6)
     
