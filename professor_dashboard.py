@@ -1105,41 +1105,37 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
     col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown(f"### {icon('menu_book', '#8b5cf6', 24)} Desempenho por Componente de Conhecimento", unsafe_allow_html=True)
-        if component_stats:
-            df_comp = pd.DataFrame(component_stats)
+        st.markdown(f"### {icon('menu_book', '#8b5cf6', 24)} Desempenho por Questão (1 a 6)", unsafe_allow_html=True)
+        if question_stats:
+            df_q_stats = pd.DataFrame(question_stats)
+            df_q_stats['label'] = df_q_stats['questao_num'].apply(lambda x: f"Questão {x}")
             
-            # Trunca nomes muito longos para melhor visualização
-            df_comp['componente_display'] = df_comp['componente'].apply(
-                lambda x: x if len(x) <= 30 else x[:27] + '...'
-            )
-            
-            fig_comp = px.bar(
-                df_comp,
+            fig_q = px.bar(
+                df_q_stats,
                 x='taxa_acerto',
-                y='componente_display',
+                y='label',
                 orientation='h',
-                title="Taxa de Acerto por Componente (%)",
+                title="Taxa de Acerto por Questão (%)",
                 text_auto='.1f',
                 color='taxa_acerto',
                 color_continuous_scale='RdYlGn',
                 range_color=[0, 100],
-                hover_data={'componente': True, 'componente_display': False}  # Mostra nome completo no hover
+                hover_data={'questao_num': True, 'label': False, 'titulo': True}
             )
-            fig_comp.update_layout(
+            fig_q.update_layout(
                 xaxis_title="Taxa de Acerto (%)",
                 yaxis_title=None,
                 showlegend=False,
                 height=400,
-                margin=dict(l=200, r=20, t=40, b=40),  # Mais espaço à esquerda para labels
-                yaxis=dict(tickfont=dict(size=11))  # Fonte menor para caber melhor
+                margin=dict(l=100, r=20, t=40, b=40),
+                yaxis=dict(tickfont=dict(size=11), categoryorder='total ascending')
             )
-            st.plotly_chart(fig_comp, use_container_width=True)
+            st.plotly_chart(fig_q, use_container_width=True)
             
             # Tooltip explicativo
-            st.markdown(f"<div style='color: #64748b; font-size: 0.85rem; margin-bottom: 1rem;'>{icon('lightbulb', '#eab308', 16)} Componentes no topo têm menor taxa de acerto (mais difíceis)</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='color: #64748b; font-size: 0.85rem; margin-bottom: 1rem;'>{icon('lightbulb', '#eab308', 16)} Questões no topo são as que os alunos apresentaram maior dificuldade</div>", unsafe_allow_html=True)
         else:
-            st.info("Dados insuficientes para análise por componente")
+            st.info("Dados insuficientes para análise por questão")
     
     with col2:
         st.markdown(f"### {icon('bar_chart', '#3b82f6', 24)} Distribuição de Alunos por Nível", unsafe_allow_html=True)
