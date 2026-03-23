@@ -1174,9 +1174,6 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
     
     if hardest_questions:
         # Gráfico de barras horizontal para questões
-        import pandas as pd
-        import plotly.express as px
-        
         df_q = pd.DataFrame(hardest_questions)
         df_q['label'] = df_q['questao_num'].apply(lambda x: f"Questão {x}")
         
