@@ -913,7 +913,7 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
     
     # Carrega estatísticas globais
     global_stats = get_global_stats()
-    question_stats = get_question_stats()
+    q_stats_data = get_question_stats()
     level_stats = get_average_user_level()
     hardest_questions = get_hardest_questions(top_n=6)
     
@@ -1057,7 +1057,7 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
     # PDF de Visão Geral (Agora em 3 colunas)
     col_pdf1, col_pdf2, col_pdf3 = st.columns(3)
     with col_pdf1:
-        pdf_bytes_class = generate_class_pdf(turma_filter, student_users, global_stats, question_stats)
+        pdf_bytes_class = generate_class_pdf(turma_filter, student_users, global_stats, q_stats_data)
         st.download_button(
             label=f"Relatório da Turma ({turma_filter})",
             icon=":material/download:",
@@ -1084,7 +1084,7 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
         if st.button("Gerar Insights Pedagógicos com IA (PDF)", icon=":material/auto_awesome:", use_container_width=True, type="primary"):
             with st.spinner("A IA está analisando todas as respostas por categoria. Isso pode levar alguns segundos..."):
                 try:
-                    pdf_ia = generate_ai_insights_pdf(hardest_categories)
+                    pdf_ia = generate_ai_insights_pdf(hardest_questions)
                     st.download_button(
                         label=f"Baixar Insights com IA",
                         icon=":material/download:",
@@ -1101,13 +1101,13 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
     
     # ===== VISUALIZAÇÕES =====
     
-    # Linha 1: Desempenho por Componente e Distribuição por Nível
+    # Linha 1: Desempenho por Questão e Distribuição por Nível
     col1, col2 = st.columns(2)
     
     with col1:
         st.markdown(f"### {icon('menu_book', '#8b5cf6', 24)} Desempenho por Questão (1 a 6)", unsafe_allow_html=True)
-        if question_stats:
-            df_q_stats = pd.DataFrame(question_stats)
+        if q_stats_data:
+            df_q_stats = pd.DataFrame(q_stats_data)
             df_q_stats['label'] = df_q_stats['questao_num'].apply(lambda x: f"Questão {x}")
             
             fig_q = px.bar(
