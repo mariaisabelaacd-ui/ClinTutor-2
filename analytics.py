@@ -179,9 +179,8 @@ def flush_chat_buffer(user_id: str, case_id: str):
 # Cálculo de Taxa de Acertos
 # =============================
 
-def calculate_accuracy_rate(user_id: str) -> Dict[str, Any]:
+def calculate_accuracy_rate(case_analytics: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Calcula a taxa de acertos de um usuário"""
-    case_analytics = get_user_case_analytics(user_id)
     
     if not case_analytics:
         return {
@@ -196,45 +195,61 @@ def calculate_accuracy_rate(user_id: str) -> Dict[str, Any]:
     
     total_cases = len(case_analytics)
     
-    # Recalcula pontos dos critérios em tempo real (não confia em points_gained salvo)
+    # Recalcula pontos dos critérios em tempo real
     total_points = 0.0
-    for case_data in case_analytics:
-        result = case_data.get("case_result", {})
-        criterios = result.get("criterios", {})
-        if criterios and isinstance(criterios, dict):
-            pts = 0.0
-            for crit, status in criterios.items():
-                s = str(status).upper()
-                if "COMPLETA" in s or "CORRETA" in s:
-                    pts += 1.0
-                elif "PARCIAL" in s:
-                    pts += 0.5
-            total_points += min(pts, 5.0)
-        else:
-            # Fallback: usa outcome se não tem criterios
-            outcome = result.get("outcome", "")
-            if outcome == "correct":
-                total_points += 5.0
-            elif outcome == "partial":
-                total_points += 2.5
-            # incorrect = 0
-
-    correct_cases = total_points / 5.0
-    accuracy_rate = (total_points / (total_cases * 5.0) * 100) if total_cases > 0 else 0.0
+    total_possible_points = 0.0
     
-    # Calcula tempo total usando duration_seconds diretamente
+    from logic import get_case
+    
+    for case_data in case_analytics:
+        cid = case_data.get("case_id")
+        case_info = get_case(cid)
+        # Se for das novas questoes (3 pts), usa 3. Caso contrário 5 (retrocompatibilidade)
+        max_q_pts = float(case_info.get("pontuacao_maxima", 5.0))
+        total_possible_points += max_q_pts
+        
+        result = case_data.get("case_result", {})
+        points_gained = result.get("points_gained", 0.0)
+        
+        # Se temos os pontos salvos corretamente, usamos eles
+        if isinstance(points_gained, (int, float)):
+            total_points += min(float(points_gained), max_q_pts)
+        else:
+            # Fallback se points_gained não existir ou for inválido
+            criterios = result.get("criterios", {})
+            if criterios and isinstance(criterios, dict):
+                pts = 0.0
+                for crit, status in criterios.items():
+                    s = str(status).upper()
+                    if "COMPLETA" in s or "CORRETA" in s or "AVANÇADO" in s or "AVANCADO" in s:
+                        pts += 1.0
+                    elif "PARCIAL" in s or "MÉDIO" in s or "MEDIO" in s:
+                        pts += 0.5
+                    elif "BÁSICO" in s or "BASICO" in s:
+                         pts += 0.2 # Ajuste grosseiro para o antigo sistema se cair aqui
+                total_points += min(pts, max_q_pts)
+            else:
+                outcome = result.get("outcome", "")
+                if outcome == "correct":
+                    total_points += max_q_pts
+                elif outcome == "partial":
+                    total_points += max_q_pts / 2
+    
+    # Normalização dos casos "corretos" baseada nos pontos totais vs possíveis
+    correct_cases = (total_points / (total_possible_points / total_cases)) if total_cases > 0 and total_possible_points > 0 else 0.0
+    accuracy_rate = (total_points / total_possible_points * 100) if total_possible_points > 0 else 0.0
+    
+    # ... resto da função permanece igual ...
+    # Calcula tempo total
     total_time = 0
     valid_durations = 0
     
     for case_data in case_analytics:
         duration = case_data.get("duration_seconds", 0)
-        
-        # Se duration é numérico, usa diretamente
         if isinstance(duration, (int, float)) and duration > 0:
             total_time += duration
             valid_durations += 1
     
-    # Calcula média baseada em durações válidas
     average_time = total_time / valid_durations if valid_durations > 0 else 0.0
     
     return {
@@ -245,7 +260,8 @@ def calculate_accuracy_rate(user_id: str) -> Dict[str, Any]:
         "total_time": total_time,
         "average_time_formatted": format_duration(average_time),
         "total_time_formatted": format_duration(total_time),
-        "total_points": total_points
+        "total_points": total_points,
+        "total_possible_points": total_possible_points
     }
 
 # =============================
@@ -688,7 +704,7 @@ def get_user_detailed_stats(user_id: str) -> Dict[str, Any]:
     chat_interactions = get_user_chat_interactions(user_id)
     
     # Estatísticas de casos
-    case_stats = calculate_accuracy_rate(user_id)
+    case_stats = calculate_accuracy_rate(case_analytics)
     
     # Estatísticas de chat
     total_chat_interactions = len(chat_interactions)

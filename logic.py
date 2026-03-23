@@ -64,19 +64,70 @@ SAVE_PATH = os.path.join(DATA_DIR, "progresso_gamificado.json")
 # =============================
 QUESTIONS: List[Dict[str, Any]] = [
     {
-      "id": "q_dna_replicacao_multicriterio",
-      "pergunta": "A dupla fita do DNA é antiparalela. Defina antiparalelismo e explique, considerando os mecanismos de funcionamento da DNA polimerase, de que forma essa característica impõe limitações à replicação do DNA e quais mecanismos moleculares a célula utiliza para contorná-las.",
-      "componentes_conhecimento": [
-          "1. Compreensão do antiparalelismo",
-          "2. Limitação da direcionalidade da polimerase",
-          "3. Mecanismo da fita lagging",
-          "4. Papel do primer e da primase",
-          "5. Integração entre as limitações"
-      ],
-      "resposta_esperada": "O antiparalelismo da dupla fita do DNA significa que as duas fitas correm em direções opostas — uma no sentido 5'→3' e a outra no sentido 3'→5'. Isso impõe duas limitações fundamentais à replicação.\nPrimeira limitação: a DNA polimerase só sintetiza no sentido 5'→3'\nComo a enzima só consegue adicionar nucleotídeos na extremidade 3' da fita em crescimento, ela consegue acompanhar a forquilha de replicação continuamente em apenas uma das fitas — a fita leading — que já está orientada no sentido favorável. Na fita complementar, a fita lagging, a orientação é oposta à direção de abertura da forquilha, o que impede a síntese contínua. A célula resolve isso sintetizando a fita lagging em pequenos segmentos no sentido contrário ao avanço da forquilha — os fragmentos de Okazaki — que posteriormente são unidos pela DNA ligase após remoção dos primers.\nSegunda limitação: a DNA polimerase não consegue iniciar a síntese do zero\nA enzima exige uma extremidade 3'-OH livre para começar a trabalhar, ou seja, ela só estende uma fita existente, nunca inicia uma. Para contornar isso, a primase sintetiza pequenos segmentos de RNA chamados primers, que fornecem a extremidade 3'-OH necessária para que a DNA polimerase inicie a síntese em ambas as fitas — e em cada novo fragmento de Okazaki na fita lagging. Após a síntese, os primers são removidos, substituídos por DNA e as lacunas resultantes são seladas pela ligase.\nConsequência integradora\nAs duas limitações estão conectadas: é justamente porque a polimerase não inicia do zero e só trabalha em um sentido que a fita lagging precisa de múltiplos primers e é sintetizada de forma descontínua. O antiparalelismo, portanto, não gera um único problema — gera uma cadeia de necessidades mecanísticas.",
-      "erro_critico": "Afirmar que as fitas são sintetizadas na mesma direção (3'->5') ou omitir que a DNA Polimerase só sintetiza no sentido 5'->3'.",
-      "pontuacao": 10,
-      "dificuldade": "avançado"
+      "id": "q1_dna_interacoes",
+      "pergunta": "A dupla hélice do DNA é mantida por diferentes tipos de interações químicas. Explique quais são essas forças, onde cada uma atua na estrutura e o que acontece com a molécula quando elas são rompidas.",
+      "componentes_conhecimento": ["Interações Químicas", "Estabilidade do DNA", "Conformação do DNA"],
+      "referencia": {
+          "Básico": "A dupla hélice é mantida por ligações de hidrogênio entre as bases nitrogenadas complementares (A=T com duas ligações; G≡C com três) e por ligações covalentes no backbone (esqueleto / cadeia principal) de açúcar e fosfato. Quando rompidas, as fitas se separam. Na célula, isso é feito por helicases.",
+          "Médio": "Além das ligações de hidrogênio, forças de empilhamento (base stacking) entre bases adjacentes — interações hidrofóbicas e de van der Waals — contribuem igualmente para a estabilidade. A repulsão dos grupos fosfato negativos é uma força desestabilizadora neutralizada por histonas e cátions.",
+          "Avançado": "A estabilidade não é uniforme ao longo da sequência — regiões A-T são menos estáveis e constituem pontos preferenciais de abertura, como origens de replicação. O DNA pode adotar conformações A, B ou Z dependendo de hidratação, superenrolamento (supercoiling) e contexto proteico. As forças de empilhamento são anisotrópicas e sequência-dependentes. Proteínas HMG e topoisomerases modulam ativamente o estado conformacional in vivo."
+      },
+      "pontuacao_maxima": 3
+    },
+    {
+      "id": "q2_dna_polimerase_limitacoes",
+      "pergunta": "A DNA polimerase é a principal enzima da replicação, mas sozinha ela não consegue copiar o DNA. Explique quais são as suas limitações estruturais e funcionais e como a célula resolve cada uma delas para garantir que a replicação ocorra com fidelidade.",
+      "componentes_conhecimento": ["DNA Polimerase", "Mecanismos de Replicação", "Fidelidade da Replicação"],
+      "referencia": {
+          "Básico": "A DNA polimerase precisa de fita molde, iniciador (primer) com extremidade 3'-OH e não consegue iniciar síntese do zero. A primase fornece o iniciador (primer) de RNA. A polimerase só sintetiza 5'→3' e corrige erros pelo proofreading (revisão / atividade corretora).",
+          "Médio": "A incapacidade de iniciar é contornada pela primase (RNA polimerase que não exige iniciador). A energia vem da hidrólise do pirofosfato do dNTP incorporado. O proofreading (revisão) usa o sítio exonuclease 3'→5' da própria polimerase. A processividade é garantida pelo grampo deslizante (sliding clamp). Os iniciadores (primers) são removidos pela DNA pol I (procariotos) após a síntese.",
+          "Avançado": "A direcionalidade 5'→3' é vantagem evolutiva: permite proofreading (revisão) sem destruir a fonte de energia. Em eucariotos, Pol α inicia com iniciador (primer) acoplado, depois é substituída por Pol ε (fita líder / leading strand) e Pol δ (fita atrasada / lagging strand) após recrutamento do PCNA (grampo deslizante eucariótico). Pol δ também atua no NER (reparo por excisão de nucleotídeo) e MMR (reparo de mau-pareamento), integrando replicação e reparo."
+      },
+      "pontuacao_maxima": 3
+    },
+    {
+      "id": "q3_replicacao_fita_atrasada",
+      "pergunta": "As duas fitas do DNA são copiadas de formas diferentes durante a replicação. Explique por que isso acontece e descreva, passo a passo, como a fita que apresenta maior dificuldade para ser copiada é sintetizada e processada até gerar uma fita contínua e completa.",
+      "componentes_conhecimento": ["Antiparalelismo", "Fragmentos de Okazaki", "Mecanismo da Fita Atrasada"],
+      "referencia": {
+          "Básico": "O antiparalelismo faz com que apenas uma fita — fita líder (leading strand) — possa ser copiada continuamente. A outra — fita atrasada (lagging strand) — é copiada em fragmentos de Okazaki, cada um iniciado por um iniciador (primer), depois unidos pela ligase.",
+          "Médio": "A síntese da fita atrasada (lagging strand) é cíclica: primase sintetiza o iniciador (primer), a pol III extende a fita até o fragmento anterior. A DNA pol I remove o iniciador e preenche (síntese por substituição / nick translation). A ligase sela com NAD+/ATP. Em eucariotos os fragmentos são menores (~100-200 nt) por causa dos nucleossomos.",
+          "Avançado": "O modelo do trombone (trombone model) mantém ambas as polimerases acopladas no replissomo. Em eucariotos, Pol δ realiza deslocamento de fita (strand displacement)."
+      },
+      "pontuacao_maxima": 3
+    },
+    {
+      "id": "q4_problemas_mecanicos_topoisomerases",
+      "pergunta": "A abertura da dupla fita durante a replicação cria problemas mecânicos que precisam ser resolvidos para que a forquilha avance. Identifique esses problemas e explique como as enzimas envolvidas os resolvem — e o que acontece quando uma delas é inibida por um fármaco.",
+      "componentes_conhecimento": ["Topoisomerases", "Superenrolamento", "Inibidores Enzimáticos"],
+      "referencia": {
+          "Básico": "A helicase abre a fita; as proteínas SSB (SSBPs / proteínas de ligação à fita simples) estabilizam a fita simples; topoisomerases resolvem o superenrolamento (supercoiling). A ciprofloxacina inibe a DNA girase (DNA gyrase) bacteriana, bloqueando a replicação.",
+          "Médio": "A DNA girase (gyrase) introduz superenrolamentos negativos cortando transitoriamente as duas fitas. A ciprofloxacina estabiliza o complexo covalente girase-DNA, gerando quebras letais. O etoposídeo age analogamente sobre a topoisomerase II eucariótica — útil em quimioterapia mas genotóxico.",
+          "Avançado": "A seletividade da ciprofloxacina deve-se às diferenças estruturais entre GyrA/B e Top2α/β. A camptotecina inibe a topoisomerase I eucariótica. O complexo CMG eucariótico acopla velocidade da helicase à síntese para evitar excesso de fita simples exposta que ativaria a via de resposta ao dano ao DNA (DDR)."
+      },
+      "pontuacao_maxima": 3
+    },
+    {
+      "id": "q5_lesoes_e_reparo",
+      "pergunta": "Escolha dois tipos de lesão quimicamente distintos, explique como cada um é formado, qual é a consequência para a informação genética se não for reparado e como a célula os identifica e corrige.",
+      "componentes_conhecimento": ["Lesões no DNA", "Mecanismos de Reparo (BER/NER)", "Mutagênese"],
+      "referencia": {
+          "Básico": "Despurinação perde a base, gerando sítio AP (sítio abásico / sítio apurídico) — polimerase insere nucleotídeo incorreto. Dímeros de pirimidina por UV bloqueiam a polimerase. Ambos são corrigidos por excisão de base (BER / REB) ou excisão de nucleotídeo (NER / REN).",
+          "Médio": "Reparo por excisão de base (BER / REB) para lesões pontuais: glicosilase remove a base → AP endonuclease → polimerase → ligase. Reparo por excisão de nucleotídeo (NER / REN) para dímeros: remove oligonucleotídeo ~25-30 nt contendo a lesão. Fotorreativação (photoreactivation) em bactérias usa energia luminosa para reverter o dímero diretamente. Deaminação (desaminação) de metil-citosina gera timina — difícil de reconhecer como lesão.",
+          "Avançado": "O NER acoplado à transcrição (TC-NER) é ativado pelo bloqueio da RNA pol II e é prioritário. Defeitos no NER causam xeroderma pigmentosum, síndrome de Cockayne e tricotiodistrofia. O reparo de mau-pareamento (MMR) depende de metilação (procariotos) ou quebras de fita simples transitórias (nicks) em eucariotos para identificar a fita com erro. Perda do MMR causa instabilidade de microssatélites — síndrome de Lynch."
+      },
+      "pontuacao_maxima": 3
+    },
+    {
+      "id": "q6_consequencias_falha_reparo",
+      "pergunta": "Uma célula em divisão apresenta simultaneamente uma lesão na fita molde e um erro de incorporação de nucleotídeo cometido pela polimerase. Compare os mecanismos disponíveis para corrigir cada um desses problemas, explique por que o momento em que a correção ocorre é crítico e o que acontece se ambos não forem resolvidos antes da próxima divisão.",
+      "componentes_conhecimento": ["Revisão e MMR", "Síntese Translesão", "Checkpoints do Ciclo Celular"],
+      "referencia": {
+          "Básico": "O proofreading (revisão / atividade corretora) corrige erros durante a síntese; o MMR (reparo de mau-pareamento) atua depois. Lesões bloqueiam a polimerase e precisam ser reparadas ou contornadas. Erros não corrigidos geram mutações transmitidas às filhas.",
+          "Médio": "O MMR (reparo de mau-pareamento) depende de marcadores de identidade da fita — metilação em procariotos; quebras de fita simples transitórias (nicks) em eucariotos — e tem janela temporal estreita. Lesões durante a replicação podem ser contornadas por síntese translesão (TLS / síntese sobre lesão) com polimerases de baixa fidelidade, ou reparadas por recombinação homóloga (HR / RH) usando a cromátide irmã. Acúmulo de danos ativa p53 → senescência ou apoptose.",
+          "Avançado": "A via de resposta ao dano ao DNA impõe pontos de checagem (checkpoints) para garantir tempo de reparo. A recombinação homóloga (HR / RH) é restrita às fases S/G2 (cromátide irmã disponível); a junção de extremidades não homólogas (NHEJ / JENH) opera em todo o ciclo mas é mutagênica. O colapso da forquilha replicativa (replication fork collapse) ativa a HR de emergência. Perda de função (loss of function) de p53 permite tolerância a danos e progressão tumoral — conexão direta entre falha nos sistemas de reparo e oncogênese."
+      },
+      "pontuacao_maxima": 3
     }
 ]
 
@@ -90,65 +141,46 @@ LEVEL_MAP = {
 
 
 def evaluate_answer_with_ai(question_data: Dict, user_answer: str) -> Dict[str, Any]:
+    # Extrai as referências disponíveis
+    referencias = question_data.get('referencia', {})
+    ref_basico = referencias.get('Básico', '')
+    ref_medio = referencias.get('Médio', '')
+    ref_avancado = referencias.get('Avançado', '')
+
     prompt = f"""
 Você é um avaliador acadêmico preciso para uma plataforma de ensino de Genética e Biologia Molecular.
-Sua tarefa é avaliar a resposta do aluno em relação ao gabarito esperado, focando ESTRITAMENTE em 5 critérios.
+Sua tarefa é avaliar a resposta do aluno e classificá-la em um de quatro níveis: "Básico", "Médio", "Avançado" ou "Incorreto".
 
 Pergunta: {question_data.get('pergunta')}
-Resposta Esperada / Gabarito: {question_data.get('resposta_esperada')}
 
-Resposta do Aluno: {user_answer}
+---
+**GABARITOS DE REFERÊNCIA:**
 
-AVALIE CADA UM DOS 5 CRITÉRIOS ABAIXO com as notas: "Completa", "Parcial" ou "Ausente".
+NÍVEL BÁSICO: {ref_basico}
+NÍVEL MÉDIO (Inclui o Básico e adiciona): {ref_medio}
+NÍVEL AVANÇADO (Inclui o Médio e adiciona profundidade): {ref_avancado}
+---
 
-**REGRA CRÍTICA DE CLASSIFICAÇÃO:**
-- "Ausente" = O aluno NÃO MENCIONOU o conceito. Se o texto do aluno não contém NENHUMA referência ao tópico, a nota é OBRIGATORIAMENTE "Ausente". NÃO dê "Parcial" para algo que o aluno simplesmente não abordou.
-- "Parcial" = O aluno MENCIONOU o conceito MAS de forma incompleta ou imprecisa. Exige evidência textual explícita na resposta.
-- "Completa" = O aluno explicou o conceito de forma correta e completa.
+**RESPOSTA DO ALUNO:**
+{user_answer}
 
-1. Compreensão do antiparalelismo:
-   - Completa: Explica 5'→3' e 3'→5' e identifica isso como origem das limitações
-   - Parcial: Menciona que as fitas têm direções opostas mas não conecta ao problema
-   - Ausente: Não explica o que é antiparalelismo ou usa o termo sem definição
+**INSTRUÇÕES DE AVALIAÇÃO:**
+1. **Incorreto**: A resposta está errada, é irrelevante ou não aborda nenhum dos pontos do gabarito básico.
+2. **Básico**: O aluno demonstra compreensão fundamental descrita no gabarito básico.
+3. **Médio**: O aluno aborda os pontos do gabarito básico e inclui conhecimentos do nível médio (ex: forças de empilhamento, processividade, energia, etc).
+4. **Avançado**: O aluno demonstra domínio profundo, citando detalhes técnicos, nomes de proteínas específicas ou contextos conformacionais/moleculares descritos no nível avançado.
 
-2. Limitação da direcionalidade da polimerase:
-   - Completa: Conecta a direcionalidade (5'→3') ao problema específico da fita lagging e à necessidade de síntese descontínua
-   - Parcial: Menciona que a polimerase tem uma direção preferencial sem explicar a consequência
-   - Ausente: Não menciona a restrição direcional da enzima
-
-3. Mecanismo da fita lagging:
-   - Completa: Descreve fragmentos de Okazaki, direção de síntese e necessidade de ligação posterior
-   - Parcial: Menciona síntese descontínua mas não explica por quê ocorre
-   - Ausente: Não distingue fita leading de lagging
-
-4. Papel do primer e da primase:
-   - Completa: Explica que a polimerase não inicia do zero, que a primase sintetiza o primer de RNA e que ele fornece a extremidade 3'-OH necessária
-   - Parcial: Cita o primer mas não explica sua função ou origem
-   - Ausente: Não menciona a necessidade de primer
-
-5. Integração entre as limitações:
-   - Completa: Articula que a necessidade de múltiplos primers na fita lagging é consequência simultânea da direcionalidade da polimerase e do antiparalelismo
-   - Parcial: Percebe que há mais de um problema mas não os conecta mecanisticamente
-   - Ausente: Trata as limitações como problemas independentes e sem relação ou não cita.
-
-DIRETRIZES FINAIS:
-- Se TODOS ou quase todos (4 ou 5) critérios forem "Completa", a "classification" deve ser "CORRETA".
-- Se houver mescla de Parcial/Completa ou alguns Ausentes, a "classification" deve ser "PARCIALMENTE CORRETA".
-- Se quase tudo for Ausente ou houver erros conceituais graves, a "classification" é "INCORRETA".
-- IMPORTANTE: Se o aluno não abordou um tópico, ele DEVE receber "Ausente" naquele critério. "Parcial" exige que o aluno tenha TENTADO abordar o tema, mesmo que de forma incompleta.
+**DIRETRIZES:**
+- Classifique no nível mais alto que o aluno preencheu satisfatoriamente.
+- O feedback deve ser construtivo, indicando o que ele alcançou e o que faltou para o próximo nível.
+- Se o aluno ficar entre dois níveis, seja criterioso. Para o "Médio", ele precisa ter ido significativamente além do "Básico".
 
 Retorne SUA AVALIAÇÃO ESTRITAMENTE NESTE FORMATO JSON VÁLIDO:
 {{
-  "correct": true ou false,
-  "classification": "CORRETA", "PARCIALMENTE CORRETA" ou "INCORRETA",
-  "criterios": {{
-       "antiparalelismo": "Completa|Parcial|Ausente",
-       "direcionalidade": "Completa|Parcial|Ausente",
-       "lagging": "Completa|Parcial|Ausente",
-       "primer": "Completa|Parcial|Ausente",
-       "integracao": "Completa|Parcial|Ausente"
-  }},
-  "feedback": "Um texto claro indicando o que ele acertou e o que faltou, baseando-se nos 5 critérios."
+  "level": "Básico" | "Médio" | "Avançado" | "Incorreto",
+  "points": 1, 2, 3 ou 0,
+  "classification": "BÁSICO", "MÉDIO", "AVANÇADO" ou "INCORRETO",
+  "feedback": "Texto claro explicando a classificação."
 }}
 NÃO RETORNE TEXTO FORA DO JSON.
 """
@@ -156,10 +188,9 @@ NÃO RETORNE TEXTO FORA DO JSON.
     import time
     max_retries = 3
     for attempt in range(max_retries):
-        # MUDANÇA CRÍTICA: Instanciar um NOVO client a cada tentativa para pegar uma nova chave
         client = get_groq_client()
         if not client:
-            return {"correct": False, "feedback": "Erro: Cliente IA não configurado. Verifique as chaves.", "evaluation_type": "error"}
+            return {"level": "Incorreto", "points": 0, "classification": "INCORRETO", "feedback": "Erro: Cliente IA não configurado."}
             
         try:
             response = client.chat.completions.create(
@@ -174,26 +205,22 @@ NÃO RETORNE TEXTO FORA DO JSON.
             try:
                 return json.loads(text)
             except:
-                 # Fallback se a IA não retornar JSON limpo
+                 # Fallback manual em caso de erro no JSON
                 lower_text = text.lower()
-                if "parcial" in lower_text:
-                    is_correct = True
-                    classification = "PARCIALMENTE CORRETA"
+                if "avançado" in lower_text or "avancado" in lower_text:
+                    return {"level": "Avançado", "points": 3, "classification": "AVANÇADO", "feedback": text}
+                elif "médio" in lower_text or "medio" in lower_text:
+                    return {"level": "Médio", "points": 2, "classification": "MÉDIO", "feedback": text}
+                elif "básico" in lower_text or "basico" in lower_text:
+                    return {"level": "Básico", "points": 1, "classification": "BÁSICO", "feedback": text}
                 else:
-                    is_correct = "true" in lower_text or ("correta" in lower_text and "incorreta" not in lower_text)
-                    classification = "CORRETA" if is_correct else "INCORRETA"
-                    
-                return {
-                    "correct": is_correct,
-                    "classification": classification, 
-                    "feedback": text
-                }
+                    return {"level": "Incorreto", "points": 0, "classification": "INCORRETO", "feedback": text}
                 
         except Exception as e:
             print(f"🔄 Tentativa {attempt+1}/{max_retries} falhou no Avaliador IA: {e}")
             if attempt == max_retries - 1:
-                return {"correct": False, "feedback": f"Erro IA após tentar múltiplas chaves: {e}", "evaluation_type": "error"}
-            time.sleep(1) # Espera antes de tentar de novo com uma CHAVE DIFERENTE
+                return {"level": "Incorreto", "points": 0, "classification": "INCORRETO", "feedback": f"Erro IA: {e}"}
+            time.sleep(1) 
 
 def _construir_contexto_para_ia(question: Dict[str, Any], chat_history: List[Dict[str, str]]) -> str:
     ctx = f"**Questão:** {question['pergunta']}\n"
@@ -207,10 +234,17 @@ def _construir_contexto_para_ia(question: Dict[str, Any], chat_history: List[Dic
 
 def tutor_reply_com_ia(question: Dict[str, Any], user_msg: str, chat_history: List[Dict[str, str]]) -> Generator[str, None, None]:
     contexto = _construir_contexto_para_ia(question, chat_history)
+    
+    # Prepara o gabarito completo para o tutor saber todas as nuances
+    gabarito_completo = "\n".join([f"{k}: {v}" for k, v in question.get('referencia', {}).items()])
+    if not gabarito_completo:
+        gabarito_completo = question.get('resposta_esperada', 'N/A')
+
     prompt = f"""
     SITUAÇÃO: Você é um Tutor Inteligente estritamente Socrático de Biologia Molecular da plataforma Helix.AI.
     OBJETIVO: O aluno está tentando responder a seguinte questão: "{question['pergunta']}".
-    A resposta correta para essa questão seria: "{question['resposta_esperada']}".
+    A resposta correta em diferentes níveis de profundidade é:
+    {gabarito_completo}
 
     **REGRAS ABSOLUTAS E INQUEBRÁVEIS (PENA DE FALHA CRÍTICA SE DESCUMPRIDAS):**
     1. **NUNCA, JAMAIS DÊ A RESPOSTA FINAL DIRETAMENTE.** O seu papel NÃO é responder a pergunta por ele.
@@ -244,11 +278,11 @@ def tutor_reply_com_ia(question: Dict[str, Any], user_msg: str, chat_history: Li
             for chunk in stream:
                 if chunk.choices[0].delta.content is not None:
                     yield chunk.choices[0].delta.content
-            return # Sai da função se o stream completou com sucesso sem crashar
+            return 
         except Exception as e:
             print(f"🔄 Tentativa {attempt+1}/{max_retries} falhou no Tutor Chat: {e}")
             if attempt == max_retries - 1:
-                yield f"Erro na IA após tentar múltiplas chaves: {e}"
+                yield f"Erro na IA: {e}"
                 return
             time.sleep(1)
 
@@ -275,7 +309,7 @@ def save_progress(data: Dict[str, Any]):
             json.dump(progress_list, f, ensure_ascii=False, indent=2)
     except: pass
 
-LEVEL_THRESHOLDS = {1: 0, 2: 120, 3: 300}
+LEVEL_THRESHOLDS = {1: 0, 2: 20, 3: 50} # Ajustado para escala de 3 pontos
 MAX_LEVEL = 3
 
 def level_from_score(score: int) -> int:
@@ -292,7 +326,6 @@ def progress_to_next_level(score: int) -> float:
 
 def pick_new_case(level: int, used_cases: List[str] = None) -> Dict[str, Any]:
     used_cases = used_cases or []
-    
     available = [q for q in QUESTIONS if q["id"] not in used_cases]
     
     if not available: 
@@ -308,41 +341,24 @@ def get_case(cid: str) -> Dict[str, Any]:
     return QUESTIONS[0]
 
 def finalize_question_response(question: Dict[str, Any], user_answer: str, ai_evaluation: Dict[str, Any]) -> Dict[str, Any]:
-    classification = ai_evaluation.get("classification", "INCORRETA").upper()
-    criterios = ai_evaluation.get("criterios", {})
+    classification = ai_evaluation.get("classification", "INCORRETO").upper()
+    points = float(ai_evaluation.get("points", 0))
+    feedback = ai_evaluation.get("feedback", "")
+    level = ai_evaluation.get("level", "Incorreto")
+
+    is_correct = points > 0
+    outcome = "correct" if points >= 1 else "incorrect" # Simplificado para o novo sistema
+    if points == 2: outcome = "partial" # Médio como parcial se quiser manter a lógica original
     
-    # Nova pontuação baseada estritamente nos 5 critérios
-    points = 0.0
-    for crit, status in criterios.items():
-        if "Completa" in status:
-            points += 1.0
-        elif "Parcial" in status:
-            points += 0.5
-            
-    # Trava de segurança para não passar de 5
-    if points > 5.0: points = 5.0
-    
-    if "INCORRETA" in classification:
-        is_correct = False
-        outcome = "incorrect"
-    elif "PARCIAL" in classification:
-        is_correct = True # Counts as correct/progress for streak purposes
-        outcome = "partial"
-    elif "CORRETA" in classification:
-        is_correct = True
-        outcome = "correct"
-    else:
-        is_correct = False
-        outcome = "incorrect"
-        
     return {
-        "points_gained": float(points),
+        "points_gained": points,
         "is_correct": is_correct,
         "classification": classification,
+        "level": level,
         "outcome": outcome,
-        "feedback": ai_evaluation.get("feedback", ""),
+        "feedback": feedback,
         "user_answer": user_answer,
-        "criterios": criterios
+        "criterios": {"Nível": level} 
     }
 
 # Compatibilidade para analytics

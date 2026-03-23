@@ -305,12 +305,18 @@ def main():
             if st.session_state.last_result:
                 res = st.session_state.last_result
                 st.markdown("---")
-                if res.get("outcome") == "partial":
-                    st.warning(f"**Parcialmente Correto! +{res['points_gained']} pontos**")
-                elif res.get("is_correct"):
-                    st.success(f"**Correto! +{res['points_gained']} pontos**")
+                
+                level = res.get("level", "Incorreto")
+                points = res.get("points_gained", 0)
+                
+                if level == "Avançado":
+                    st.success(f"**Nível: Avançado! (Pontuação: {points:.1f}/3.0)**")
+                elif level == "Médio":
+                    st.info(f"**Nível: Médio! (Pontuação: {points:.1f}/3.0)**")
+                elif level == "Básico":
+                    st.warning(f"**Nível: Básico! (Pontuação: {points:.1f}/3.0)**")
                 else:
-                    st.error(f"**Incorreto. +{res['points_gained']} pontos**")
+                    st.error(f"**Nível: Incorreto (Pontuação: {points:.1f}/3.0)**")
                 
                 st.markdown(f"**Feedback da IA:** {res['feedback']}")
                 

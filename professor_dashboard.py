@@ -97,9 +97,23 @@ def generate_student_pdf(student: Dict, basic_stats: Dict, advanced_stats: Dict,
     acc = case_stats.get('accuracy_rate', 0)
     nivel = advanced_stats.get('nivel_estimado', 'N/A') if advanced_stats else 'N/A'
     avg_time = format_duration(case_stats.get('avg_time_per_case', 0))
-    # Calcular media de pontos (0 a 5 por questao)
-    avg_points = (points / total) if total > 0 else 0
-    values = [str(total), f'{avg_points:.1f} / 5.0', str(nivel), avg_time, str(points)]
+    # Calcular media de pontos baseada no historico
+    total_max_points = 0.0
+    points_received = 0.0
+    for item in history_entries:
+        pts = float(item.get('Pontos', 0))
+        points_received += pts
+        # Tenta descobrir o maximo da questao
+        q_text = item.get('Questao', '')
+        # Simplificação: se pts > 3 ou a questao nao esta no novo set, assume 5
+        # Mas melhor usar a lista QUESTIONS de logic.py
+        from logic import QUESTIONS
+        q_obj = next((q for q in QUESTIONS if q['pergunta'][:30] in q_text), None)
+        total_max_points += q_obj.get('pontuacao_maxima', 5.0) if q_obj else 5.0
+
+    avg_points = (points_received / total) if total > 0 else 0
+    max_label = (total_max_points / total) if total > 0 else 5.0
+    values = [str(total), f'{avg_points:.1f} / {max_label:.1f}', str(nivel), avg_time, f'{points_received:.1f}']
     for v in values:
         pdf.cell(col_w, 8, v, 1, 0, 'C')
     pdf.ln(12)
@@ -360,8 +374,16 @@ def generate_class_pdf(turma_name: str, student_users: List[Dict], global_stats:
         if not cas: continue
         total_q = len(cas)
         total_pts = sum(e.get('case_result', {}).get('points_gained', 0) for e in cas)
-        corr_q = total_pts / 5.0
-        acc = (total_pts / (total_q * 5.0) * 100) if total_q > 0 else 0
+        
+        # Calculo dinamico do maximo para a taxa
+        total_possible = 0.0
+        from logic import get_case
+        for e in cas:
+            q_info = get_case(e.get('case_id'))
+            total_possible += q_info.get('pontuacao_maxima', 5.0)
+            
+        corr_q = total_pts / (total_possible / total_q) if total_q > 0 and total_possible > 0 else 0.0
+        acc = (total_pts / total_possible * 100) if total_possible > 0 else 0
         ranking.append((s, total_q, corr_q, acc))
 
     ranking.sort(key=lambda x: x[3], reverse=True)
@@ -439,8 +461,15 @@ def generate_global_interactions_pdf(student_users: List[Dict], all_analytics: D
         parcial_q = sum(1 for e in case_list if 'PARCIAL' in e.get('case_result', {}).get('classification', '').upper())
         errado_q  = total_q - (correct_full_q + parcial_q)
         total_pts = sum(e.get('case_result', {}).get('points_gained', 0) for e in case_list)
-        accuracy  = (total_pts / (total_q * 5.0) * 100) if total_q > 0 else 0.0
-        correct_q = total_pts / 5.0
+        
+        total_possible = 0.0
+        from logic import get_case
+        for e in case_list:
+            q_info = get_case(e.get('case_id'))
+            total_possible += q_info.get('pontuacao_maxima', 5.0)
+
+        accuracy  = (total_pts / total_possible * 100) if total_possible > 0 else 0.0
+        correct_q = total_pts / (total_possible / total_q) if total_q > 0 and total_possible > 0 else 0.0
         nivel_txt = nivel_map.get(level_from_score(int(total_pts)), 'Basico')
         total_ch  = len(u_data.get('chat_interactions', []))
 
@@ -543,7 +572,10 @@ def generate_global_interactions_pdf(student_users: List[Dict], all_analytics: D
             pdf.set_fill_color(*status_color)
             pdf.set_text_color(255, 255, 255)
             pdf.set_font('Helvetica', 'B', 8)
-            pdf.cell(W, 6, safe(f'  Status: {status_txt}   |   Pontos ganhos: {pts}'), 0, 1, 'L', True)
+            
+            # Mostra o nível no status
+            level_label = result.get('level', status_txt)
+            pdf.cell(W, 6, safe(f'  Nivel: {level_label}   |   Pontos ganhos: {pts}'), 0, 1, 'L', True)
             pdf.set_text_color(0, 0, 0)
 
             # Resposta do aluno e Feedback da IA
