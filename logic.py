@@ -539,7 +539,6 @@ Devolva ESTRITAMENTE um JSON com as 6 chaves acima. Cada valor deve ter uma aná
 }}
 NÃO RETORNE TEXTO FORA DO JSON.
 """
-"""
 
     import time
     import json
