@@ -321,7 +321,12 @@ def main():
                 st.markdown(f"**Feedback da IA:** {res['feedback']}")
                 
                 with st.expander("Ver Gabarito Esperado"):
-                    st.info(case['resposta_esperada'])
+                    referencias = case.get('referencia', {})
+                    if referencias:
+                        for n, txt in referencias.items():
+                            st.markdown(f"**{n}**: {txt}")
+                    else:
+                        st.info(case.get('resposta_esperada', 'Gabarito não disponível.'))
                 
                 if st.button("Próxima Questão", type="primary"):
                     start_new_case()
