@@ -1222,14 +1222,16 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
         
         # Recalcula pontos totais de forma simples
         total_points = sum(float(c.get("case_result", {}).get("points_gained", 0)) for c in case_analytics)
-                outcome = result.get("outcome", "")
-                if outcome == "correct":
-                    total_points += 5.0
-                elif outcome == "partial":
-                    total_points += 2.5
-                # incorrect = 0
         
-        acc_rate = (total_points / (total_cases * 5.0) * 100) if total_cases > 0 else 0.0
+        # Calcula taxa média baseada nos pontos possíveis
+        total_possible = 0.0
+        from logic import get_case
+        for c in case_analytics:
+            q_info = get_case(c.get('case_id', ''))
+            total_possible += q_info.get('pontuacao_maxima', 5.0)
+            
+        acc_rate = (total_points / total_possible * 100) if total_possible > 0 else 0.0
+        
         
         ranking_data.append({
             'Nome': user['name'],
