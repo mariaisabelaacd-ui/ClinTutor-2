@@ -337,7 +337,12 @@ def pick_new_case(level: int, used_cases: List[str] = None) -> Dict[str, Any]:
 
 def get_case(cid: str) -> Dict[str, Any]:
     for q in QUESTIONS:
-        if q["id"] == cid: return q
+        if q["id"] == cid:
+            res = q.copy()
+            if "resposta_esperada" not in res and "referencia" in res:
+                # Usa o nível avançado como resposta de referência principal para compatibilidade
+                res["resposta_esperada"] = res["referencia"].get("Avançado", "")
+            return res
     return QUESTIONS[0]
 
 def finalize_question_response(question: Dict[str, Any], user_answer: str, ai_evaluation: Dict[str, Any]) -> Dict[str, Any]:
