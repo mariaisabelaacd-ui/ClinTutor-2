@@ -242,7 +242,7 @@ def generate_student_pdf(student: Dict, basic_stats: Dict, advanced_stats: Dict,
     
     return bytes(pdf.output())
 
-def generate_class_pdf(turma_name: str, student_users: List[Dict], global_stats: Dict, component_stats: list) -> bytes:
+def generate_class_pdf(turma_name: str, student_users: List[Dict], global_stats: Dict, question_stats: list) -> bytes:
     """Gera um PDF com a visao geral da turma - versao completa"""
     from fpdf import FPDF
     pdf = FPDF()
@@ -289,18 +289,19 @@ def generate_class_pdf(turma_name: str, student_users: List[Dict], global_stats:
     pdf.cell(col4, 8, str(global_stats.get('total_chat_interactions', 0)), 1, 0, 'C')
     pdf.ln(12)
 
-    # ---- DESEMPENHO POR CATEGORIA (ordenado: pior primeiro) ----
-    if component_stats:
-        sorted_comps = sorted(component_stats, key=lambda x: x.get('taxa_acerto', 0))
-        hardest = sorted_comps[0] if sorted_comps else None
+    # ---- DESEMPENHO POR QUESTAO (ordenado: pior primeiro) ----
+    if question_stats:
+        # Ordena por taxa de acerto (pior primeiro)
+        sorted_qs = sorted(question_stats, key=lambda x: x.get('taxa_acerto', 0))
+        hardest = sorted_qs[0] if sorted_qs else None
 
-        # Destaque da categoria mais dificil
+        # Destaque da questão mais difícil
         if hardest:
             pdf.set_fill_color(254, 226, 226)
             pdf.set_draw_color(220, 38, 38)
             pdf.set_font('Helvetica', 'B', 9)
             pdf.set_text_color(220, 38, 38)
-            pdf.cell(W, 7, safe_text(f'  Categoria Mais Dificil: {hardest["componente"]}  —  Taxa de acerto: {hardest["taxa_acerto"]:.1f}%'), 1, 1, 'L', True)
+            pdf.cell(W, 7, safe_text(f'  Questao Mais Dificil: Questao {hardest["questao_num"]}  —  Taxa de acerto: {hardest["taxa_acerto"]:.1f}%'), 1, 1, 'L', True)
             pdf.set_text_color(0, 0, 0)
             pdf.set_draw_color(0, 0, 0)
             pdf.ln(3)
@@ -308,41 +309,41 @@ def generate_class_pdf(turma_name: str, student_users: List[Dict], global_stats:
         pdf.set_fill_color(16, 185, 129)
         pdf.set_text_color(255, 255, 255)
         pdf.set_font('Helvetica', 'B', 10)
-        pdf.cell(W, 7, '  Desempenho por Categoria de Conhecimento (do mais dificil ao mais facil)', ln=True, fill=True)
+        pdf.cell(W, 7, '  Desempenho por Questao (do mais dificil ao mais facil)', ln=True, fill=True)
         pdf.set_text_color(0, 0, 0)
         pdf.ln(1)
 
         # Header da tabela
         pdf.set_fill_color(241, 245, 249)
         pdf.set_font('Helvetica', 'B', 8)
-        pdf.cell(80, 7, 'Categoria', 1, 0, 'C', True)
-        pdf.cell(28, 7, 'Tentativas', 1, 0, 'C', True)
-        pdf.cell(28, 7, 'Acertos', 1, 0, 'C', True)
-        pdf.cell(28, 7, 'Erros', 1, 0, 'C', True)
-        pdf.cell(26, 7, 'Taxa (%)', 1, 0, 'C', True)
+        pdf.cell(80, 7, 'Questao / Topico', 1, 0, 'C', True)
+        pdf.cell(25, 7, 'Tentativas', 1, 0, 'C', True)
+        pdf.cell(25, 7, 'Acertos (Estim.)', 1, 0, 'C', True)
+        pdf.cell(30, 7, 'Tempo Medio', 1, 0, 'C', True)
+        pdf.cell(25, 7, 'Taxa (%)', 1, 0, 'C', True)
         pdf.ln()
 
         pdf.set_font('Helvetica', '', 8)
-        for comp in sorted_comps:
-            taxa = comp.get('taxa_acerto', 0)
-            total = comp.get('total_questoes', comp.get('total_attempts', 0))
-            acertos = comp.get('acertos', comp.get('total_correct', 0))
-            erros = total - acertos
-            nome = safe_text(comp.get('componente', 'N/A'))[:40]
+        for q in sorted_qs:
+            taxa = q.get('taxa_acerto', 0)
+            total = q.get('total_respostas', 0)
+            acertos_estim = (taxa / 100) * total
+            titulo = safe_text(f'Questao {q["questao_num"]}: {q["titulo"][:45]}')
+            tempo = safe_text(q.get('tempo_medio_formatado', '0s'))
 
             # Cor de fundo pela taxa
-            if taxa < 40:
+            if taxa < 45:
                 pdf.set_fill_color(254, 226, 226)  # vermelho claro
-            elif taxa < 65:
+            elif taxa < 75:
                 pdf.set_fill_color(254, 249, 195)  # amarelo claro
             else:
                 pdf.set_fill_color(220, 252, 231)  # verde claro
 
-            pdf.cell(80, 6, nome, 1, 0, 'L', True)
-            pdf.cell(28, 6, str(total), 1, 0, 'C', True)
-            pdf.cell(28, 6, str(acertos), 1, 0, 'C', True)
-            pdf.cell(28, 6, str(erros), 1, 0, 'C', True)
-            pdf.cell(26, 6, f'{taxa:.1f}%', 1, 0, 'C', True)
+            pdf.cell(80, 6, titulo, 1, 0, 'L', True)
+            pdf.cell(25, 6, str(total), 1, 0, 'C', True)
+            pdf.cell(25, 6, f"{acertos_estim:.1f}", 1, 0, 'C', True)
+            pdf.cell(30, 6, tempo, 1, 0, 'C', True)
+            pdf.cell(25, 6, f"{taxa:.1f}%", 1, 0, 'C', True)
             pdf.ln()
         pdf.ln(8)
 
@@ -1056,7 +1057,7 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
     # PDF de Visão Geral (Agora em 3 colunas)
     col_pdf1, col_pdf2, col_pdf3 = st.columns(3)
     with col_pdf1:
-        pdf_bytes_class = generate_class_pdf(turma_filter, student_users, global_stats, component_stats)
+        pdf_bytes_class = generate_class_pdf(turma_filter, student_users, global_stats, question_stats)
         st.download_button(
             label=f"Relatório da Turma ({turma_filter})",
             icon=":material/download:",
