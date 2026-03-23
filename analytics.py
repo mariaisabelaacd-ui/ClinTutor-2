@@ -1011,6 +1011,80 @@ def get_global_knowledge_component_stats() -> List[Dict[str, Any]]:
     
     return results
 
+def get_question_stats() -> List[Dict[str, Any]]:
+    """
+    Calcula estatísticas agregadas por QUESTÃO (1 a 6) para todos os alunos.
+    """
+    from logic import QUESTIONS
+    
+    all_analytics = get_all_users_analytics()
+    q_map = {q['id']: i+1 for i, q in enumerate(QUESTIONS)} # Mapeia ID para número 1-6
+    q_titles = {q['id']: q['pergunta'][:50] + "..." for q in QUESTIONS}
+    
+    # Estrutura para agregar dados por questão
+    question_stats = {}
+    
+    for user_id, user_data in all_analytics.items():
+        case_analytics = user_data.get('case_analytics', [])
+        
+        for entry in case_analytics:
+            cid = entry.get('case_id')
+            result = entry.get('case_result', {})
+            duration = entry.get('duration_seconds', 0)
+            
+            q_num = q_map.get(cid)
+            if not q_num:
+                continue
+            
+            points = float(result.get('points_gained', 0))
+            # Para as novas questões, o máximo é 3.0
+            from logic import QUESTIONS as QL
+            q_info = next((q for q in QL if q['id'] == cid), None)
+            max_pts = float(q_info.get('pontuacao_maxima', 5.0)) if q_info else 5.0
+            
+            accuracy_val = (points / max_pts) if max_pts > 0 else 0
+            
+            if q_num not in question_stats:
+                question_stats[q_num] = {
+                    'total': 0,
+                    'correct_sum': 0.0,
+                    'times': [],
+                    'title': q_titles.get(cid, f"Questão {q_num}")
+                }
+            
+            question_stats[q_num]['total'] += 1
+            question_stats[q_num]['correct_sum'] += accuracy_val
+            if duration > 0:
+                question_stats[q_num]['times'].append(duration)
+    
+    results = []
+    for q_num, data in question_stats.items():
+        accuracy = (data['correct_sum'] / data['total'] * 100) if data['total'] > 0 else 0
+        avg_time = sum(data['times']) / len(data['times']) if data['times'] else 0
+        
+        results.append({
+            'questao_num': q_num,
+            'titulo': data['title'],
+            'total_respostas': data['total'],
+            'taxa_acerto': accuracy,
+            'tempo_medio': avg_time,
+            'tempo_medio_formatado': format_duration(avg_time)
+        })
+    
+    # Ordena por número da questão
+    results.sort(key=lambda x: x['questao_num'])
+    return results
+
+def get_hardest_questions(top_n: int = 6) -> List[Dict[str, Any]]:
+    stats = get_question_stats()
+    # Ordena por taxa de acerto (menor primeiro)
+    stats.sort(key=lambda x: x['taxa_acerto'])
+    return stats[:top_n]
+
+def get_hardest_categories(top_n: int = 5) -> List[Dict[str, Any]]:
+    stats = get_global_knowledge_component_stats()
+    return stats[:top_n]
+
 def get_all_answers_by_category(limit_per_category: int = 20) -> Dict[str, List[str]]:
     """
     Agrupa todas as respostas (corretas, parciais e incorretas) 
@@ -1018,51 +1092,46 @@ def get_all_answers_by_category(limit_per_category: int = 20) -> Dict[str, List[
     Returns:
         Um dicionário: { "Nome da Categoria": ["Resposta ruim 1", "Resposta ruim 2"] }
     """
-    from logic import QUESTIONS
+    # Mapeamento de QID para o Tópico dos 6 Eixos
+    qid_to_axis = {
+        "q1_dna_interacoes": "1. Estabilidade e Interações do DNA",
+        "q2_dna_polimerase": "2. Replicação: Direcionalidade e Limitações da Polimerase",
+        "q3_fita_atrasada": "3. Fita Atrasada e Fragmentos de Okazaki",
+        "q4_topoisomerases": "4. Problemas Mecânicos e Papel das Topoisomerases",
+        "q5_reparo_lesoes": "5. Mecanismos de Reparo (BER/NER) e Lesões",
+        "q6_falha_reparo": "6. Checkpoints do Ciclo Celular e Evolução Tumoral"
+    }
     
-    all_analytics = get_all_users_analytics()
-    
-    # Mapeamento rápido de ID da questão para suas categorias
-    q_cats = {q['id']: q.get('componentes_conhecimento', []) for q in QUESTIONS}
-    
-    # Coleta de respostas ruins por categoria
-    category_bad_answers = {}
+    # Coleta de respostas por eixo
+    axis_answers = {}
     
     for user_id, user_data in all_analytics.items():
         case_analytics = user_data.get('case_analytics', [])
         for entry in case_analytics:
             qid = entry.get('case_id')
-            if not qid or qid not in q_cats:
+            if not qid or qid not in qid_to_axis:
                 continue
                 
+            axis = qid_to_axis[qid]
             result = entry.get('case_result', {})
             user_answer = result.get('user_answer')
-            is_correct = result.get('is_correct', False)
             points = result.get('points_gained', 0)
             
-            # Pega todas as respostas (validando apenas se existe texto)
-            if user_answer:
-                cats = q_cats[qid]
-                for cat in cats:
-                    if cat not in category_bad_answers:
-                        category_bad_answers[cat] = []
-                    category_bad_answers[cat].append({
-                        'answer': user_answer,
-                        'points': points
-                    })
+            if user_answer and len(user_answer) > 10:
+                if axis not in axis_answers:
+                    axis_answers[axis] = []
+                axis_answers[axis].append({
+                    'answer': user_answer,
+                    'points': points
+                })
                     
     # Pega as piores ordenando por pontos e trunca
     result_dict = {}
-    for cat, answers in category_bad_answers.items():
-        # OPCIONAL: Se quiser dar foco a respostas ruins misturadas com as boas, mantemos a ordenação por pontos (crescente). 
-        # Assim ele pega os piores casos primeiro caso estoure o 'limit_per_category'.
+    for axis, answers in axis_answers.items():
         answers.sort(key=lambda x: x['points'])
-        
-        # Filtra repostas curtas ou inúteis como "nao sei", "nada" etc., se quiser, ou pega as X primeiras
-        valid_answers = [a['answer'] for a in answers if len(a['answer']) > 15]
-        
+        valid_answers = [a['answer'] for a in answers]
         if valid_answers:
-            result_dict[cat] = valid_answers[:limit_per_category]
+            result_dict[axis] = valid_answers[:limit_per_category]
             
     return result_dict
 

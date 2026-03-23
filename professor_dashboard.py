@@ -912,9 +912,9 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
     
     # Carrega estatísticas globais
     global_stats = get_global_stats()
-    component_stats = get_global_knowledge_component_stats()
+    question_stats = get_question_stats()
     level_stats = get_average_user_level()
-    hardest_categories = get_hardest_categories(top_n=5)
+    hardest_questions = get_hardest_questions(top_n=6)
     
     # ===== KPIs PRINCIPAIS =====
     st.markdown(f"### {icon('push_pin', '#10b981', 24)} Métricas Principais", unsafe_allow_html=True)
@@ -932,25 +932,24 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
         st.markdown(metric_card(
             "Média Geral",
             f"{global_stats.get('average_accuracy_rate', 0):.1f}%",
-            icon_name="track_changes", # Fixed: target -> track_changes
+            icon_name="track_changes",
             icon_color="#10b981"
         ), unsafe_allow_html=True)
     
-    
     with col3:
-        # Categoria com maior dificuldade - Custom display para evitar truncamento
-        if hardest_categories:
-            hardest_cat = hardest_categories[0]['componente']
-            hardest_acc = hardest_categories[0]['taxa_acerto']
+        # Questão com maior dificuldade - Novo foco em Questões 1-6
+        if hardest_questions:
+            hardest_q = hardest_questions[0]['questao_num']
+            hardest_acc = hardest_questions[0]['taxa_acerto']
             st.markdown(f"""
                 <div style='background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%); 
                             padding: 1rem; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.3);'>
                     <div style='color: #475569; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem;'>
-                        {icon('warning', '#ef4444', 18)} Categoria Mais Difícil
+                        {icon('warning', '#ef4444', 18)} Questão Mais Difícil
                     </div>
                     <div style='color: #ef4444; font-size: 1.5rem; font-weight: 600; margin-bottom: 0.25rem; 
-                                word-wrap: break-word; line-height: 1.2;'>
-                        {hardest_cat}
+                                 word-wrap: break-word; line-height: 1.2;'>
+                        Questão {hardest_q}
                     </div>
                     <div style='color: #ef4444; font-size: 0.875rem;'>
                         Taxa: {hardest_acc:.1f}%
@@ -958,7 +957,7 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
                 </div>
             """, unsafe_allow_html=True)
         else:
-            st.metric("Categoria Mais Difícil", "N/A", help="Componente com menor taxa de acerto geral")
+            st.metric("Questão Mais Difícil", "N/A", help="Questão com menor taxa de acerto geral")
     
     
     with col4:
@@ -1024,7 +1023,7 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
                 
                 criteria_analysis = generate_class_criteria_analysis(recent_answers[:15])
                 
-                st.markdown("#### Desempenho nos 5 Critérios")
+                st.markdown(f"#### {icon('psychology', '#8b5cf6', 22)} Análise de IA por Eixos de Conhecimento (1 a 6)")
                 for crit_name, crit_text in criteria_analysis.items():
                     st.info(f"**{crit_name}:**\n{crit_text}")
                     
@@ -1169,47 +1168,40 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
         else:
             st.info("Dados insuficientes")
     
-    st.markdown("---")
+    # Linha 2: Ranking de Dificuldade das Questões
+    st.markdown(f"### {icon('analytics', '#ef4444', 24)} Ranking de Dificuldade das Questões (1 a 6)", unsafe_allow_html=True)
     
-    # Linha 2: Top 5 Categorias Mais Difíceis
-    st.markdown(f"### {icon('warning', '#ef4444', 24)} Top 5 Categorias Mais Difíceis", unsafe_allow_html=True)
-    if hardest_categories:
-        df_hardest = pd.DataFrame(hardest_categories)
+    if hardest_questions:
+        # Gráfico de barras horizontal para questões
+        import pandas as pd
+        import plotly.express as px
         
-        # Trunca nomes muito longos
-        df_hardest['componente_display'] = df_hardest['componente'].apply(
-            lambda x: x if len(x) <= 30 else x[:27] + '...'
-        )
+        df_q = pd.DataFrame(hardest_questions)
+        df_q['label'] = df_q['questao_num'].apply(lambda x: f"Questão {x}")
         
-        fig_hardest = px.bar(
-            df_hardest,
-            x='taxa_acerto',
-            y='componente_display',
+        fig = px.bar(
+            df_q, 
+            x='taxa_acerto', 
+            y='label',
             orientation='h',
-            title="Componentes que Precisam de Mais Atenção",
-            text_auto='.1f',
+            labels={'taxa_acerto': 'Taxa de Acerto (%)', 'label': 'Questão'},
             color='taxa_acerto',
-            color_continuous_scale='Reds_r',
-            range_color=[0, 100],
-            hover_data={'componente': True, 'componente_display': False}
+            color_continuous_scale='RdYlGn',
+            range_x=[0, 100],
+            text='taxa_acerto'
         )
-        fig_hardest.update_layout(
-            xaxis_title="Taxa de Acerto (%)",
-            yaxis_title=None,
-            showlegend=False,
-            height=300,
-            margin=dict(l=200, r=20, t=40, b=40),
-            yaxis=dict(tickfont=dict(size=11))
-        )
-        st.plotly_chart(fig_hardest, use_container_width=True)
+        fig.update_traces(texttemplate='%{text:.1f}%', textposition='outside')
+        fig.update_layout(yaxis={'categoryorder':'total ascending'}, height=400)
+        st.plotly_chart(fig, use_container_width=True)
         
-        # Tabela detalhada
-        with st.expander("Detalhes das Categorias Difíceis"):
-            df_display = df_hardest[['componente', 'taxa_acerto', 'total_questoes', 'acertos', 'tempo_medio_formatado']].copy()
-            df_display.columns = ['Componente', 'Taxa de Acerto (%)', 'Total de Questões', 'Acertos', 'Tempo Médio']
-            st.dataframe(df_display, use_container_width=True, hide_index=True)
+        with st.expander("Ver Detalhes das Questões"):
+            for q in hardest_questions:
+                col_a, col_b, col_c = st.columns([1, 4, 3])
+                with col_a: st.markdown(f"**Q{q['questao_num']}**")
+                with col_b: st.markdown(f"*{q['titulo']}*")
+                with col_c: st.progress(q['taxa_acerto']/100, text=f"{q['taxa_acerto']:.1f}%")
     else:
-        st.info("Dados insuficientes")
+        st.info("Dados insuficientes para gerar o ranking de questões.")
     
     st.markdown("---")
     
@@ -1228,22 +1220,8 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
         
         total_cases = len(case_analytics)
         
-        # Recalcula pontos dos critérios em tempo real (não confia em is_correct nem points_gained)
-        total_points = 0.0
-        for c in case_analytics:
-            result = c.get("case_result", {})
-            criterios = result.get("criterios", {})
-            if criterios and isinstance(criterios, dict):
-                pts = 0.0
-                for crit, status in criterios.items():
-                    s = str(status).upper()
-                    if "COMPLETA" in s or "CORRETA" in s:
-                        pts += 1.0
-                    elif "PARCIAL" in s:
-                        pts += 0.5
-                total_points += min(pts, 5.0)
-            else:
-                # Fallback: usa outcome se não tem criterios
+        # Recalcula pontos totais de forma simples
+        total_points = sum(float(c.get("case_result", {}).get("points_gained", 0)) for c in case_analytics)
                 outcome = result.get("outcome", "")
                 if outcome == "correct":
                     total_points += 5.0

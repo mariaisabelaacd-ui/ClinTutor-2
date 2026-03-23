@@ -504,51 +504,53 @@ def generate_class_criteria_analysis(answers_list: List[str]) -> Dict[str, str]:
     prompt = f"""
 Você é um Diretor Pedagógico sênior especialista em Biologia Molecular, com experiência em análise de aprendizagem.
 
-Sua tarefa é analisar DETALHADAMENTE as respostas dos alunos abaixo sobre "Antiparalelismo e Limitações da DNA Polimerase".
+Sua tarefa é analisar DETALHADAMENTE as respostas dos alunos abaixo, que cobrem 6 questões fundamentais de Biologia Molecular (Estabilidade, Replicação, Fita Atrasada, Topoisomerases, Reparo e Consequências).
 
 **Respostas dos Alunos:**
 {answers_str}
 
 **INSTRUÇÕES DETALHADAS:**
 
-Para CADA um dos 5 tópicos abaixo, escreva uma análise RICA e DETALHADA contendo:
-- **Ponto positivo:** O que a maioria dos alunos acertou ou compreendeu
-- **Ponto de atenção:** Onde está a dificuldade principal, com exemplos concretos do que os alunos escreveram
-- **Lacunas:** Quais conceitos foram omitidos ou tratados de forma superficial
-- Se poucos ou nenhum aluno abordou aquele tópico, diga isso CLARAMENTE
+Para CADA um dos 6 eixos de conhecimento abaixo, escreva uma análise RICA e PROFUNDA contendo:
+- **Domínio Coletivo:** O que a turma demonstra ter consolidado.
+- **Pontos de Atenção:** Quais as confusões conceituais ou simplificações excessivas recorrentes.
+- **Lacunas Estruturais:** Detalhes técnicos importantes (ex: nomes de enzimas, direcionalidade, tipos de ligações) que foram ignorados.
 
 REGRAS ABSOLUTAS:
-- NÃO invente que os alunos mencionaram algo se eles não mencionaram.
-- Se um tópico não foi abordado por nenhum aluno, diga: "Nenhum aluno abordou este tópico de forma explícita."
-- Seja honesto e preciso. Cada análise deve ter 3-5 frases.
+- NÃO mencione os 5 critérios antigos (antiparalelismo, direcionalidade, lagging, primer, integracao) se a resposta não for sobre eles.
+- Baseie-se ESTRITAMENTE na amostra de respostas fornecida.
 
-Os 5 tópicos:
-1. Compreensão do antiparalelismo (definição de 5'→3' e 3'→5')
-2. Limitação da direcionalidade da polimerase (só sintetiza 5'→3')
-3. Mecanismo da fita lagging (fragmentos de Okazaki, síntese descontínua)
-4. Papel do primer e da primase (necessidade de extremidade 3'-OH)
-5. Integração entre as limitações (conexão entre os problemas)
+Os 6 Eixos de Conhecimento:
+1. Estabilidade e Interações do DNA (Ligações de H, Empilhamento, Backbone)
+2. Replicação: Direcionalidade e Limitações da Polimerase
+3. Fita Atrasada e Fragmentos de Okazaki
+4. Problemas Mecânicos e Papel das Topoisomerases
+5. Mecanismos de Reparo (BER/NER) e Lesões
+6. Checkpoints do Ciclo Celular e Evolução Tumoral
 
-Devolva ESTRITAMENTE um JSON com as 5 chaves abaixo. Cada valor deve ter 3-5 frases ricas de análise.
+Devolva ESTRITAMENTE um JSON com as 6 chaves acima. Cada valor deve ter uma análise pedagógica de 3 a 5 frases.
 {{
-    "1. Compreensão do antiparalelismo": "análise detalhada aqui",
-    "2. Limitação da direcionalidade da polimerase": "análise detalhada aqui",
-    "3. Mecanismo da fita lagging": "análise detalhada aqui",
-    "4. Papel do primer e da primase": "análise detalhada aqui",
-    "5. Integração entre as limitações": "análise detalhada aqui"
+    "1. Estabilidade e Interações do DNA": "...",
+    "2. Replicação: Direcionalidade e Limitações da Polimerase": "...",
+    "3. Fita Atrasada e Fragmentos de Okazaki": "...",
+    "4. Problemas Mecânicos e Papel das Topoisomerases": "...",
+    "5. Mecanismos de Reparo (BER/NER) e Lesões": "...",
+    "6. Checkpoints do Ciclo Celular e Evolução Tumoral": "..."
 }}
 NÃO RETORNE TEXTO FORA DO JSON.
+"""
 """
 
     import time
     import json
     max_retries = 3
     default_resp = {
-        "1. Compreensão do antiparalelismo": "Não foi possível analisar adequadamente.",
-        "2. Limitação da direcionalidade da polimerase": "Não avaliado.",
-        "3. Mecanismo da fita lagging": "Não avaliado.",
-        "4. Papel do primer e da primase": "Não avaliado.",
-        "5. Integração entre as limitações": "Não avaliado."
+        "1. Estabilidade e Interações do DNA": "Sem dados suficientes para análise profunda.",
+        "2. Replicação: Direcionalidade e Limitações da Polimerase": "Sem dados suficientes.",
+        "3. Fita Atrasada e Fragmentos de Okazaki": "Sem dados suficientes.",
+        "4. Problemas Mecânicos e Papel das Topoisomerases": "Sem dados suficientes.",
+        "5. Mecanismos de Reparo (BER/NER) e Lesões": "Sem dados suficientes.",
+        "6. Checkpoints do Ciclo Celular e Evolução Tumoral": "Sem dados suficientes."
     }
 
     if not answers_list:
