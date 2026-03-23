@@ -315,6 +315,8 @@ def main():
                     st.info(f"**Nível: Médio! (Pontuação: {points:.1f}/3.0)**")
                 elif level == "Básico":
                     st.warning(f"**Nível: Básico! (Pontuação: {points:.1f}/3.0)**")
+                elif level == "Parcial":
+                    st.warning(f"**Nível: Parcial (Pontuação: {points:.1f}/3.0)**")
                 else:
                     st.error(f"**Nível: Incorreto (Pontuação: {points:.1f}/3.0)**")
                 

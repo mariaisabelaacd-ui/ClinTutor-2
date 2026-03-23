@@ -149,7 +149,7 @@ def evaluate_answer_with_ai(question_data: Dict, user_answer: str) -> Dict[str, 
 
     prompt = f"""
 Você é um avaliador acadêmico preciso para uma plataforma de ensino de Genética e Biologia Molecular.
-Sua tarefa é avaliar a resposta do aluno e classificá-la em um de quatro níveis: "Básico", "Médio", "Avançado" ou "Incorreto".
+Sua tarefa é avaliar a resposta do aluno e classificá-la em um de cinco níveis: "Avançado", "Médio", "Básico", "Parcial" ou "Incorreto".
 
 Pergunta: {question_data.get('pergunta')}
 
@@ -164,22 +164,23 @@ NÍVEL AVANÇADO (Inclui o Médio e adiciona profundidade): {ref_avancado}
 **RESPOSTA DO ALUNO:**
 {user_answer}
 
-**INSTRUÇÕES DE AVALIAÇÃO:**
-1. **Incorreto**: A resposta está errada, é irrelevante ou não aborda nenhum dos pontos do gabarito básico.
-2. **Básico**: O aluno demonstra compreensão fundamental descrita no gabarito básico.
-3. **Médio**: O aluno aborda os pontos do gabarito básico e inclui conhecimentos do nível médio (ex: forças de empilhamento, processividade, energia, etc).
-4. **Avançado**: O aluno demonstra domínio profundo, citando detalhes técnicos, nomes de proteínas específicas ou contextos conformacionais/moleculares descritos no nível avançado.
+**TABELA RÍGIDA DE PONTUAÇÃO (OBRIGATÓRIO):**
+1. **Incorreto (0.0 pts)**: A resposta está errada, é irrelevante ou não aborda nenhum ponto dos gabaritos.
+2. **Parcial (0.5 pts)**: O aluno menciona alguns termos corretos, mas não consegue formar uma explicação completa nem mesmo do nível básico.
+3. **Básico (1.0 pt)**: O aluno demonstra a compreensão fundamental descrita no gabarito básico.
+4. **Médio (2.0 pts)**: O aluno aborda os pontos do gabarito básico e inclui conhecimentos do nível médio (ex: forças de empilhamento, processividade, energia, etc).
+5. **Avançado (3.0 pts)**: O aluno demonstra domínio profundo, citando detalhes técnicos, nomes de proteínas específicas ou contextos conformacionais/moleculares descritos no nível avançado.
 
 **DIRETRIZES:**
 - Classifique no nível mais alto que o aluno preencheu satisfatoriamente.
 - O feedback deve ser construtivo, indicando o que ele alcançou e o que faltou para o próximo nível.
-- Se o aluno ficar entre dois níveis, seja criterioso. Para o "Médio", ele precisa ter ido significativamente além do "Básico".
+- **ATENÇÃO EXTREMA**: Se o nível for "Básico", os pontos DEVEM ser 1.0. Se for "Médio", DEVEM ser 2.0. Nunca misture níveis e pontos fora da tabela acima.
 
 Retorne SUA AVALIAÇÃO ESTRITAMENTE NESTE FORMATO JSON VÁLIDO:
 {{
-  "level": "Básico" | "Médio" | "Avançado" | "Incorreto",
-  "points": 1, 2, 3 ou 0,
-  "classification": "BÁSICO", "MÉDIO", "AVANÇADO" ou "INCORRETO",
+  "level": "Avançado" | "Médio" | "Básico" | "Parcial" | "Incorreto",
+  "points": 3.0, 2.0, 1.0, 0.5 ou 0.0,
+  "classification": "AVANÇADO", "MÉDIO", "BÁSICO", "PARCIAL" ou "INCORRETO",
   "feedback": "Texto claro explicando a classificação."
 }}
 NÃO RETORNE TEXTO FORA DO JSON.
@@ -352,8 +353,8 @@ def finalize_question_response(question: Dict[str, Any], user_answer: str, ai_ev
     level = ai_evaluation.get("level", "Incorreto")
 
     is_correct = points > 0
-    outcome = "correct" if points >= 1 else "incorrect" # Simplificado para o novo sistema
-    if points == 2: outcome = "partial" # Médio como parcial se quiser manter a lógica original
+    outcome = "correct" if points >= 1 else "incorrect"
+    if points == 0.5 or points == 2: outcome = "partial" # Parcial ou Médio contam como parcial no sistema interno
     
     return {
         "points_gained": points,
