@@ -9,10 +9,10 @@ import textwrap
 from io import BytesIO
 from analytics import (
     get_all_users_analytics, get_global_stats,
-    get_global_knowledge_component_stats, get_average_user_level,
-    get_hardest_categories, get_student_complete_profile,
+    get_average_user_level, get_student_complete_profile,
     get_student_weakness_analysis, format_duration,
-    get_user_chat_interactions, get_all_answers_by_category
+    get_user_chat_interactions, get_all_answers_by_category,
+    get_question_stats, get_hardest_questions
 )
 from auth_firebase import get_all_users, get_user_by_id, delete_user
 from logic import get_case, generate_category_insights
