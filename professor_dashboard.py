@@ -1105,39 +1105,50 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
     
     # ===== VISUALIZAÇÕES =====
     
-    # Linha 1: Desempenho por Questão e Distribuição por Nível
+    # Linha 1: Radar de Desempenho por Questão + Distribuição por Nível
     col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown(f"### {icon('menu_book', '#8b5cf6', 24)} Desempenho por Questão (1 a 6)", unsafe_allow_html=True)
+        st.markdown(f"### {icon('radar', '#8b5cf6', 24)} Desempenho por Questão (1 a 6)", unsafe_allow_html=True)
         if q_stats_data:
-            df_q_stats = pd.DataFrame(q_stats_data)
-            df_q_stats['label'] = df_q_stats['questao_num'].apply(lambda x: f"Questão {x}")
+            # Radar chart para visualizar todas as 6 questões de uma vez
+            categories = [f"Q{q['questao_num']}" for q in sorted(q_stats_data, key=lambda x: x['questao_num'])]
+            values = [q['taxa_acerto'] for q in sorted(q_stats_data, key=lambda x: x['questao_num'])]
             
-            fig_q = px.bar(
-                df_q_stats,
-                x='taxa_acerto',
-                y='label',
-                orientation='h',
-                title="Taxa de Acerto por Questão (%)",
-                text_auto='.1f',
-                color='taxa_acerto',
-                color_continuous_scale='RdYlGn',
-                range_color=[0, 100],
-                hover_data={'questao_num': True, 'label': False, 'titulo': True}
-            )
-            fig_q.update_layout(
-                xaxis_title="Taxa de Acerto (%)",
-                yaxis_title=None,
+            fig_radar = go.Figure()
+            fig_radar.add_trace(go.Scatterpolar(
+                r=values + [values[0]],  # Fecha o polígono
+                theta=categories + [categories[0]],
+                fill='toself',
+                fillcolor='rgba(139, 92, 246, 0.15)',
+                line=dict(color='#8b5cf6', width=2.5),
+                marker=dict(size=8, color='#8b5cf6'),
+                name='Taxa de Acerto',
+                hovertemplate='%{theta}: %{r:.1f}%<extra></extra>'
+            ))
+            fig_radar.update_layout(
+                polar=dict(
+                    radialaxis=dict(
+                        visible=True, range=[0, 100],
+                        gridcolor='rgba(148, 163, 184, 0.2)',
+                        ticksuffix='%', tickfont=dict(size=10)
+                    ),
+                    angularaxis=dict(
+                        gridcolor='rgba(148, 163, 184, 0.2)',
+                        tickfont=dict(size=13, weight='bold')
+                    ),
+                    bgcolor='rgba(0,0,0,0)'
+                ),
                 showlegend=False,
-                height=400,
-                margin=dict(l=100, r=20, t=40, b=40),
-                yaxis=dict(tickfont=dict(size=11), categoryorder='total ascending')
+                height=420,
+                margin=dict(l=60, r=60, t=30, b=30),
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)'
             )
-            st.plotly_chart(fig_q, use_container_width=True)
+            st.plotly_chart(fig_radar, use_container_width=True)
             
-            # Tooltip explicativo
-            st.markdown(f"<div style='color: #64748b; font-size: 0.85rem; margin-bottom: 1rem;'>{icon('lightbulb', '#eab308', 16)} Questões no topo são as que os alunos apresentaram maior dificuldade</div>", unsafe_allow_html=True)
+            # Legenda explicativa
+            st.markdown(f"<div style='color: #64748b; font-size: 0.85rem; text-align: center;'>{icon('lightbulb', '#eab308', 16)} Quanto maior a área, melhor o desempenho geral da turma</div>", unsafe_allow_html=True)
         else:
             st.info("Dados insuficientes para análise por questão")
     
@@ -1169,37 +1180,116 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
         else:
             st.info("Dados insuficientes")
     
-    # Linha 2: Ranking de Dificuldade das Questões
-    st.markdown(f"### {icon('analytics', '#ef4444', 24)} Ranking de Dificuldade das Questões (1 a 6)", unsafe_allow_html=True)
+    # ===== CARDS DE QUESTÕES DETALHADOS =====
+    st.markdown(f"### {icon('quiz', '#10b981', 24)} Painel de Questões — Visão Detalhada", unsafe_allow_html=True)
+    st.markdown(f"<div style='color: #64748b; font-size: 0.9rem; margin-bottom: 1rem;'>{icon('info', '#64748b', 16)} Cada card mostra o desempenho da turma em uma questão específica do módulo de Biologia Molecular.</div>", unsafe_allow_html=True)
     
-    if hardest_questions:
-        # Gráfico de barras horizontal para questões
-        df_q = pd.DataFrame(hardest_questions)
-        df_q['label'] = df_q['questao_num'].apply(lambda x: f"Questão {x}")
+    if q_stats_data:
+        sorted_stats = sorted(q_stats_data, key=lambda x: x['questao_num'])
         
-        fig = px.bar(
-            df_q, 
-            x='taxa_acerto', 
-            y='label',
-            orientation='h',
-            labels={'taxa_acerto': 'Taxa de Acerto (%)', 'label': 'Questão'},
-            color='taxa_acerto',
-            color_continuous_scale='RdYlGn',
-            range_x=[0, 100],
-            text='taxa_acerto'
-        )
-        fig.update_traces(texttemplate='%{text:.1f}%', textposition='outside')
-        fig.update_layout(yaxis={'categoryorder':'total ascending'}, height=400)
-        st.plotly_chart(fig, use_container_width=True)
-        
-        with st.expander("Ver Detalhes das Questões"):
-            for q in hardest_questions:
-                col_a, col_b, col_c = st.columns([1, 4, 3])
-                with col_a: st.markdown(f"**Q{q['questao_num']}**")
-                with col_b: st.markdown(f"*{q['titulo']}*")
-                with col_c: st.progress(q['taxa_acerto']/100, text=f"{q['taxa_acerto']:.1f}%")
+        # Exibe em 2 colunas, 3 linhas
+        for row_idx in range(0, len(sorted_stats), 2):
+            cols = st.columns(2)
+            for col_idx in range(2):
+                q_idx = row_idx + col_idx
+                if q_idx >= len(sorted_stats):
+                    break
+                q = sorted_stats[q_idx]
+                
+                with cols[col_idx]:
+                    taxa = q['taxa_acerto']
+                    total = q['total_respostas']
+                    tempo = q.get('tempo_medio_formatado', '0s')
+                    titulo = q['titulo']
+                    
+                    # Cores por taxa de acerto
+                    if taxa >= 70:
+                        status_color = '#22c55e'
+                        status_bg = 'rgba(34, 197, 94, 0.08)'
+                        status_border = 'rgba(34, 197, 94, 0.3)'
+                        status_label = 'Bom'
+                        status_icon = 'check_circle'
+                    elif taxa >= 40:
+                        status_color = '#eab308'
+                        status_bg = 'rgba(234, 179, 8, 0.08)'
+                        status_border = 'rgba(234, 179, 8, 0.3)'
+                        status_label = 'Atenção'
+                        status_icon = 'warning'
+                    else:
+                        status_color = '#ef4444'
+                        status_bg = 'rgba(239, 68, 68, 0.08)'
+                        status_border = 'rgba(239, 68, 68, 0.3)'
+                        status_label = 'Crítico'
+                        status_icon = 'error'
+                    
+                    # Barra de progresso interna em CSS puro
+                    bar_width = max(taxa, 3)  # Mínimo visual
+                    
+                    st.markdown(f"""
+                    <div style='background: {status_bg}; border: 1px solid {status_border}; 
+                                border-radius: 16px; padding: 1.25rem; margin-bottom: 0.75rem;
+                                transition: transform 0.2s; position: relative; overflow: hidden;'>
+                        
+                        <!-- Badge da questão -->
+                        <div style='display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;'>
+                            <div style='display: flex; align-items: center; gap: 0.75rem;'>
+                                <div style='background: {status_color}; color: white; font-weight: 700; font-size: 1.1rem;
+                                            width: 44px; height: 44px; border-radius: 12px; display: flex; 
+                                            align-items: center; justify-content: center; box-shadow: 0 2px 8px {status_color}40;'>
+                                    Q{q['questao_num']}
+                                </div>
+                                <div>
+                                    <div style='font-weight: 600; font-size: 0.85rem; color: var(--text-color); line-height: 1.3;
+                                                max-width: 280px; overflow: hidden; text-overflow: ellipsis;'>
+                                        {titulo[:65]}
+                                    </div>
+                                </div>
+                            </div>
+                            <div style='display: flex; align-items: center; gap: 4px; background: {status_color}18; 
+                                        padding: 2px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; color: {status_color};'>
+                                {icon(status_icon, status_color, 14)} {status_label}
+                            </div>
+                        </div>
+                        
+                        <!-- Barra de progresso -->
+                        <div style='background: rgba(148, 163, 184, 0.15); border-radius: 8px; height: 28px; 
+                                    overflow: hidden; margin-bottom: 0.75rem; position: relative;'>
+                            <div style='background: linear-gradient(90deg, {status_color}cc, {status_color}); height: 100%; 
+                                        width: {bar_width}%; border-radius: 8px; transition: width 0.8s ease;
+                                        display: flex; align-items: center; justify-content: flex-end; padding-right: 8px;'>
+                                <span style='color: white; font-weight: 700; font-size: 0.85rem; text-shadow: 0 1px 2px rgba(0,0,0,0.3);'>
+                                    {taxa:.1f}%
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Métricas inferiores -->
+                        <div style='display: flex; justify-content: space-around; gap: 0.5rem;'>
+                            <div style='text-align: center; flex: 1;'>
+                                <div style='font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;'>
+                                    {icon('people', '#64748b', 13)} Respostas
+                                </div>
+                                <div style='font-size: 1.1rem; font-weight: 600; color: var(--text-color);'>{total}</div>
+                            </div>
+                            <div style='width: 1px; background: rgba(148, 163, 184, 0.2);'></div>
+                            <div style='text-align: center; flex: 1;'>
+                                <div style='font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;'>
+                                    {icon('schedule', '#64748b', 13)} Tempo Médio
+                                </div>
+                                <div style='font-size: 1.1rem; font-weight: 600; color: var(--text-color);'>{tempo}</div>
+                            </div>
+                            <div style='width: 1px; background: rgba(148, 163, 184, 0.2);'></div>
+                            <div style='text-align: center; flex: 1;'>
+                                <div style='font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;'>
+                                    {icon('track_changes', status_color, 13)} Acerto
+                                </div>
+                                <div style='font-size: 1.1rem; font-weight: 700; color: {status_color};'>{taxa:.1f}%</div>
+                            </div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
     else:
-        st.info("Dados insuficientes para gerar o ranking de questões.")
+        st.info("Nenhuma questão foi respondida ainda.")
     
     st.markdown("---")
     
@@ -1446,119 +1536,177 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
     
     st.markdown("---")
     
-    # ===== SEÇÃO: ANÁLISE DE DIFICULDADES =====
-    st.markdown(f"### {icon('warning', '#ef4444', 24)} Análise de Dificuldades", unsafe_allow_html=True)
+    # ===== SEÇÃO: DESEMPENHO POR QUESTÃO (1 a 6) =====
+    st.markdown(f"### {icon('quiz', '#8b5cf6', 24)} Desempenho por Questão (1 a 6)", unsafe_allow_html=True)
     
-    col1, col2 = st.columns(2)
+    # Computa o desempenho do aluno por questão
+    case_analytics_ind = all_analytics.get(student_id, {}).get('case_analytics', [])
+    from logic import QUESTIONS as ALL_QUESTIONS
     
-    with col1:
-        st.markdown(f"#### {icon('error', '#ef4444', 20)} Componente Mais Difícil", unsafe_allow_html=True)
-        worst_comp = weakness.get('componente_mais_dificil')
-        if worst_comp:
-            st.error(f"**{worst_comp['nome']}**")
-            st.write(f"- Taxa de acerto: **{worst_comp['acuracia']:.1f}%**")
-            st.write(f"- Questões: {worst_comp['acertos']}/{worst_comp['total']}")
-        else:
-            st.info("Dados insuficientes")
+    student_q_data = {}
+    for entry in case_analytics_ind:
+        cid = entry.get('case_id', '')
+        result = entry.get('case_result', {})
+        duration = entry.get('duration_seconds', 0)
+        
+        # Encontra a questão no banco
+        q_idx = next((i for i, q in enumerate(ALL_QUESTIONS) if q['id'] == cid), None)
+        if q_idx is None:
+            continue
+        
+        q_num = q_idx + 1
+        points = float(result.get('points_gained', 0))
+        max_pts = float(ALL_QUESTIONS[q_idx].get('pontuacao_maxima', 3.0))
+        level = result.get('level', result.get('classification', 'N/A')).strip().upper()
+        feedback = result.get('feedback', '')
+        
+        # Pega a tentativa mais recente de cada questão
+        if q_num not in student_q_data or True:  # Mantém a última tentativa
+            student_q_data[q_num] = {
+                'q_num': q_num,
+                'titulo': ALL_QUESTIONS[q_idx]['pergunta'][:70] + '...',
+                'points': points,
+                'max_pts': max_pts,
+                'level': level,
+                'feedback': feedback,
+                'duration': duration,
+                'taxa': (points / max_pts * 100) if max_pts > 0 else 0
+            }
     
-    with col2:
-        st.markdown(f"#### {icon('trending_up', '#3b82f6', 20)} Nível Mais Difícil", unsafe_allow_html=True)
-        worst_diff = weakness.get('nivel_mais_dificil')
-        if worst_diff:
-            st.error(f"**{worst_diff['nivel'].title()}**")
-            st.write(f"- Taxa de acerto: **{worst_diff['acuracia']:.1f}%**")
-            st.write(f"- Questões: {worst_diff['acertos']}/{worst_diff['total']}")
-        else:
-            st.info("Dados insuficientes")
-    
-    # Componentes problemáticos
-    problematic = weakness.get('componentes_problematicos', [])
-    if problematic:
-        st.markdown(f"#### {icon('error_outline', '#ef4444', 20)} Componentes Problemáticos (Taxa < 50%)", unsafe_allow_html=True)
-        for comp in problematic[:5]:  # Top 5
-            st.warning(f"**{comp['nome']}**: {comp['acuracia']:.1f}% ({comp['acertos']}/{comp['total']})")
-    
-    # Padrões de erro
-    patterns = weakness.get('padroes_erro', [])
-    if patterns:
-        st.markdown(f"#### {icon('search', '#6366f1', 20)} Padrões Identificados", unsafe_allow_html=True)
-        for pattern in patterns:
-            st.info(f"**{pattern['padrao']}**: {pattern['descricao']}")
-    
-    st.markdown("---")
-    
-    # ===== SEÇÃO: DESEMPENHO POR CATEGORIA =====
-    st.markdown(f"### {icon('menu_book', '#8b5cf6', 24)} Desempenho por Categoria", unsafe_allow_html=True)
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("#### Por Componente de Conhecimento")
-        if advanced_stats['componentes']:
-            df_comp = pd.DataFrame(advanced_stats['componentes'])
+    if student_q_data:
+        # Radar chart individual
+        col_radar, col_summary = st.columns([1.2, 1])
+        
+        with col_radar:
+            all_q_nums = list(range(1, len(ALL_QUESTIONS) + 1))
+            radar_labels = [f"Q{n}" for n in all_q_nums]
+            radar_values = [student_q_data.get(n, {}).get('taxa', 0) for n in all_q_nums]
             
-            # Trunca nomes longos
-            df_comp['nome_display'] = df_comp['nome'].apply(
-                lambda x: x if len(x) <= 25 else x[:22] + '...'
+            fig_ind_radar = go.Figure()
+            fig_ind_radar.add_trace(go.Scatterpolar(
+                r=radar_values + [radar_values[0]],
+                theta=radar_labels + [radar_labels[0]],
+                fill='toself',
+                fillcolor='rgba(59, 130, 246, 0.15)',
+                line=dict(color='#3b82f6', width=2.5),
+                marker=dict(size=8, color='#3b82f6'),
+                name='Desempenho',
+                hovertemplate='%{theta}: %{r:.1f}%<extra></extra>'
+            ))
+            fig_ind_radar.update_layout(
+                polar=dict(
+                    radialaxis=dict(visible=True, range=[0, 100],
+                                    gridcolor='rgba(148, 163, 184, 0.2)',
+                                    ticksuffix='%', tickfont=dict(size=10)),
+                    angularaxis=dict(gridcolor='rgba(148, 163, 184, 0.2)',
+                                     tickfont=dict(size=13, weight='bold')),
+                    bgcolor='rgba(0,0,0,0)'
+                ),
+                showlegend=False, height=380,
+                margin=dict(l=60, r=60, t=20, b=20),
+                paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)'
             )
+            st.plotly_chart(fig_ind_radar, use_container_width=True)
+        
+        with col_summary:
+            # Resumo textual
+            answered = len(student_q_data)
+            total_q = len(ALL_QUESTIONS)
+            avg_taxa = sum(d['taxa'] for d in student_q_data.values()) / answered if answered > 0 else 0
+            total_pts = sum(d['points'] for d in student_q_data.values())
+            total_max = sum(d['max_pts'] for d in student_q_data.values())
             
-            fig_comp = px.bar(
-                df_comp,
-                x='acuracia',
-                y='nome_display',
-                orientation='h',
-                text_auto='.1f',
-                color='acuracia',
-                color_continuous_scale='RdYlGn',
-                range_color=[0, 100],
-                hover_data={'nome': True, 'nome_display': False}
-            )
-            fig_comp.update_layout(
-                xaxis_title="Acurácia (%)",
-                yaxis_title=None,
-                showlegend=False,
-                height=400,
-                margin=dict(l=180, r=20, t=20, b=40),
-                yaxis=dict(tickfont=dict(size=10))
-            )
-            st.plotly_chart(fig_comp, use_container_width=True)
-        else:
-            st.info("Dados insuficientes")
-    
-    with col2:
-        st.markdown("#### Por Nível de Dificuldade")
-        if advanced_stats['dificuldade']:
-            df_diff = pd.DataFrame(advanced_stats['dificuldade'])
+            not_answered = [n for n in range(1, total_q + 1) if n not in student_q_data]
             
-            fig_diff = px.bar(
-                df_diff,
-                x='nivel',
-                y='acuracia',
-                text_auto='.1f',
-                color='nivel',
-                color_discrete_map={
-                    'básico': '#22c55e',
-                    'intermediário': '#eab308',
-                    'avançado': '#ef4444'
-                }
-            )
-            fig_diff.update_layout(
-                xaxis_title="Nível",
-                yaxis_title="Acurácia (%)",
-                showlegend=False,
-                height=400
-            )
-            st.plotly_chart(fig_diff, use_container_width=True)
-        else:
-            st.info("Dados insuficientes")
-    
-    # Tabela detalhada
-    with st.expander("Tabela Detalhada por Componente"):
-        if advanced_stats['componentes']:
-            df_comp_table = pd.DataFrame(advanced_stats['componentes'])
-            df_comp_table.columns = ['Componente', 'Acurácia (%)', 'Total', 'Acertos']
-            df_comp_table = df_comp_table.sort_values('Acurácia (%)')
-            st.dataframe(df_comp_table, use_container_width=True, hide_index=True)
+            st.markdown(f"""
+            <div style='background: var(--secondary-background-color); padding: 1.25rem; border-radius: 14px; 
+                        border: 1px solid rgba(59, 130, 246, 0.2);'>
+                <div style='font-size: 1rem; font-weight: 600; margin-bottom: 1rem; color: var(--text-color);'>
+                    {icon('summarize', '#3b82f6', 20)} Resumo do Aluno
+                </div>
+                <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;'>
+                    <div style='text-align: center; padding: 0.75rem; background: rgba(139, 92, 246, 0.08); border-radius: 10px;'>
+                        <div style='font-size: 0.7rem; color: #94a3b8; text-transform: uppercase;'>Respondidas</div>
+                        <div style='font-size: 1.5rem; font-weight: 700; color: #8b5cf6;'>{answered}/{total_q}</div>
+                    </div>
+                    <div style='text-align: center; padding: 0.75rem; background: rgba(16, 185, 129, 0.08); border-radius: 10px;'>
+                        <div style='font-size: 0.7rem; color: #94a3b8; text-transform: uppercase;'>Média Geral</div>
+                        <div style='font-size: 1.5rem; font-weight: 700; color: #10b981;'>{avg_taxa:.0f}%</div>
+                    </div>
+                    <div style='text-align: center; padding: 0.75rem; background: rgba(59, 130, 246, 0.08); border-radius: 10px;'>
+                        <div style='font-size: 0.7rem; color: #94a3b8; text-transform: uppercase;'>Pontos</div>
+                        <div style='font-size: 1.5rem; font-weight: 700; color: #3b82f6;'>{total_pts:.1f}/{total_max:.0f}</div>
+                    </div>
+                    <div style='text-align: center; padding: 0.75rem; background: rgba(239, 68, 68, 0.08); border-radius: 10px;'>
+                        <div style='font-size: 0.7rem; color: #94a3b8; text-transform: uppercase;'>Pendentes</div>
+                        <div style='font-size: 1.5rem; font-weight: 700; color: #ef4444;'>{len(not_answered)}</div>
+                    </div>
+                </div>
+                {"<div style='margin-top: 0.75rem; font-size: 0.85rem; color: #94a3b8;'>" + icon('pending', '#ef4444', 14) + " Questões não respondidas: " + ", ".join([f"Q{n}" for n in not_answered]) + "</div>" if not_answered else ""}
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Cards por questão respondida
+        st.markdown(f"<div style='margin-top: 1rem;'></div>", unsafe_allow_html=True)
+        
+        for q_num in sorted(student_q_data.keys()):
+            qd = student_q_data[q_num]
+            
+            # Cores por nível
+            level_colors = {
+                'AVANÇADO': ('#22c55e', 'Avançado', 'star'),
+                'MÉDIO': ('#3b82f6', 'Médio', 'trending_up'),
+                'MEDIO': ('#3b82f6', 'Médio', 'trending_up'),
+                'BÁSICO': ('#eab308', 'Básico', 'check'),
+                'BASICO': ('#eab308', 'Básico', 'check'),
+                'PARCIAL': ('#f97316', 'Parcial', 'warning'),
+                'INCORRETO': ('#ef4444', 'Incorreto', 'close'),
+            }
+            lc, ll, li = level_colors.get(qd['level'], ('#94a3b8', qd['level'], 'help'))
+            bar_w = max(qd['taxa'], 3)
+            
+            st.markdown(f"""
+            <div style='background: var(--secondary-background-color); border: 1px solid rgba(148, 163, 184, 0.15);
+                        border-radius: 14px; padding: 1rem 1.25rem; margin-bottom: 0.5rem;
+                        border-left: 4px solid {lc};'>
+                <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;'>
+                    <div style='display: flex; align-items: center; gap: 0.6rem;'>
+                        <span style='background: {lc}; color: white; font-weight: 700; font-size: 0.9rem;
+                                     padding: 4px 10px; border-radius: 8px;'>Q{q_num}</span>
+                        <span style='font-size: 0.85rem; color: var(--text-color); font-weight: 500;'>{qd['titulo'][:60]}</span>
+                    </div>
+                    <div style='display: flex; align-items: center; gap: 0.5rem;'>
+                        <span style='background: {lc}18; color: {lc}; font-size: 0.75rem; font-weight: 600;
+                                     padding: 3px 10px; border-radius: 16px;'>
+                            {icon(li, lc, 13)} {ll}
+                        </span>
+                        <span style='font-weight: 700; color: {lc}; font-size: 1rem;'>{qd["points"]:.1f}/{qd["max_pts"]:.0f} pts</span>
+                    </div>
+                </div>
+                <div style='background: rgba(148, 163, 184, 0.12); border-radius: 6px; height: 10px; overflow: hidden;'>
+                    <div style='background: {lc}; height: 100%; width: {bar_w}%; border-radius: 6px;'></div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Questões não respondidas
+        for q_num in sorted([n for n in range(1, len(ALL_QUESTIONS) + 1) if n not in student_q_data]):
+            q_title = ALL_QUESTIONS[q_num - 1]['pergunta'][:60] + '...'
+            st.markdown(f"""
+            <div style='background: var(--secondary-background-color); border: 1px dashed rgba(148, 163, 184, 0.3);
+                        border-radius: 14px; padding: 0.75rem 1.25rem; margin-bottom: 0.5rem; opacity: 0.6;'>
+                <div style='display: flex; justify-content: space-between; align-items: center;'>
+                    <div style='display: flex; align-items: center; gap: 0.6rem;'>
+                        <span style='background: #94a3b8; color: white; font-weight: 700; font-size: 0.9rem;
+                                     padding: 4px 10px; border-radius: 8px;'>Q{q_num}</span>
+                        <span style='font-size: 0.85rem; color: #94a3b8; font-weight: 500;'>{q_title}</span>
+                    </div>
+                    <span style='color: #94a3b8; font-size: 0.8rem; font-style: italic;'>{icon('pending', '#94a3b8', 14)} Não respondida</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+    else:
+        st.info("O aluno ainda não respondeu nenhuma questão.")
     
     st.markdown("---")
     
