@@ -1155,6 +1155,7 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
     st.markdown(f"<div style='color: #64748b; font-size: 0.9rem; margin-bottom: 1rem;'>{icon('info', '#64748b', 16)} Cada card mostra o desempenho da turma em uma questão específica do módulo de Biologia Molecular.</div>", unsafe_allow_html=True)
     
     if q_stats_data:
+        from logic import QUESTIONS as ALL_QUESTIONS_OV
         sorted_stats = sorted(q_stats_data, key=lambda x: x['questao_num'])
         
         # Exibe em 2 colunas, 3 linhas
@@ -1185,7 +1186,10 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
                     
                     bw = max(taxa, 3)
                     
-                    card_html = f"<div style='background:{sbg};border:1px solid {sbd};border-radius:16px;padding:1.25rem;margin-bottom:0.75rem;'>"
+                    # Full question text for tooltip
+                    full_q_text = ALL_QUESTIONS_OV[q['questao_num'] - 1]['pergunta'] if q['questao_num'] <= len(ALL_QUESTIONS_OV) else titulo
+                    tooltip_text = full_q_text.replace("'", "&#39;").replace('"', '&quot;')
+                    card_html = f"<div title='{tooltip_text}' style='background:{sbg};border:1px solid {sbd};border-radius:16px;padding:1.25rem;margin-bottom:0.75rem;cursor:help;'>"
                     # Header row
                     card_html += f"<div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.75rem;'>"
                     card_html += f"<div style='display:flex;align-items:center;gap:0.75rem;'>"
