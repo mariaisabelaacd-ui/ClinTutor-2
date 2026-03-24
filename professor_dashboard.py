@@ -647,9 +647,11 @@ def generate_global_interactions_pdf(student_users: List[Dict], all_analytics: D
     return bytes(pdf.output())
 
 
-def generate_ai_insights_pdf(hardest_categories: List[Dict]) -> bytes:
-    """Gera PDF com análise pedagógica profunda baseada em IA para as piores categorias"""
+def generate_ai_insights_pdf(hardest_questions: List[Dict]) -> bytes:
+    """Gera PDF com análise pedagógica profunda baseada em IA para as 6 questões"""
     from fpdf import FPDF
+    from logic import QUESTIONS as ALL_QUESTIONS, generate_category_insights
+    from analytics import get_all_users_analytics_firebase
     
     pdf = FPDF()
     pdf.set_margins(15, 15, 15)
@@ -662,7 +664,7 @@ def generate_ai_insights_pdf(hardest_categories: List[Dict]) -> bytes:
 
     # ── CAPA ─────────────────────────────────────────────────────
     pdf.add_page()
-    pdf.set_fill_color(139, 92, 246) # Roxo (Cor da "IA")
+    pdf.set_fill_color(139, 92, 246)
     pdf.rect(0, 0, 210, 297, 'F')
     pdf.set_y(80)
     
@@ -678,118 +680,89 @@ def generate_ai_insights_pdf(hardest_categories: List[Dict]) -> bytes:
     pdf.set_y(150)
     pdf.set_font('Helvetica', 'I', 11)
     texto_capa = "Este relatorio contem uma analise automatizada gerada por Inteligencia Artificial " \
-                 "cobrindo o desempenho geral da turma em todas as categorias de conhecimento, " \
+                 "cobrindo o desempenho geral da turma nas 6 questoes fundamentais de Biologia Molecular, " \
                  "baseado em amostras de todas as respostas enviadas."
     pdf.multi_cell(0, 6, safe(texto_capa), align='C')
     pdf.set_text_color(0, 0, 0)
     
-    # ── CONTEÚDO ──────────────────────────────────────────────────
-    
-    # Coleta respostas COM dados de critérios para análise detalhada
-    # all_answers_dict = get_all_answers_by_category(limit_per_category=20) # This line is replaced by the new logic below
-    
-    # Coleta respostas com critérios individuais para exemplos específicos
-    from analytics import get_all_users_analytics_firebase
+    # ── COLETA DE RESPOSTAS POR QUESTÃO ──────────────────────────
     all_analytics_raw = get_all_users_analytics_firebase()
     
-    # Organiza respostas com seus critérios para mostrar exemplos concretos
-    answers_with_criteria = []
-    all_answers_dict = {} # New dictionary to store answers by category, similar to the original get_all_answers_by_category
+    # Organiza respostas por questão (1-6)
+    answers_by_question = {i+1: [] for i in range(len(ALL_QUESTIONS))}
+    
     for uid, data in all_analytics_raw.items():
         for case in data.get('case_analytics', []):
+            cid = case.get('case_id', '')
             result = case.get('case_result', {})
             user_answer = result.get('user_answer', '')
-            criterios = result.get('criterios', {})
+            level = result.get('level', result.get('classification', '')).upper()
+            points = result.get('points_gained', 0)
             
-            # Extract category from case_info if available
-            case_info = case.get('case_info', {})
-            components = case_info.get('componentes_conhecimento', [])
-            
-            if user_answer and criterios:
-                entry = {
+            q_idx = next((i for i, q in enumerate(ALL_QUESTIONS) if q['id'] == cid), None)
+            if q_idx is not None and user_answer:
+                answers_by_question[q_idx + 1].append({
                     'answer': user_answer,
-                    'criterios': criterios,
+                    'level': level,
+                    'points': float(points),
                     'feedback': result.get('feedback', '')
-                }
-                answers_with_criteria.append(entry)
-                
-                # Populate all_answers_dict for generate_category_insights
-                for comp in components:
-                    if comp not in all_answers_dict:
-                        all_answers_dict[comp] = []
-                    all_answers_dict[comp].append(user_answer)
+                })
     
-    # Ensure hardest_categories is sorted by 'taxa_acerto' ascending (lowest accuracy first)
-    # Assuming get_hardest_categories returns a list of dicts with 'componente' and 'taxa_acerto'
-    # and that it's already sorted by difficulty (lowest accuracy first).
-    # If not, add: hardest_categories.sort(key=lambda x: x.get('taxa_acerto', 100))
-    categories_to_analyze = [c['componente'] for c in hardest_categories]
-    
+    # ── CONTEÚDO: ANÁLISE POR QUESTÃO ────────────────────────────
     pdf.add_page()
     pdf.set_font('Helvetica', 'B', 16)
     pdf.set_text_color(139, 92, 246)
-    pdf.cell(0, 10, 'Analise Detalhada por Topico', ln=True)
+    pdf.cell(0, 10, 'Analise Detalhada por Questao (1 a 6)', ln=True)
     pdf.set_text_color(0, 0, 0)
     pdf.ln(3)
     pdf.set_font('Helvetica', 'I', 9)
     pdf.set_text_color(120, 120, 120)
-    pdf.multi_cell(0, 5, safe('Cada topico e analisado individualmente com base nos criterios da IA. Exemplos de respostas que nao atingiram pontuacao completa sao incluidos para referencia pedagogica.'))
+    pdf.multi_cell(0, 5, safe('Cada questao e analisada individualmente com base nas respostas dos alunos. A IA identifica padroes de erro e sugere intervencoes pedagogicas.'))
     pdf.set_text_color(0, 0, 0)
     pdf.ln(5)
     
-    if not categories_to_analyze:
-         pdf.set_font('Helvetica', '', 11)
-         pdf.cell(0, 10, "Dados insuficientes para analise de dificuldades no momento.", ln=True)
-         return bytes(pdf.output())
+    # Mapeia questão -> stats do hardest_questions
+    q_stats_map = {q['questao_num']: q for q in hardest_questions} if hardest_questions else {}
     
-    # Mapeamento de componente -> chave do criterio no banco
-    comp_to_crit_key = {
-        '1. Compreensão do antiparalelismo': 'antiparalelismo',
-        '2. Limitação da direcionalidade da polimerase': 'direcionalidade',
-        '3. Mecanismo da fita lagging': 'lagging',
-        '4. Papel do primer e da primase': 'primer',
-        '5. Integração entre as limitações': 'integracao'
-    }
-    
-    for idx, cat_name in enumerate(categories_to_analyze, 1):
-        samples = all_answers_dict.get(cat_name, [])
-        insight_text = generate_category_insights(cat_name, samples)
+    for q_num in range(1, len(ALL_QUESTIONS) + 1):
+        q_data = ALL_QUESTIONS[q_num - 1]
+        q_title = q_data['pergunta'][:120]
+        answers = answers_by_question.get(q_num, [])
+        stats = q_stats_map.get(q_num, {})
+        taxa = stats.get('taxa_acerto', 0)
+        total = stats.get('total_respostas', len(answers))
         
-        # Encontra a chave de critério correspondente
-        crit_key = None
-        for comp, key in comp_to_crit_key.items():
-            if key in cat_name.lower() or cat_name.lower() in comp.lower():
-                crit_key = key
-                break
-        # Fallback por substring
-        if not crit_key:
-            import unicodedata
-            cat_norm = unicodedata.normalize('NFKD', cat_name.lower()).encode('ASCII', 'ignore').decode('utf-8')
-            for comp, key in comp_to_crit_key.items():
-                if key in cat_norm:
-                    crit_key = key
-                    break
+        # Header da questão
+        if taxa < 45:
+            pdf.set_fill_color(254, 226, 226)
+        elif taxa < 75:
+            pdf.set_fill_color(254, 249, 195)
+        else:
+            pdf.set_fill_color(220, 252, 231)
         
-        pdf.set_fill_color(243, 232, 255)
         pdf.set_font('Helvetica', 'B', 12)
-        pdf.cell(0, 8, safe(f"  Topico {idx}: {cat_name}"), ln=True, fill=True)
+        pdf.cell(0, 8, safe(f"  Questao {q_num}: {q_title[:80]}..."), ln=True, fill=True)
         pdf.ln(3)
         
-        # Estatísticas rápidas do tópico
-        if crit_key and answers_with_criteria:
-            completa_count = sum(1 for a in answers_with_criteria if str(a['criterios'].get(crit_key, '')).upper() in ['COMPLETA', 'CORRETA'])
-            parcial_count = sum(1 for a in answers_with_criteria if 'PARCIAL' in str(a['criterios'].get(crit_key, '')).upper())
-            ausente_count = sum(1 for a in answers_with_criteria if 'AUSENTE' in str(a['criterios'].get(crit_key, '')).upper())
-            total = completa_count + parcial_count + ausente_count
+        # Estatísticas rápidas
+        if answers:
+            avancado = sum(1 for a in answers if 'AVANCADO' in a['level'] or 'AVANÇADO' in a['level'])
+            medio = sum(1 for a in answers if 'MEDIO' in a['level'] or 'MÉDIO' in a['level'])
+            basico = sum(1 for a in answers if 'BASICO' in a['level'] or 'BÁSICO' in a['level'])
+            parcial = sum(1 for a in answers if 'PARCIAL' in a['level'])
+            incorreto = sum(1 for a in answers if 'INCORRETO' in a['level'])
             
             pdf.set_font('Helvetica', 'B', 9)
             pdf.set_text_color(100, 100, 100)
-            if total > 0:
-                pdf.cell(0, 5, safe(f'  Completa: {completa_count}/{total} ({completa_count/total*100:.0f}%) | Parcial: {parcial_count}/{total} ({parcial_count/total*100:.0f}%) | Ausente: {ausente_count}/{total} ({ausente_count/total*100:.0f}%)'), ln=True)
+            pdf.cell(0, 5, safe(f'  Respostas: {total} | Taxa: {taxa:.1f}% | Avancado: {avancado} | Medio: {medio} | Basico: {basico} | Parcial: {parcial} | Incorreto: {incorreto}'), ln=True)
             pdf.set_text_color(0, 0, 0)
             pdf.ln(2)
         
-        # Análise da IA
+        # Gera análise com IA
+        sample_answers = [a['answer'] for a in answers[:15]]
+        q_topic = f"Questao {q_num}: {q_title[:80]}"
+        insight_text = generate_category_insights(q_topic, sample_answers)
+        
         pdf.set_font('Helvetica', 'B', 10)
         pdf.set_text_color(139, 92, 246)
         pdf.cell(0, 6, 'Analise Pedagogica:', ln=True)
@@ -797,43 +770,40 @@ def generate_ai_insights_pdf(hardest_categories: List[Dict]) -> bytes:
         pdf.set_font('Helvetica', '', 10)
         pdf.multi_cell(0, 5, safe(insight_text))
         pdf.set_text_color(0, 0, 0)
-        pdf.ln(5)
+        pdf.ln(3)
         
-        # Exemplos de respostas com falhas neste tópico
-        if crit_key and answers_with_criteria:
-            failing_examples = [a for a in answers_with_criteria 
-                                if str(a['criterios'].get(crit_key, '')).upper() in ['AUSENTE', 'PARCIAL']]
+        # Exemplos de respostas com falhas
+        failing = [a for a in answers if a['level'] in ['INCORRETO', 'PARCIAL']]
+        if failing:
+            pdf.set_font('Helvetica', 'B', 9)
+            pdf.set_text_color(220, 38, 38)
+            pdf.cell(0, 6, safe(f'Exemplos de respostas com dificuldade ({min(len(failing), 3)} de {len(failing)}):'), ln=True)
+            pdf.set_text_color(0, 0, 0)
             
-            if failing_examples:
-                pdf.set_font('Helvetica', 'B', 9)
-                pdf.set_text_color(220, 38, 38)
-                pdf.cell(0, 6, safe(f'Exemplos de respostas com falha neste topico ({min(len(failing_examples), 3)} de {len(failing_examples)}):'), ln=True)
-                pdf.set_text_color(0, 0, 0)
+            for ex in failing[:3]:
+                if 'INCORRETO' in ex['level']:
+                    pdf.set_fill_color(254, 226, 226)
+                    label = 'INCORRETO'
+                else:
+                    pdf.set_fill_color(254, 249, 195)
+                    label = 'PARCIAL'
                 
-                for i, ex in enumerate(failing_examples[:3]):
-                    status = str(ex['criterios'].get(crit_key, 'N/A')).upper()
-                    status_label = 'PARCIAL' if 'PARCIAL' in status else 'AUSENTE'
-                    
-                    # Status badge
-                    if 'AUSENTE' in status:
-                        pdf.set_fill_color(254, 226, 226)
-                    else:
-                        pdf.set_fill_color(254, 249, 195)
-                    
-                    pdf.set_font('Helvetica', 'B', 8)
-                    pdf.set_x(20)
-                    pdf.cell(25, 5, safe(f' [{status_label}]'), 0, 0, 'L', True)
-                    pdf.set_font('Helvetica', 'I', 8)
-                    answer_preview = ex['answer'][:200] + ('...' if len(ex['answer']) > 200 else '')
-                    pdf.set_x(47)
-                    pdf.multi_cell(W - 35, 4, safe(f'"{answer_preview}"'))
-                    pdf.ln(2)
+                pdf.set_font('Helvetica', 'B', 8)
+                pdf.set_x(20)
+                pdf.cell(25, 5, safe(f' [{label}]'), 0, 0, 'L', True)
+                pdf.set_font('Helvetica', 'I', 8)
+                preview = ex['answer'][:200] + ('...' if len(ex['answer']) > 200 else '')
+                pdf.set_x(47)
+                pdf.multi_cell(W - 35, 4, safe(f'"{preview}"'))
+                pdf.ln(2)
         
         pdf.ln(5)
         pdf.set_draw_color(220, 220, 220)
         pdf.line(15, pdf.get_y(), 195, pdf.get_y())
+        pdf.ln(3)
 
     return bytes(pdf.output())
+
 
 
 def show_advanced_professor_dashboard():
@@ -1028,7 +998,7 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
                 
                 criteria_analysis = generate_class_criteria_analysis(recent_answers[:15])
                 
-                st.markdown(f"#### {icon('psychology', '#8b5cf6', 22)} Análise de IA por Eixos de Conhecimento (1 a 6)")
+                st.markdown(f"#### {icon('psychology', '#8b5cf6', 22)} Análise de IA por Eixos de Conhecimento (1 a 6)", unsafe_allow_html=True)
                 for crit_name, crit_text in criteria_analysis.items():
                     st.info(f"**{crit_name}:**\n{crit_text}")
                     
