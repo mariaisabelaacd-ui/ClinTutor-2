@@ -1186,10 +1186,10 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
                     
                     bw = max(taxa, 3)
                     
-                    # Full question text for tooltip
+                    # Full question text
                     full_q_text = ALL_QUESTIONS_OV[q['questao_num'] - 1]['pergunta'] if q['questao_num'] <= len(ALL_QUESTIONS_OV) else titulo
-                    tooltip_text = full_q_text.replace("'", "&#39;").replace('"', '&quot;')
-                    card_html = f"<div title='{tooltip_text}' style='background:{sbg};border:1px solid {sbd};border-radius:16px;padding:1.25rem;margin-bottom:0.75rem;cursor:help;'>"
+                    
+                    card_html = f"<div style='background:{sbg};border:1px solid {sbd};border-radius:16px;padding:1.25rem;margin-bottom:0.5rem;'>"
                     # Header row
                     card_html += f"<div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.75rem;'>"
                     card_html += f"<div style='display:flex;align-items:center;gap:0.75rem;'>"
@@ -1213,6 +1213,8 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
                     card_html += "</div></div>"
                     
                     st.markdown(card_html, unsafe_allow_html=True)
+                    with st.expander("Ler questão completa", expanded=False):
+                        st.markdown(f"**Questão {q['questao_num']}**: {full_q_text}")
 
     else:
         st.info("Nenhuma questão foi respondida ainda.")
@@ -1739,8 +1741,7 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
                     is_correct = item['is_correct']
                     is_partial = item['is_partial']
                     classification = item['classification']
-                    comps = item['comps']
-                    diff = item['diff']
+                    q_num = item.get('q_num', '?')
                     
                     # Layout de Timeline
                     col_time, col_content = st.columns([0.15, 0.85])
@@ -1790,8 +1791,8 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
                                     expected_answer=q_info.get('resposta_esperada', None),
                                     feedback=result.get('feedback', None),
                                     classification=classification if classification else ('CORRETA' if is_correct else 'INCORRETA'),
-                                    components=comps,
-                                    difficulty=diff,
+                                    components=[f"Questão {q_num}"],
+                                    difficulty="N/A",
                                     time_spent=format_duration(entry.get('duration_seconds', 0)),
                                     points=result.get('points_gained', 0)
                                 )
