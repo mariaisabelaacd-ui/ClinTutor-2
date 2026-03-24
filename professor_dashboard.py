@@ -1200,94 +1200,46 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
                     taxa = q['taxa_acerto']
                     total = q['total_respostas']
                     tempo = q.get('tempo_medio_formatado', '0s')
-                    titulo = q['titulo']
+                    titulo = q['titulo'][:65]
                     
                     # Cores por taxa de acerto
                     if taxa >= 70:
-                        status_color = '#22c55e'
-                        status_bg = 'rgba(34, 197, 94, 0.08)'
-                        status_border = 'rgba(34, 197, 94, 0.3)'
-                        status_label = 'Bom'
-                        status_icon = 'check_circle'
+                        sc, sbg, sbd = '#22c55e', 'rgba(34,197,94,0.08)', 'rgba(34,197,94,0.3)'
+                        sl, si = 'Bom', 'check_circle'
                     elif taxa >= 40:
-                        status_color = '#eab308'
-                        status_bg = 'rgba(234, 179, 8, 0.08)'
-                        status_border = 'rgba(234, 179, 8, 0.3)'
-                        status_label = 'Atenção'
-                        status_icon = 'warning'
+                        sc, sbg, sbd = '#eab308', 'rgba(234,179,8,0.08)', 'rgba(234,179,8,0.3)'
+                        sl, si = 'Atenção', 'warning'
                     else:
-                        status_color = '#ef4444'
-                        status_bg = 'rgba(239, 68, 68, 0.08)'
-                        status_border = 'rgba(239, 68, 68, 0.3)'
-                        status_label = 'Crítico'
-                        status_icon = 'error'
+                        sc, sbg, sbd = '#ef4444', 'rgba(239,68,68,0.08)', 'rgba(239,68,68,0.3)'
+                        sl, si = 'Crítico', 'error'
                     
-                    # Barra de progresso interna em CSS puro
-                    bar_width = max(taxa, 3)  # Mínimo visual
+                    bw = max(taxa, 3)
                     
-                    st.markdown(f"""
-                    <div style='background: {status_bg}; border: 1px solid {status_border}; 
-                                border-radius: 16px; padding: 1.25rem; margin-bottom: 0.75rem;
-                                transition: transform 0.2s; position: relative; overflow: hidden;'>
-                        
-                        <!-- Badge da questão -->
-                        <div style='display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;'>
-                            <div style='display: flex; align-items: center; gap: 0.75rem;'>
-                                <div style='background: {status_color}; color: white; font-weight: 700; font-size: 1.1rem;
-                                            width: 44px; height: 44px; border-radius: 12px; display: flex; 
-                                            align-items: center; justify-content: center; box-shadow: 0 2px 8px {status_color}40;'>
-                                    Q{q['questao_num']}
-                                </div>
-                                <div>
-                                    <div style='font-weight: 600; font-size: 0.85rem; color: var(--text-color); line-height: 1.3;
-                                                max-width: 280px; overflow: hidden; text-overflow: ellipsis;'>
-                                        {titulo[:65]}
-                                    </div>
-                                </div>
-                            </div>
-                            <div style='display: flex; align-items: center; gap: 4px; background: {status_color}18; 
-                                        padding: 2px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; color: {status_color};'>
-                                {icon(status_icon, status_color, 14)} {status_label}
-                            </div>
-                        </div>
-                        
-                        <!-- Barra de progresso -->
-                        <div style='background: rgba(148, 163, 184, 0.15); border-radius: 8px; height: 28px; 
-                                    overflow: hidden; margin-bottom: 0.75rem; position: relative;'>
-                            <div style='background: linear-gradient(90deg, {status_color}cc, {status_color}); height: 100%; 
-                                        width: {bar_width}%; border-radius: 8px; transition: width 0.8s ease;
-                                        display: flex; align-items: center; justify-content: flex-end; padding-right: 8px;'>
-                                <span style='color: white; font-weight: 700; font-size: 0.85rem; text-shadow: 0 1px 2px rgba(0,0,0,0.3);'>
-                                    {taxa:.1f}%
-                                </span>
-                            </div>
-                        </div>
-                        
-                        <!-- Métricas inferiores -->
-                        <div style='display: flex; justify-content: space-around; gap: 0.5rem;'>
-                            <div style='text-align: center; flex: 1;'>
-                                <div style='font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;'>
-                                    {icon('people', '#64748b', 13)} Respostas
-                                </div>
-                                <div style='font-size: 1.1rem; font-weight: 600; color: var(--text-color);'>{total}</div>
-                            </div>
-                            <div style='width: 1px; background: rgba(148, 163, 184, 0.2);'></div>
-                            <div style='text-align: center; flex: 1;'>
-                                <div style='font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;'>
-                                    {icon('schedule', '#64748b', 13)} Tempo Médio
-                                </div>
-                                <div style='font-size: 1.1rem; font-weight: 600; color: var(--text-color);'>{tempo}</div>
-                            </div>
-                            <div style='width: 1px; background: rgba(148, 163, 184, 0.2);'></div>
-                            <div style='text-align: center; flex: 1;'>
-                                <div style='font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;'>
-                                    {icon('track_changes', status_color, 13)} Acerto
-                                </div>
-                                <div style='font-size: 1.1rem; font-weight: 700; color: {status_color};'>{taxa:.1f}%</div>
-                            </div>
-                        </div>
-                    </div>
-                    """, unsafe_allow_html=True)
+                    card_html = f"<div style='background:{sbg};border:1px solid {sbd};border-radius:16px;padding:1.25rem;margin-bottom:0.75rem;'>"
+                    # Header row
+                    card_html += f"<div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.75rem;'>"
+                    card_html += f"<div style='display:flex;align-items:center;gap:0.75rem;'>"
+                    card_html += f"<div style='background:{sc};color:white;font-weight:700;font-size:1.1rem;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px {sc}40;'>Q{q['questao_num']}</div>"
+                    card_html += f"<div style='font-weight:600;font-size:0.85rem;color:var(--text-color);line-height:1.3;max-width:280px;'>{titulo}</div>"
+                    card_html += "</div>"
+                    card_html += f"<div style='display:flex;align-items:center;gap:4px;background:{sc}18;padding:2px 10px;border-radius:20px;font-size:0.75rem;font-weight:600;color:{sc};'>{icon(si, sc, 14)} {sl}</div>"
+                    card_html += "</div>"
+                    # Progress bar
+                    card_html += f"<div style='background:rgba(148,163,184,0.15);border-radius:8px;height:28px;overflow:hidden;margin-bottom:0.75rem;'>"
+                    card_html += f"<div style='background:linear-gradient(90deg,{sc}cc,{sc});height:100%;width:{bw}%;border-radius:8px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;'>"
+                    card_html += f"<span style='color:white;font-weight:700;font-size:0.85rem;text-shadow:0 1px 2px rgba(0,0,0,0.3);'>{taxa:.1f}%</span>"
+                    card_html += "</div></div>"
+                    # Bottom metrics
+                    card_html += "<div style='display:flex;justify-content:space-around;gap:0.5rem;'>"
+                    card_html += f"<div style='text-align:center;flex:1;'><div style='font-size:0.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;'>{icon('people','#64748b',13)} Respostas</div><div style='font-size:1.1rem;font-weight:600;color:var(--text-color);'>{total}</div></div>"
+                    card_html += "<div style='width:1px;background:rgba(148,163,184,0.2);'></div>"
+                    card_html += f"<div style='text-align:center;flex:1;'><div style='font-size:0.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;'>{icon('schedule','#64748b',13)} Tempo Médio</div><div style='font-size:1.1rem;font-weight:600;color:var(--text-color);'>{tempo}</div></div>"
+                    card_html += "<div style='width:1px;background:rgba(148,163,184,0.2);'></div>"
+                    card_html += f"<div style='text-align:center;flex:1;'><div style='font-size:0.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;'>{icon('track_changes',sc,13)} Acerto</div><div style='font-size:1.1rem;font-weight:700;color:{sc};'>{taxa:.1f}%</div></div>"
+                    card_html += "</div></div>"
+                    
+                    st.markdown(card_html, unsafe_allow_html=True)
+
     else:
         st.info("Nenhuma questão foi respondida ainda.")
     
@@ -1665,46 +1617,33 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
             lc, ll, li = level_colors.get(qd['level'], ('#94a3b8', qd['level'], 'help'))
             bar_w = max(qd['taxa'], 3)
             
-            st.markdown(f"""
-            <div style='background: var(--secondary-background-color); border: 1px solid rgba(148, 163, 184, 0.15);
-                        border-radius: 14px; padding: 1rem 1.25rem; margin-bottom: 0.5rem;
-                        border-left: 4px solid {lc};'>
-                <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;'>
-                    <div style='display: flex; align-items: center; gap: 0.6rem;'>
-                        <span style='background: {lc}; color: white; font-weight: 700; font-size: 0.9rem;
-                                     padding: 4px 10px; border-radius: 8px;'>Q{q_num}</span>
-                        <span style='font-size: 0.85rem; color: var(--text-color); font-weight: 500;'>{qd['titulo'][:60]}</span>
-                    </div>
-                    <div style='display: flex; align-items: center; gap: 0.5rem;'>
-                        <span style='background: {lc}18; color: {lc}; font-size: 0.75rem; font-weight: 600;
-                                     padding: 3px 10px; border-radius: 16px;'>
-                            {icon(li, lc, 13)} {ll}
-                        </span>
-                        <span style='font-weight: 700; color: {lc}; font-size: 1rem;'>{qd["points"]:.1f}/{qd["max_pts"]:.0f} pts</span>
-                    </div>
-                </div>
-                <div style='background: rgba(148, 163, 184, 0.12); border-radius: 6px; height: 10px; overflow: hidden;'>
-                    <div style='background: {lc}; height: 100%; width: {bar_w}%; border-radius: 6px;'></div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+            ind_card = f"<div style='background:var(--secondary-background-color);border:1px solid rgba(148,163,184,0.15);border-radius:14px;padding:1rem 1.25rem;margin-bottom:0.5rem;border-left:4px solid {lc};'>"
+            ind_card += f"<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;'>"
+            ind_card += f"<div style='display:flex;align-items:center;gap:0.6rem;'>"
+            ind_card += f"<span style='background:{lc};color:white;font-weight:700;font-size:0.9rem;padding:4px 10px;border-radius:8px;'>Q{q_num}</span>"
+            ind_card += f"<span style='font-size:0.85rem;color:var(--text-color);font-weight:500;'>{qd['titulo'][:60]}</span>"
+            ind_card += "</div>"
+            ind_card += f"<div style='display:flex;align-items:center;gap:0.5rem;'>"
+            ind_card += f"<span style='background:{lc}18;color:{lc};font-size:0.75rem;font-weight:600;padding:3px 10px;border-radius:16px;'>{icon(li, lc, 13)} {ll}</span>"
+            ind_card += f"<span style='font-weight:700;color:{lc};font-size:1rem;'>{qd['points']:.1f}/{qd['max_pts']:.0f} pts</span>"
+            ind_card += "</div></div>"
+            ind_card += f"<div style='background:rgba(148,163,184,0.12);border-radius:6px;height:10px;overflow:hidden;'>"
+            ind_card += f"<div style='background:{lc};height:100%;width:{bar_w}%;border-radius:6px;'></div>"
+            ind_card += "</div></div>"
+            st.markdown(ind_card, unsafe_allow_html=True)
         
         # Questões não respondidas
         for q_num in sorted([n for n in range(1, len(ALL_QUESTIONS) + 1) if n not in student_q_data]):
             q_title = ALL_QUESTIONS[q_num - 1]['pergunta'][:60] + '...'
-            st.markdown(f"""
-            <div style='background: var(--secondary-background-color); border: 1px dashed rgba(148, 163, 184, 0.3);
-                        border-radius: 14px; padding: 0.75rem 1.25rem; margin-bottom: 0.5rem; opacity: 0.6;'>
-                <div style='display: flex; justify-content: space-between; align-items: center;'>
-                    <div style='display: flex; align-items: center; gap: 0.6rem;'>
-                        <span style='background: #94a3b8; color: white; font-weight: 700; font-size: 0.9rem;
-                                     padding: 4px 10px; border-radius: 8px;'>Q{q_num}</span>
-                        <span style='font-size: 0.85rem; color: #94a3b8; font-weight: 500;'>{q_title}</span>
-                    </div>
-                    <span style='color: #94a3b8; font-size: 0.8rem; font-style: italic;'>{icon('pending', '#94a3b8', 14)} Não respondida</span>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+            na_card = f"<div style='background:var(--secondary-background-color);border:1px dashed rgba(148,163,184,0.3);border-radius:14px;padding:0.75rem 1.25rem;margin-bottom:0.5rem;opacity:0.6;'>"
+            na_card += f"<div style='display:flex;justify-content:space-between;align-items:center;'>"
+            na_card += f"<div style='display:flex;align-items:center;gap:0.6rem;'>"
+            na_card += f"<span style='background:#94a3b8;color:white;font-weight:700;font-size:0.9rem;padding:4px 10px;border-radius:8px;'>Q{q_num}</span>"
+            na_card += f"<span style='font-size:0.85rem;color:#94a3b8;font-weight:500;'>{q_title}</span>"
+            na_card += "</div>"
+            na_card += f"<span style='color:#94a3b8;font-size:0.8rem;font-style:italic;'>{icon('pending', '#94a3b8', 14)} Não respondida</span>"
+            na_card += "</div></div>"
+            st.markdown(na_card, unsafe_allow_html=True)
     else:
         st.info("O aluno ainda não respondeu nenhuma questão.")
     
@@ -1717,7 +1656,7 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
     
     if case_analytics:
         # Filtros para histórico
-        col1, col2, col3 = st.columns(3)
+        col1, col2 = st.columns(2)
         
         with col1:
             filter_status_hist = st.selectbox(
@@ -1727,20 +1666,13 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
             )
         
         with col2:
-            # Pega componentes únicos
-            all_comps = list(set([c['nome'] for c in advanced_stats['componentes']]))
-            filter_comp_hist = st.selectbox(
-                "Componente",
-                ["Todos"] + sorted(all_comps),
-                key="hist_comp"
+            q_labels = [f"Q{i+1}" for i in range(len(ALL_QUESTIONS))]
+            filter_q_hist = st.selectbox(
+                "Questão",
+                ["Todas"] + q_labels,
+                key="hist_q"
             )
-        
-        with col3:
-            filter_difficulty = st.selectbox(
-                "Dificuldade",
-                ["Todos", "básico", "intermediário", "avançado"],
-                key="hist_diff"
-            )
+
         
         
         # Prepara histórico com detalhes completos
@@ -1755,8 +1687,8 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
             is_partial = 'PARCIAL' in classification
             
             # Dados de filtro
-            comps = q_info.get('componentes_conhecimento', [])
-            diff = q_info.get('dificuldade', 'desconhecido')
+            q_idx_hist = next((i for i, q in enumerate(ALL_QUESTIONS) if q['id'] == cid), None)
+            q_num_hist = q_idx_hist + 1 if q_idx_hist is not None else 0
             
             # Aplica filtros
             if filter_status_hist == "Corretas" and (not is_correct or is_partial):
@@ -1766,11 +1698,9 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
             if filter_status_hist == "Parciais" and not is_partial:
                 continue
             
-            if filter_comp_hist != "Todos" and filter_comp_hist not in comps:
+            if filter_q_hist != "Todas" and f"Q{q_num_hist}" != filter_q_hist:
                 continue
-            
-            if filter_difficulty != "Todos" and diff != filter_difficulty:
-                continue
+
             
             timestamp_ts = entry.get('timestamp')
             if isinstance(timestamp_ts, str):
@@ -1793,8 +1723,7 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
                 'is_correct': is_correct,
                 'is_partial': is_partial,
                 'classification': classification,
-                'comps': comps,
-                'diff': diff
+                'q_num': q_num_hist
             })
         
         
