@@ -306,13 +306,6 @@ def main():
     col_space1, col_center, col_space2 = st.columns([1, 4, 1])
     
     with col_center:
-        st.markdown(f"## <span class='material-icons-outlined'>help_outline</span> {case['pergunta']}", unsafe_allow_html=True)
-        
-        # Tags de conhecimento
-        tags = " ".join([f"<span style='background-color:#e0e7ff; color:#3730a3; padding:4px 8px; border-radius:12px; font-size:0.8em; margin-right:5px'>{tag}</span>" for tag in case.get("componentes_conhecimento", [])])
-        st.markdown(tags, unsafe_allow_html=True)
-        st.markdown("")
-        
         # --- STUDENT PROGRESS HEADER ---
         total_q = len(QUESTIONS)
         answered_q = min(len(st.session_state.used_cases), total_q)
@@ -336,7 +329,15 @@ def main():
         chat_container = st.container(height=480)
         with chat_container:
             if not st.session_state.chat:
-                st.info("Olá! Sou seu tutor Helix.AI. Leia a questão acima e escreva sua resposta ou dúvida para começarmos.")
+                tags_text = ", ".join(case.get("componentes_conhecimento", []))
+                intro_text = f"""Olá! Sou seu tutor Helix.AI. Hoje vamos resolver a seguinte questão:
+
+**{case['pergunta']}**
+
+_Tópicos relacionados:_ `{tags_text}`
+
+Como você explicaria ou por onde gostaria de começar a responder a essa pergunta?"""
+                st.session_state.chat.append({"role": "assistant", "content": intro_text})
             for msg in st.session_state.chat:
                 with st.chat_message(msg["role"]):
                     st.markdown(msg["content"])
