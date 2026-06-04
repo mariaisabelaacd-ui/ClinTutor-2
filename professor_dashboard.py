@@ -1691,6 +1691,9 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
                  except:
                      timestamp = datetime.now()
             
+            comps = q_info.get('componentes_conhecimento', ['Geral'])
+            diff = 'N/A'
+            
             filtered_entries.append({
                 'entry': entry,
                 'q_info': q_info,
@@ -1699,7 +1702,9 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
                 'is_correct': is_correct,
                 'is_partial': is_partial,
                 'classification': classification,
-                'q_num': q_num_hist
+                'q_num': q_num_hist,
+                'comps': comps,
+                'diff': diff
             })
         
         
@@ -1846,7 +1851,8 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
                     'Status': status_txt,
                     'Tempo': format_duration(item['entry'].get('duration_seconds', 0)),
                     'Pontos': item['result'].get('points_gained', 0),
-                    'Resposta_Aluno': item['result'].get('user_answer', 'N/A')
+                    'Resposta do Aluno': item['result'].get('user_answer', 'N/A'),
+                    'Feedback da IA': item['result'].get('feedback', 'N/A')
                 })
             
             df_history = pd.DataFrame(history_summary)

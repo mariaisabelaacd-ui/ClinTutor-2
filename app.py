@@ -19,7 +19,7 @@ from auth_firebase import (
 from analytics import (
     start_case_timer, end_case_timer, log_chat_interaction, 
     get_user_detailed_stats, calculate_accuracy_rate,
-    save_student_progress, load_student_progress
+    save_student_progress, load_student_progress, flush_chat_buffer
 )
 from admin_dashboard import show_admin_dashboard
 from professor_dashboard import show_advanced_professor_dashboard
@@ -374,6 +374,10 @@ Como você explicaria ou por onde gostaria de começar a responder a essa pergun
                                     st.balloons()
                                 persist_now()
                                 try:
+                                    flush_chat_buffer(user['id'], case['id'])
+                                except Exception as e:
+                                    print(f"Erro ao salvar chat log: {e}")
+                                try:
                                     end_case_timer(st.session_state.current_timer_id, result)
                                     st.session_state.current_timer_id = None
                                 except:
@@ -404,6 +408,10 @@ Como você explicaria ou por onde gostaria de começar a responder a essa pergun
                                         st.session_state.unlocked_level = nl
                                         st.balloons()
                                     persist_now()
+                                    try:
+                                        flush_chat_buffer(user['id'], case['id'])
+                                    except Exception as e:
+                                        print(f"Erro ao salvar chat log: {e}")
                                     try:
                                         end_case_timer(st.session_state.current_timer_id, result)
                                         st.session_state.current_timer_id = None
