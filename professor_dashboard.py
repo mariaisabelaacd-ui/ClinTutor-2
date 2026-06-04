@@ -25,6 +25,166 @@ from admin_utils import (
 from ui_helpers import icon, metric_card
 
 
+def inject_dashboard_styles():
+    """Injeta estilos CSS customizados para uma visualização premium e moderna"""
+    style_html = """
+    <style>
+        /* Tipografia e Títulos */
+        .dash-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        
+        .dash-subtitle {
+            color: #64748b !important;
+            font-size: 0.9rem !important;
+            margin-bottom: 1.5rem !important;
+        }
+
+        /* Glassmorphism Metric Cards */
+        .premium-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(128, 128, 128, 0.15) !important;
+            border-radius: 16px !important;
+            padding: 1.25rem !important;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.04) !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+        
+        .premium-card:hover {
+            transform: translateY(-4px) !important;
+            border-color: #10b981 !important;
+            box-shadow: 0 12px 40px 0 rgba(16, 185, 129, 0.12) !important;
+        }
+        
+        .premium-card-label {
+            color: #94a3b8 !important;
+            font-size: 0.75rem !important;
+            font-weight: 600 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.05em !important;
+            margin-bottom: 0.5rem !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 0.5rem !important;
+        }
+        
+        .premium-card-value {
+            font-size: 2rem !important;
+            font-weight: 700 !important;
+            line-height: 1.1 !important;
+        }
+
+        /* Question Cards (Q1-Q6) */
+        .q-card-green {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0.02) 100%) !important;
+            border: 1px solid rgba(16, 185, 129, 0.2) !important;
+        }
+        .q-card-yellow {
+            background: linear-gradient(135deg, rgba(234, 179, 8, 0.08) 0%, rgba(234, 179, 8, 0.02) 100%) !important;
+            border: 1px solid rgba(234, 179, 8, 0.2) !important;
+        }
+        .q-card-red {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(239, 68, 68, 0.02) 100%) !important;
+            border: 1px solid rgba(239, 68, 68, 0.2) !important;
+        }
+        
+        .q-card {
+            border-radius: 16px !important;
+            padding: 1.5rem !important;
+            box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.03) !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            margin-bottom: 1rem !important;
+        }
+        
+        .q-card:hover {
+            transform: translateY(-4px) !important;
+            box-shadow: 0 16px 32px 0 rgba(0, 0, 0, 0.08) !important;
+        }
+
+        /* Progress Bar */
+        .q-progress-bg {
+            background: rgba(148, 163, 184, 0.15) !important;
+            border-radius: 8px !important;
+            height: 24px !important;
+            overflow: hidden !important;
+            margin-bottom: 0.75rem !important;
+            border: 1px solid rgba(128, 128, 128, 0.05) !important;
+        }
+        
+        .q-progress-bar {
+            height: 100% !important;
+            border-radius: 8px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-end !important;
+            padding-right: 10px !important;
+            transition: width 0.8s ease-in-out !important;
+        }
+
+        /* Timeline and Student Profiles */
+        .student-profile-banner {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.04) 0%, rgba(59, 130, 246, 0.04) 100%) !important;
+            border: 1px solid rgba(128, 128, 128, 0.15) !important;
+            border-radius: 16px !important;
+            padding: 1.5rem !important;
+            margin-bottom: 2rem !important;
+            box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.02) !important;
+        }
+
+        .chat-bubble-container {
+            background: rgba(148, 163, 184, 0.03) !important;
+            border: 1px solid rgba(128, 128, 128, 0.12) !important;
+            border-radius: 12px !important;
+            padding: 0.85rem !important;
+            margin-bottom: 0.75rem !important;
+            box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.01) !important;
+            transition: all 0.2s ease !important;
+        }
+        
+        .chat-bubble-container:hover {
+            border-color: rgba(139, 92, 246, 0.25) !important;
+            background: rgba(139, 92, 246, 0.02) !important;
+        }
+
+        /* Danger Zone Block */
+        .danger-zone-container {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.06) 0%, rgba(239, 68, 68, 0.02) 100%) !important;
+            border: 1px solid rgba(239, 68, 68, 0.2) !important;
+            border-radius: 16px !important;
+            padding: 1.5rem !important;
+            margin-bottom: 2rem !important;
+            box-shadow: 0 8px 32px 0 rgba(239, 68, 68, 0.04) !important;
+        }
+    </style>
+    """
+    st.markdown(style_html, unsafe_allow_html=True)
+
+
+def draw_premium_metric_card(label: str, value: str, icon_name: str, icon_color: str, subtitle: str = None):
+    icon_html = icon(icon_name, icon_color, 20) if icon_name else ""
+    subtitle_html = f"<div style='color: #64748b; font-size: 0.8rem; margin-top: 0.25rem;'>{subtitle}</div>" if subtitle else ""
+    card_html = f"""
+        <div class="premium-card">
+            <div class="premium-card-label">
+                {icon_html} <span>{label}</span>
+            </div>
+            <div class="premium-card-value" style="color: {icon_color};">
+                {value}
+            </div>
+            {subtitle_html}
+        </div>
+    """
+    st.markdown(card_html, unsafe_allow_html=True)
+
+
 def generate_student_pdf(student: Dict, basic_stats: Dict, advanced_stats: Dict, 
                          weakness: Dict, history_entries: list) -> bytes:
     """Gera um PDF com o resumo completo do aluno"""
@@ -810,20 +970,21 @@ def show_advanced_professor_dashboard():
     """Dashboard redesenhado para professores com foco em insights acionáveis"""
     # Garante carregamento dos ícones
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
+    inject_dashboard_styles()
     
     col_left, col_center, col_right = st.columns([0.6, 5, 0.6])
     
     with col_center:
         col_t, col_b = st.columns([3, 1])
         with col_t:
-            st.markdown(f"# {icon('dashboard', '#10b981', 32)} Dashboard do Professor", unsafe_allow_html=True)
+            st.markdown(f"<div class='dash-title'>{icon('dashboard', '#10b981', 32)} Dashboard do Professor</div>", unsafe_allow_html=True)
         with col_b:
-            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
             if st.button("Atualizar Dados", icon=":material/refresh:", help="Limpar cache e buscar dados em tempo real", use_container_width=True):
                 st.cache_data.clear()
                 st.rerun()
         
-        st.markdown(f"<div style='color: #64748b; font-size: 0.85rem; margin-top: -1rem; margin-bottom: 1rem;'>{icon('info', '#64748b', 16)} Os dados do painel são mantidos em cache por 5 minutos para alta velocidade. Use o botão acima se precisar dos últimos dados exatos.</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='dash-subtitle'>{icon('info', '#64748b', 16)} Os dados do painel são mantidos em cache por 5 minutos para alta velocidade. Use o botão acima se precisar dos últimos dados exatos.</div>", unsafe_allow_html=True)
         st.markdown("---")
         
         try:
@@ -899,20 +1060,20 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
     col1, col2, col3, col4, col5 = st.columns(5)
     
     with col1:
-        st.markdown(metric_card(
+        draw_premium_metric_card(
             "Total de Alunos",
             str(len(student_users)),
             icon_name="people",
             icon_color="#3b82f6"
-        ), unsafe_allow_html=True)
+        )
     
     with col2:
-        st.markdown(metric_card(
+        draw_premium_metric_card(
             "Média Geral",
             f"{global_stats.get('average_accuracy_rate', 0):.1f}%",
             icon_name="track_changes",
             icon_color="#10b981"
-        ), unsafe_allow_html=True)
+        )
     
     with col3:
         # Questão com maior dificuldade - Novo foco em Questões 1-6
@@ -920,30 +1081,23 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
             hardest_q = hardest_questions[0]['questao_num']
             hardest_acc = hardest_questions[0]['taxa_acerto']
             st.markdown(f"""
-                <div style='background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%); 
-                            padding: 1rem; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.3);'>
-                    <div style='color: #475569; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem;'>
-                        {icon('warning', '#ef4444', 18)} Questão Mais Difícil
+                <div class="premium-card" style="border-color: rgba(239, 68, 68, 0.2) !important;">
+                    <div class="premium-card-label" style="color: #ef4444 !important;">
+                        {icon('warning', '#ef4444', 20)} Questão Mais Difícil
                     </div>
-                    <div style='color: #ef4444; font-size: 1.5rem; font-weight: 600; margin-bottom: 0.25rem; 
-                                 word-wrap: break-word; line-height: 1.2;'>
+                    <div class="premium-card-value" style="color: #ef4444;">
                         Questão {hardest_q}
                     </div>
-                    <div style='color: #ef4444; font-size: 0.875rem;'>
-                        Taxa: {hardest_acc:.1f}%
-                    </div>
+                    <div style='color: #64748b; font-size: 0.8rem; margin-top: 0.25rem;'>Taxa: {hardest_acc:.1f}%</div>
                 </div>
             """, unsafe_allow_html=True)
         else:
-            st.metric("Questão Mais Difícil", "N/A", help="Questão com menor taxa de acerto geral")
-    
+            draw_premium_metric_card("Questão Mais Difícil", "N/A", "warning", "#ef4444", "Sem dados")
     
     with col4:
         # Nível médio - Custom display para consistência visual
         nivel_map = {1: "Básico", 2: "Intermediário", 3: "Avançado"}
         nivel_medio = nivel_map.get(level_stats.get('nivel_medio', 1), "Básico")
-        
-        # Cores por nível
         nivel_colors = {
             "Básico": "#3b82f6",
             "Intermediário": "#eab308", 
@@ -952,24 +1106,24 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
         color = nivel_colors.get(nivel_medio, "#3b82f6")
         
         st.markdown(f"""
-            <div style='background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(5, 150, 105, 0.05) 100%); 
-                        padding: 1rem; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.2);'>
-                <div style='color: #475569; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem;'>
-                    {icon('bar_chart', '#475569', 18)} Nível Médio
+            <div class="premium-card" style="border-color: rgba(16, 185, 129, 0.2) !important;">
+                <div class="premium-card-label" style="color: {color} !important;">
+                    {icon('bar_chart', color, 20)} Nível Médio
                 </div>
-                <div style='color: {color}; font-size: 1.875rem; font-weight: 600;'>
+                <div class="premium-card-value" style="color: {color};">
                     {nivel_medio}
                 </div>
+                <div style='color: #64748b; font-size: 0.8rem; margin-top: 0.25rem;'>Desempenho Geral</div>
             </div>
         """, unsafe_allow_html=True)
     
     with col5:
-        st.markdown(metric_card(
+        draw_premium_metric_card(
             "Questões Respondidas",
             str(global_stats.get('total_cases', 0)),
             icon_name="quiz",
             icon_color="#8b5cf6"
-        ), unsafe_allow_html=True)
+        )
     
     st.markdown("---")
     
@@ -1184,42 +1338,57 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
                     
                     # Cores por taxa de acerto
                     if taxa >= 70:
-                        sc, sbg, sbd = '#22c55e', 'rgba(34,197,94,0.08)', 'rgba(34,197,94,0.3)'
-                        sl, si = 'Bom', 'check_circle'
+                        q_class = "q-card-green"
+                        sc = "#10b981"
+                        sl, si = "Bom", "check_circle"
                     elif taxa >= 40:
-                        sc, sbg, sbd = '#eab308', 'rgba(234,179,8,0.08)', 'rgba(234,179,8,0.3)'
-                        sl, si = 'Atenção', 'warning'
+                        q_class = "q-card-yellow"
+                        sc = "#eab308"
+                        sl, si = "Atenção", "warning"
                     else:
-                        sc, sbg, sbd = '#ef4444', 'rgba(239,68,68,0.08)', 'rgba(239,68,68,0.3)'
-                        sl, si = 'Crítico', 'error'
+                        q_class = "q-card-red"
+                        sc = "#ef4444"
+                        sl, si = "Crítico", "error"
                     
                     bw = max(taxa, 3)
                     
                     # Full question text
                     full_q_text = ALL_QUESTIONS_OV[q['questao_num'] - 1]['pergunta'] if q['questao_num'] <= len(ALL_QUESTIONS_OV) else titulo
                     
-                    card_html = f"<div style='background:{sbg};border:1px solid {sbd};border-radius:16px;padding:1.25rem;margin-bottom:0.5rem;'>"
-                    # Header row
-                    card_html += f"<div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.75rem;'>"
-                    card_html += f"<div style='display:flex;align-items:center;gap:0.75rem;'>"
-                    card_html += f"<div style='background:{sc};color:white;font-weight:700;font-size:1.1rem;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px {sc}40;'>Q{q['questao_num']}</div>"
-                    card_html += f"<div style='font-weight:600;font-size:0.85rem;color:var(--text-color);line-height:1.3;max-width:280px;'>{titulo}</div>"
-                    card_html += "</div>"
-                    card_html += f"<div style='display:flex;align-items:center;gap:4px;background:{sc}18;padding:2px 10px;border-radius:20px;font-size:0.75rem;font-weight:600;color:{sc};'>{icon(si, sc, 14)} {sl}</div>"
-                    card_html += "</div>"
-                    # Progress bar
-                    card_html += f"<div style='background:rgba(148,163,184,0.15);border-radius:8px;height:28px;overflow:hidden;margin-bottom:0.75rem;'>"
-                    card_html += f"<div style='background:linear-gradient(90deg,{sc}cc,{sc});height:100%;width:{bw}%;border-radius:8px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;'>"
-                    card_html += f"<span style='color:white;font-weight:700;font-size:0.85rem;text-shadow:0 1px 2px rgba(0,0,0,0.3);'>{taxa:.1f}%</span>"
-                    card_html += "</div></div>"
-                    # Bottom metrics
-                    card_html += "<div style='display:flex;justify-content:space-around;gap:0.5rem;'>"
-                    card_html += f"<div style='text-align:center;flex:1;'><div style='font-size:0.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;'>{icon('people','#64748b',13)} Respostas</div><div style='font-size:1.1rem;font-weight:600;color:var(--text-color);'>{total}</div></div>"
-                    card_html += "<div style='width:1px;background:rgba(148,163,184,0.2);'></div>"
-                    card_html += f"<div style='text-align:center;flex:1;'><div style='font-size:0.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;'>{icon('schedule','#64748b',13)} Tempo Médio</div><div style='font-size:1.1rem;font-weight:600;color:var(--text-color);'>{tempo}</div></div>"
-                    card_html += "<div style='width:1px;background:rgba(148,163,184,0.2);'></div>"
-                    card_html += f"<div style='text-align:center;flex:1;'><div style='font-size:0.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;'>{icon('track_changes',sc,13)} Acerto</div><div style='font-size:1.1rem;font-weight:700;color:{sc};'>{taxa:.1f}%</div></div>"
-                    card_html += "</div></div>"
+                    card_html = f"""
+                    <div class="q-card {q_class}">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div style="background: {sc}; color: white; font-weight: 700; font-size: 1.1rem; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px {sc}40;">Q{q['questao_num']}</div>
+                                <div style="font-weight: 600; font-size: 0.9rem; color: var(--text-color); line-height: 1.3; max-width: 280px;">{titulo}</div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 4px; background: {sc}18; padding: 2px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; color: {sc};">
+                                {icon(si, sc, 14)} {sl}
+                            </div>
+                        </div>
+                        <div class="q-progress-bg">
+                            <div class="q-progress-bar" style="background: linear-gradient(90deg, {sc}88, {sc}); width: {bw}%;">
+                                <span style="color: white; font-weight: 700; font-size: 0.85rem; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">{taxa:.1f}%</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: space-around; gap: 0.5rem; margin-top: 0.75rem;">
+                            <div style="text-align: center; flex: 1;">
+                                <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">{icon('people', '#64748b', 13)} Respostas</div>
+                                <div style="font-size: 1.1rem; font-weight: 600; color: var(--text-color);">{total}</div>
+                            </div>
+                            <div style="width: 1px; background: rgba(148, 163, 184, 0.2);"></div>
+                            <div style="text-align: center; flex: 1;">
+                                <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">{icon('schedule', '#64748b', 13)} Tempo Médio</div>
+                                <div style="font-size: 1.1rem; font-weight: 600; color: var(--text-color);">{tempo}</div>
+                            </div>
+                            <div style="width: 1px; background: rgba(148, 163, 184, 0.2);"></div>
+                            <div style="text-align: center; flex: 1;">
+                                <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">{icon('track_changes', sc, 13)} Acerto</div>
+                                <div style="font-size: 1.1rem; font-weight: 700; color: {sc};">{taxa:.1f}%</div>
+                            </div>
+                        </div>
+                    </div>
+                    """
                     
                     st.markdown(card_html, unsafe_allow_html=True)
                     with st.expander("Ler questão completa", expanded=False):
@@ -1377,14 +1546,13 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
     ra_display = selected_student.get('ra', 'N/A')
     
     st.markdown(f"""
-    <div style='background: var(--secondary-background-color); padding: 1.25rem; border-radius: 12px; 
-                border: 1px solid rgba(16, 185, 129, 0.2); margin-bottom: 1.5rem;'>
-        <div style='display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;'>
+    <div class="student-profile-banner">
+        <div style='display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;'>
             <div style='flex: 1; min-width: 200px;'>
                 <div style='font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;'>
                     {icon('person', '#3b82f6', 16)} Nome
                 </div>
-                <div style='font-size: 1.25rem; font-weight: 600; color: var(--text-color);'>
+                <div style='font-size: 1.3rem; font-weight: 700; color: var(--text-color); margin-top: 0.25rem;'>
                     {selected_student['name']}
                 </div>
             </div>
@@ -1392,7 +1560,7 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
                 <div style='font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;'>
                     {icon('badge', '#8b5cf6', 16)} RA
                 </div>
-                <div style='font-size: 1.1rem; font-weight: 500; color: var(--text-color);'>
+                <div style='font-size: 1.15rem; font-weight: 600; color: var(--text-color); margin-top: 0.25rem;'>
                     {ra_display}
                 </div>
             </div>
@@ -1400,7 +1568,7 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
                 <div style='font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;'>
                     {icon('school', '#10b981', 16)} Turma
                 </div>
-                <div style='font-size: 1.1rem; font-weight: 500; color: var(--text-color);'>
+                <div style='font-size: 1.15rem; font-weight: 600; color: var(--text-color); margin-top: 0.25rem;'>
                     {turma_display}
                 </div>
             </div>
@@ -1408,7 +1576,7 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
                 <div style='font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;'>
                     {icon('email', '#64748b', 16)} Email
                 </div>
-                <div style='font-size: 0.9rem; font-weight: 400; color: var(--text-color); opacity: 0.8;'>
+                <div style='font-size: 0.95rem; font-weight: 500; color: var(--text-color); opacity: 0.85; margin-top: 0.25rem;'>
                     {selected_student['email']}
                 </div>
             </div>
@@ -1422,54 +1590,46 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
     col1, col2, col3, col4, col5 = st.columns(5)
     
     with col1:
-        st.markdown(metric_card(
+        draw_premium_metric_card(
             "Questões Respondidas",
             str(basic_stats['case_stats']['total_cases']),
             icon_name="assignment",
             icon_color="#8b5cf6"
-        ), unsafe_allow_html=True)
+        )
     
     with col2:
         acc = basic_stats['case_stats']['accuracy_rate']
-        st.markdown(metric_card(
+        draw_premium_metric_card(
             "Taxa de Acertos",
             f"{acc:.1f}%",
             icon_name="track_changes",
             icon_color="#10b981"
-        ), unsafe_allow_html=True)
+        )
     
     with col3:
-        st.markdown(metric_card(
+        draw_premium_metric_card(
             "Tempo Médio",
             basic_stats['case_stats']['average_time_formatted'],
             icon_name="schedule",
             icon_color="#3b82f6"
-        ), unsafe_allow_html=True)
+        )
     
     with col4:
-        st.markdown(metric_card(
+        draw_premium_metric_card(
             "Interações Chat",
             str(basic_stats['total_chat_interactions']),
             icon_name="chat",
             icon_color="#ec4899"
-        ), unsafe_allow_html=True)
+        )
     
     with col5:
-        # Comparação com turma
-        perf_icons = {
-            'acima': icon('trending_up', '#10b981', 20),
-            'abaixo': icon('trending_down', '#ef4444', 20),
-            'na_media': icon('trending_flat', '#64748b', 20)
-        }
-        perf_icon = perf_icons.get(comparison['performance'], perf_icons['na_media'])
-        
-        st.markdown(metric_card(
+        draw_premium_metric_card(
             "vs Turma",
             f"{comparison['performance'].replace('_', ' ').title()}",
-            subtitle=f"{comparison['diferenca']:.1f}%",
             icon_name="compare_arrows",
-            icon_color="#6366f1"
-        ), unsafe_allow_html=True)
+            icon_color="#6366f1",
+            subtitle=f"{comparison['diferenca']:.1f}%"
+        )
     
     st.markdown("---")
     
@@ -1804,7 +1964,7 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
                                 bot_msg = interaction.get('bot_response', '')
                                 
                                 st.markdown(f"""
-<div style='background: var(--background-color); padding: 0.75rem; border-radius: 8px; margin-bottom: 0.5rem; border: 1px solid rgba(128, 128, 128, 0.15);'>
+<div class="chat-bubble-container">
     <div style='color: #8b5cf6; font-size: 0.75rem; margin-bottom: 0.25rem; font-weight: 600;'>
         {icon('schedule', '#8b5cf6', 14)} {chat_time}
     </div>
@@ -1911,11 +2071,11 @@ def show_admin_tab(student_users: List[Dict]):
     st.markdown(f"## {icon('admin_panel_settings', '#eab308', 28)} Painel de Administração", unsafe_allow_html=True)
     
     st.markdown(f"""
-        <div style="background-color: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem;">
-            <div style="color: #ef4444; font-weight: 600; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-                {icon('warning', '#ef4444', 22)} Zona de Perigo (Ações Destrutivas)
+        <div class="danger-zone-container">
+            <div style="color: #ef4444; font-weight: 700; font-size: 1.25rem; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                {icon('warning', '#ef4444', 24)} Zona de Perigo (Ações Destrutivas)
             </div>
-            <div style="color: var(--text-color); opacity: 0.8; font-size: 0.9rem;">
+            <div style="color: var(--text-color); opacity: 0.85; font-size: 0.95rem; line-height: 1.4;">
                 Esta área contém operações que podem deletar dados permanentemente! Tenha cuidado extra antes de prosseguir.
             </div>
         </div>
