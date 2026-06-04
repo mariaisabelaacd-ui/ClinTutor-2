@@ -152,7 +152,7 @@ def render_top_navbar():
                     st.session_state.professor_page = "Dashboard"
                     st.rerun()
         elif user["user_type"] == "aluno":
-            st.markdown("<div style='height:100%; display:flex; align-items:center; font-weight:600; color:#10b981; margin-top:5px;'>🎓 Casos Clínicos</div>", unsafe_allow_html=True)
+            st.markdown("<div style='height:100%; display:flex; align-items:center; font-weight:600; color:#10b981; margin-top:5px;'>🎓 Questões</div>", unsafe_allow_html=True)
         elif user["user_type"] == "admin":
             st.markdown("<div style='height:100%; display:flex; align-items:center; font-weight:600; color:#10b981; margin-top:5px;'>⚙️ Painel Admin</div>", unsafe_allow_html=True)
             
@@ -210,7 +210,7 @@ def init_state():
         "score": 0, "streak": 0, "unlocked_level": 1,
         "current_case_id": None, "case_scored": False, "last_result": None,
         "chat": [], "show_next_case_btn": False, "used_cases": [],
-        "current_timer_id": None, "case_counter": 0
+        "current_timer_id": None, "case_counter": 0, "current_evaluation": None
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -262,6 +262,7 @@ def start_new_case():
     st.session_state.last_result = None
     st.session_state.chat = []
     st.session_state.show_next_case_btn = False
+    st.session_state.current_evaluation = None
     st.rerun()
 
 def main():
@@ -297,11 +298,21 @@ def main():
              show_advanced_professor_dashboard()
              return
     
+    # --- MAIN CONTENT ---
+    if st.session_state.current_case_id is None: start_new_case()
+    case = get_case(st.session_state.current_case_id)
+    
+    st.markdown(f"## <span class='material-icons-outlined'>help_outline</span> {case['pergunta']}", unsafe_allow_html=True)
+    
+    # Tags de conhecimento
+    tags = " ".join([f"<span style='background-color:#e0e7ff; color:#3730a3; padding:4px 8px; border-radius:12px; font-size:0.8em; margin-right:5px'>{tag}</span>" for tag in case.get("componentes_conhecimento", [])])
+    st.markdown(tags, unsafe_allow_html=True)
+    st.markdown("")
+    
     # --- STUDENT PROGRESS HEADER ---
     total_q = len(QUESTIONS)
     answered_q = min(len(st.session_state.used_cases), total_q)
     
-    # Progress metrics shown nicely below navbar
     prog_col1, prog_col2, prog_col3 = st.columns([3, 1, 1])
     with prog_col1:
         st.markdown(f"**Progresso das Questões:** {answered_q} de {total_q}")
@@ -315,145 +326,138 @@ def main():
             
     st.markdown("<hr style='margin-top: 0.5rem; margin-bottom: 1.5rem; border: 0; border-top: 1px solid rgba(128,128,128,0.15);'>", unsafe_allow_html=True)
 
+    # --- UNIFIED CHAT INTERFACE ---
+    st.markdown("### 💬 Conversa com o Tutor")
     
-
-
-    # --- MAIN CONTENT ---
-    if st.session_state.current_case_id is None: start_new_case()
-    case = get_case(st.session_state.current_case_id)
-    
-    st.markdown(f"## <span class='material-icons-outlined'>help_outline</span> {case['pergunta']}", unsafe_allow_html=True)
-    
-    # Tags de conhecimento
-    tags = " ".join([f"<span style='background-color:#e0e7ff; color:#3730a3; padding:4px 8px; border-radius:12px; font-size:0.8em; margin-right:5px'>{tag}</span>" for tag in case.get("componentes_conhecimento", [])])
-    st.markdown(tags, unsafe_allow_html=True)
-    st.markdown("")
-    
-    main_col, chat_col = st.columns([1.8, 1])
-    
-    with main_col:
-        with st.container(border=True):
-            st.markdown("### Sua Resposta")
-            text_key = f"ans_input_{st.session_state.get('case_counter', 0)}"
-            user_answer = st.text_area("Escreva sua explicação detalhada:", height=150, key=text_key, disabled=st.session_state.case_scored)
-            
-            if st.button("Enviar Resposta", type="primary", disabled=not user_answer or st.session_state.case_scored):
-                with st.spinner("IA Analisando sua resposta..."):
-                    # 1. Avaliação AI
-                    ai_eval = evaluate_answer_with_ai(case, user_answer)
-                    
-                    # 2. Finalização
-                    result = finalize_question_response(case, user_answer, ai_eval)
-                    
-                    # 3. Atualizar Estado
+    chat_container = st.container(height=450)
+    with chat_container:
+        if not st.session_state.chat:
+            st.info("Olá! Sou seu tutor Helix.AI. Leia a questão acima e escreva sua resposta ou dúvida para começarmos.")
+        for msg in st.session_state.chat:
+            with st.chat_message(msg["role"]):
+                st.markdown(msg["content"])
+                
+    # Exibir a avaliação atual e o botão para avançar
+    eval_data = st.session_state.get("current_evaluation")
+    if eval_data:
+        level = eval_data.get("level", "Incorreto")
+        points = float(eval_data.get("points", 0))
+        feedback = eval_data.get("feedback", "")
+        classification = eval_data.get("classification", "INCORRETO")
+        
+        # Só libera para avançar se não for INCORRETO (ou seja, se for PARCIAL, BÁSICO, MÉDIO ou AVANÇADO)
+        if classification != "INCORRETO":
+            st.markdown("---")
+            if level == "Avançado":
+                st.success(f"🎉 **Excelente! Você atingiu o nível máximo (Avançado)!** (Pontuação: **3.0 / 3.0**)")
+                st.markdown(f"💡 **Feedback do Tutor:** {feedback}")
+                
+                # Para fins de finalização, o user_answer é a junção das mensagens do aluno
+                student_messages = [msg["content"] for msg in st.session_state.chat if msg["role"] == "user"]
+                combined_ans = "\n".join(student_messages)
+                
+                if st.button("Concluir Questão e Avançar (+3.0 pts) 🚀", type="primary", use_container_width=True):
+                    result = finalize_question_response(case, combined_ans, eval_data)
                     st.session_state.score += result["points_gained"]
-                    if result["is_correct"]: st.session_state.streak += 1
-                    else: st.session_state.streak = 0
-                    
+                    st.session_state.streak += 1
                     nl = level_from_score(st.session_state.score)
-                    if nl > st.session_state.unlocked_level: st.session_state.unlocked_level = nl; st.balloons()
-                    
+                    if nl > st.session_state.unlocked_level: 
+                        st.session_state.unlocked_level = nl
+                        st.balloons()
                     persist_now()
-                    st.session_state.case_scored = True
-                    st.session_state.last_result = result
-                    st.session_state.show_next_case_btn = True
                     
-                    try: end_case_timer(st.session_state.current_timer_id, result); st.session_state.current_timer_id = None
-                    except: pass
-                    st.rerun()
-            
-            if st.session_state.last_result:
-                res = st.session_state.last_result
-                st.markdown("---")
-                
-                level = res.get("level", "Incorreto")
-                points = res.get("points_gained", 0)
-                
-                if level == "Avançado":
-                    st.success(f"**Nível: Avançado! (Pontuação: {points:.1f}/3.0)**")
-                elif level == "Médio":
-                    st.info(f"**Nível: Médio! (Pontuação: {points:.1f}/3.0)**")
-                elif level == "Básico":
-                    st.warning(f"**Nível: Básico! (Pontuação: {points:.1f}/3.0)**")
-                elif level == "Parcial":
-                    st.warning(f"**Nível: Parcial (Pontuação: {points:.1f}/3.0)**")
-                else:
-                    st.error(f"**Nível: Incorreto (Pontuação: {points:.1f}/3.0)**")
-                
-                st.markdown(f"**Feedback da IA:** {res['feedback']}")
-                
-                with st.expander("Ver Gabarito Esperado"):
-                    referencias = case.get('referencia', {})
-                    if referencias:
-                        for n, txt in referencias.items():
-                            st.markdown(f"**{n}**: {txt}")
-                    else:
-                        st.info(case.get('resposta_esperada', 'Gabarito não disponível.'))
-                
-                if st.button("Próxima Questão", type="primary"):
+                    try: 
+                        end_case_timer(st.session_state.current_timer_id, result)
+                        st.session_state.current_timer_id = None
+                    except: 
+                        pass
+                        
                     start_new_case()
-
-    with chat_col:
-        with st.container(border=True):
-            st.markdown("#### <span class='material-icons-outlined'>psychology</span> Tutor IA", unsafe_allow_html=True)
-            h_cont = st.container(height=400)
-            with h_cont:
-                if not st.session_state.chat:
-                    st.info("Dúvidas sobre a questão? Pergunte ao Tutor!")
-                for msg in st.session_state.chat:
-                    with st.chat_message(msg["role"]): st.markdown(msg["content"])
+            else:
+                color_func = st.info if level == "Médio" else st.warning
+                color_func(f"🌟 **Desempenho Atual: {level}** (Pontuação estimada: **{points:.1f} / 3.0** pts)")
+                st.markdown(f"💡 **Feedback do Tutor:** {feedback}")
+                
+                col_info_text, col_advance_btn = st.columns([2, 1])
+                with col_info_text:
+                    st.markdown("<p style='font-size:0.9em; opacity:0.8; margin-top:5px;'>Você pode continuar conversando com o tutor para aprofundar sua resposta e tentar atingir o nível Avançado (3.0 pts), ou avançar agora com sua nota atual.</p>", unsafe_allow_html=True)
+                with col_advance_btn:
+                    student_messages = [msg["content"] for msg in st.session_state.chat if msg["role"] == "user"]
+                    combined_ans = "\n".join(student_messages)
+                    
+                    if st.button(f"Avançar com {points:.1f} pts ➡️", type="primary", use_container_width=True):
+                        result = finalize_question_response(case, combined_ans, eval_data)
+                        st.session_state.score += result["points_gained"]
+                        st.session_state.streak += 1
+                        nl = level_from_score(st.session_state.score)
+                        if nl > st.session_state.unlocked_level:
+                            st.session_state.unlocked_level = nl
+                            st.balloons()
+                        persist_now()
+                        
+                        try:
+                            end_case_timer(st.session_state.current_timer_id, result)
+                            st.session_state.current_timer_id = None
+                        except:
+                            pass
+                            
+                        start_new_case()
+                        
+    # Input do Chat
+    if q_msg := st.chat_input("Responda à questão ou faça uma pergunta ao tutor..."):
+        # 1. Adicionar mensagem do aluno
+        st.session_state.chat.append({"role": "user", "content": q_msg})
+        with chat_container:
+            with st.chat_message("user"): 
+                st.markdown(q_msg)
+                
+        # 2. Resposta do Tutor
+        with st.spinner("O Tutor está pensando..."):
+            case_adapted = case.copy()
+            case_adapted['titulo'] = case['pergunta']
+            case_adapted['queixa'] = case['pergunta']
+            case_adapted['hma'] = "Questão de Biologia Molecular"
+            case_adapted['sintomas'] = case.get('componentes_conhecimento', [])
+            case_adapted['gabarito'] = case['resposta_esperada']
             
-            if q_msg := st.chat_input("Tire sua dúvida..."):
-                st.session_state.chat.append({"role": "user", "content": q_msg})
-                # Re-render chat immediately
-                with h_cont:
-                    with st.chat_message("user"): st.markdown(q_msg)
+            full_resp = ""
+            try:
+                gen = tutor_reply_com_ia(case_adapted, q_msg, st.session_state.chat)
+                with chat_container:
+                    with st.chat_message("assistant"):
+                        ph = st.empty()
+                        for chunk in gen:
+                            full_resp += chunk
+                            ph.markdown(full_resp + " ▌")
+                        ph.markdown(full_resp)
+            except Exception as e:
+                full_resp = f"Erro ao gerar resposta do tutor: {e}"
+                st.error(full_resp)
                 
-                with st.spinner("Pensando..."):
-                    full_resp = ""
-                    try:
-                        # Adaptação para o novo contexto (Questão em vez de Caso Clínico)
-                        # tutor_reply_com_ia espera 'case' dict. O formato mudou mas as chaves usadas lá 
-                        # (titulo, queixa, etc) não existem mais. Preciso checar tutor_reply_com_ia.
-                        # Vou assumir que ela precisa ser atualizada ou o prompt vai quebrar.
-                        # ATUALIZAR LOGIC.PY PREVIAMENTE SERIA MELHOR, mas vou deixar quebrar e arrumar ou passar fake keys.
-                        # Melhor: Passar o 'case' adaptado.
-                        
-                        # Fake adaptation for safe calling if logic not updated
-                        case_adapted = case.copy()
-                        case_adapted['titulo'] = case['pergunta']
-                        case_adapted['queixa'] = case['pergunta']
-                        case_adapted['hma'] = "Questão de Biologia Molecular"
-                        case_adapted['sintomas'] = case.get('componentes_conhecimento', [])
-                        case_adapted['gabarito'] = case['resposta_esperada']
-                        
-                        gen = tutor_reply_com_ia(case_adapted, q_msg, st.session_state.chat)
-                        with h_cont:
-                            with st.chat_message("assistant"):
-                                ph = st.empty()
-                                for chunk in gen:
-                                    full_resp += chunk
-                                    ph.markdown(full_resp + " ▌")
-                                ph.markdown(full_resp)
-                    except Exception as e:
-                        full_resp = f"Erro: {e}"
-                        st.error(full_resp)
+        st.session_state.chat.append({"role": "assistant", "content": full_resp})
+        
+        # 3. Registrar no Firestore
+        user = get_current_user()
+        if user and st.session_state.current_case_id:
+            log_chat_interaction(
+                user_id=user["id"],
+                case_id=st.session_state.current_case_id,
+                user_message=q_msg,
+                bot_response=full_resp,
+                response_time=None
+            )
+            
+        # 4. Avaliar as respostas acumuladas
+        with st.spinner("Avaliando seu progresso..."):
+            student_messages = [msg["content"] for msg in st.session_state.chat if msg["role"] == "user"]
+            combined_ans = "\n".join(student_messages)
+            try:
+                eval_result = evaluate_answer_with_ai(case, combined_ans)
+                st.session_state.current_evaluation = eval_result
+            except Exception as e:
+                print(f"Erro ao avaliar progresso: {e}")
                 
-                # NOVO: Registrar log do chat para aparecer nas métricas do painel
-                # Pegando user e case do escopo atual
-                user = get_current_user()
-                if user and st.session_state.current_case_id:
-                    # Registra a interação em background
-                    log_chat_interaction(
-                        user_id=user["id"], 
-                        case_id=st.session_state.current_case_id, 
-                        user_message=q_msg, 
-                        bot_response=full_resp, 
-                        response_time=None # Poderia medir usando time() mas None serve
-                    )
-                
-                st.session_state.chat.append({"role": "assistant", "content": full_resp})
-                st.rerun()
+        st.rerun()
 
 if __name__ == "__main__":
     main()

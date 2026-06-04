@@ -34,9 +34,9 @@ def show_admin_dashboard():
     with col3:
         try:
             global_stats = get_global_stats()
-            st.metric("Casos Resolvidos", global_stats.get('total_cases', 0))
+            st.metric("Questões Resolvidas", global_stats.get('total_cases', 0))
         except:
-            st.metric("Casos Resolvidos", "N/A")
+            st.metric("Questões Resolvidas", "N/A")
     
     st.markdown("---")
     
@@ -202,7 +202,7 @@ def show_data_management():
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("Analytics de Casos")
+        st.subheader("Analytics de Questões")
         
         if st.button("Excluir Todos os Analytics"):
             if st.session_state.get('confirm_delete_analytics'):
@@ -274,7 +274,7 @@ def show_data_management():
                 st.metric("Usuários", users_count)
             
             with col2:
-                st.metric("Analytics de Casos", case_analytics_count)
+                st.metric("Analytics de Questões", case_analytics_count)
             
             with col3:
                 st.metric("Interações do Chat", chat_interactions_count)
@@ -296,7 +296,7 @@ def show_statistics():
             st.metric("Total de Usuários", global_stats.get('total_users', 0))
         
         with col2:
-            st.metric("Total de Casos", global_stats.get('total_cases', 0))
+            st.metric("Total de Questões", global_stats.get('total_cases', 0))
         
         with col3:
             st.metric("Interações do Chat", global_stats.get('total_chat_interactions', 0))
