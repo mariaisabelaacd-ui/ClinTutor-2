@@ -46,7 +46,7 @@ def get_groq_client():
     # Escolhe uma chave aleatoria para dividir a carga e evitar Rate Limit (429)
     key = random.choice(GROQ_API_KEYS)
     safe_key = key[:10] + "..." + key[-5:]
-    print(f"🤖 [IA LOGGER] Requisição enviada. Usando chave Groq: {safe_key}", flush=True)
+    print(f"[IA LOGGER] Requisição enviada. Usando chave Groq: {safe_key}", flush=True)
     return Groq(api_key=key)
 
 # Modelo Padrão do Groq (8B para chat rápido e tutoria)
@@ -218,7 +218,7 @@ NÃO RETORNE TEXTO FORA DO JSON.
                     return {"level": "Incorreto", "points": 0, "classification": "INCORRETO", "feedback": text}
                 
         except Exception as e:
-            print(f"🔄 Tentativa {attempt+1}/{max_retries} falhou no Avaliador IA: {e}")
+            print(f"[Avaliador IA] Tentativa {attempt+1}/{max_retries} falhou: {e}")
             if attempt == max_retries - 1:
                 return {"level": "Incorreto", "points": 0, "classification": "INCORRETO", "feedback": f"Erro IA: {e}"}
             time.sleep(1) 
@@ -281,7 +281,7 @@ def tutor_reply_com_ia(question: Dict[str, Any], user_msg: str, chat_history: Li
                     yield chunk.choices[0].delta.content
             return 
         except Exception as e:
-            print(f"🔄 Tentativa {attempt+1}/{max_retries} falhou no Tutor Chat: {e}")
+            print(f"[Tutor Chat] Tentativa {attempt+1}/{max_retries} falhou: {e}")
             if attempt == max_retries - 1:
                 yield f"Erro na IA: {e}"
                 return
@@ -411,7 +411,7 @@ Não inclua saudações, vá direto para a análise.
             )
             return response.choices[0].message.content.strip()
         except Exception as e:
-            print(f"🔄 Tentativa {attempt+1}/{max_retries} falhou no Insight de PDF IA (Categoria): {e}")
+            print(f"[Insight de PDF IA (Categoria)] Tentativa {attempt+1}/{max_retries} falhou: {e}")
             if attempt == max_retries - 1:
                 return f"Não foi possível gerar a análise profunda devido a um erro de comunicação com a IA: {e}"
             time.sleep(1)
@@ -570,7 +570,7 @@ NÃO RETORNE TEXTO FORA DO JSON.
             text = response.choices[0].message.content.strip()
             return json.loads(text)
         except Exception as e:
-            print(f"🔄 Tentativa {attempt+1}/{max_retries} falhou no Class Criteria Analysis: {e}")
+            print(f"[Class Criteria Analysis] Tentativa {attempt+1}/{max_retries} falhou: {e}")
             if attempt == max_retries - 1:
                 return default_resp
             time.sleep(1)
