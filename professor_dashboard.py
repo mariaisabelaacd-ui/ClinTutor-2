@@ -811,59 +811,62 @@ def show_advanced_professor_dashboard():
     # Garante carregamento dos ícones
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
     
-    col_t, col_b = st.columns([3, 1])
-    with col_t:
-        st.markdown(f"# {icon('dashboard', '#10b981', 32)} Dashboard do Professor", unsafe_allow_html=True)
-    with col_b:
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("Atualizar Dados", icon=":material/refresh:", help="Limpar cache e buscar dados em tempo real", use_container_width=True):
-            st.cache_data.clear()
-            st.rerun()
+    col_left, col_center, col_right = st.columns([0.6, 5, 0.6])
     
-    st.markdown(f"<div style='color: #64748b; font-size: 0.85rem; margin-top: -1rem; margin-bottom: 1rem;'>{icon('info', '#64748b', 16)} Os dados do painel são mantidos em cache por 5 minutos para alta velocidade. Use o botão acima se precisar dos últimos dados exatos.</div>", unsafe_allow_html=True)
-    st.markdown("---")
-    
-    try:
-        # Carrega dados
-        all_users = get_all_users()
-        all_analytics = get_all_users_analytics()
+    with col_center:
+        col_t, col_b = st.columns([3, 1])
+        with col_t:
+            st.markdown(f"# {icon('dashboard', '#10b981', 32)} Dashboard do Professor", unsafe_allow_html=True)
+        with col_b:
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("Atualizar Dados", icon=":material/refresh:", help="Limpar cache e buscar dados em tempo real", use_container_width=True):
+                st.cache_data.clear()
+                st.rerun()
         
-        # Filtra apenas alunos
-        student_users = [user for user in all_users if user.get('user_type') == 'aluno']
+        st.markdown(f"<div style='color: #64748b; font-size: 0.85rem; margin-top: -1rem; margin-bottom: 1rem;'>{icon('info', '#64748b', 16)} Os dados do painel são mantidos em cache por 5 minutos para alta velocidade. Use o botão acima se precisar dos últimos dados exatos.</div>", unsafe_allow_html=True)
+        st.markdown("---")
         
-        if not student_users:
-            st.warning("Nenhum aluno encontrado.")
+        try:
+            # Carrega dados
+            all_users = get_all_users()
+            all_analytics = get_all_users_analytics()
+            
+            # Filtra apenas alunos
+            student_users = [user for user in all_users if user.get('user_type') == 'aluno']
+            
+            if not student_users:
+                st.warning("Nenhum aluno encontrado.")
+                return
+                
+            if not all_analytics:
+                st.info("Nenhum dado de analytics encontrado ainda. Os alunos precisam responder questões primeiro.")
+                # Ainda permite acesso ao admin mesmo sem dados
+                
+        except Exception as e:
+            st.error(f"Erro ao carregar dados: {e}")
             return
-            
-        if not all_analytics:
-            st.info("Nenhum dado de analytics encontrado ainda. Os alunos precisam responder questões primeiro.")
-            # Ainda permite acesso ao admin mesmo sem dados
-            
-    except Exception as e:
-        st.error(f"Erro ao carregar dados: {e}")
-        return
-    
-    # Sistema de tabs redesenhado: 3 tabs (adicionada aba Admin)
-    tab1, tab2, tab3 = st.tabs([
-        "Visão Geral", 
-        "Análise Individual",
-        "Admin"
-    ])
-    
-    with tab1:
-        if all_analytics:
-            show_general_overview_tab(student_users, all_analytics)
-        else:
-            st.info("Aguardando dados de analytics...")
-    
-    with tab2:
-        if all_analytics:
-            show_individual_analysis_tab(student_users, all_analytics)
-        else:
-            st.info("Aguardando dados de analytics...")
-    
-    with tab3:
-        show_admin_tab(student_users)
+        
+        # Sistema de tabs redesenhado: 3 tabs (adicionada aba Admin)
+        tab1, tab2, tab3 = st.tabs([
+            "Visão Geral", 
+            "Análise Individual",
+            "Admin"
+        ])
+        
+        with tab1:
+            if all_analytics:
+                show_general_overview_tab(student_users, all_analytics)
+            else:
+                st.info("Aguardando dados de analytics...")
+        
+        with tab2:
+            if all_analytics:
+                show_individual_analysis_tab(student_users, all_analytics)
+            else:
+                st.info("Aguardando dados de analytics...")
+        
+        with tab3:
+            show_admin_tab(student_users)
 
 def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
     """Tab de visão geral com estatísticas gerais de todos os alunos"""
@@ -1145,7 +1148,13 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
                 }
             )
             fig_level.update_traces(textposition='inside', textinfo='percent+label')
-            fig_level.update_layout(height=400)
+            fig_level.update_layout(
+                height=400,
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                font=dict(family="Inter, sans-serif", size=12),
+                legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5)
+            )
             st.plotly_chart(fig_level, use_container_width=True)
         else:
             st.info("Dados insuficientes")
@@ -1748,88 +1757,63 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
                     classification = item['classification']
                     q_num = item.get('q_num', '?')
                     
-                    # Layout de Timeline
-                    col_time, col_content = st.columns([0.15, 0.85])
-                    
-                    with col_time:
-                        st.markdown(f"""
-                            <div style="text-align: right; padding-top: 10px; color: #475569; font-size: 0.85rem;">
-                                {timestamp.strftime('%H:%M')}
-                            </div>
-                        """, unsafe_allow_html=True)
-                    
-                    with col_content:
-                        # Título do expander mais limpo
-                        if is_partial:
-                            status_icon = icon('circle', '#eab308', 14)
-                        elif entry.get('case_result', {}).get('is_correct'):
-                            status_icon = icon('circle', '#10b981', 14)
-                        else:
-                            status_icon = icon('circle', '#ef4444', 14)
-                            
-                        question_preview = q_info.get('pergunta', 'N/A')[:60] + "..."
+                    if is_partial:
+                        status_emoji = "🟡"
+                    elif entry.get('case_result', {}).get('is_correct'):
+                        status_emoji = "🟢"
+                    else:
+                        status_emoji = "🔴"
                         
-                        # Usando container para simular timeline visual
-                        with st.container():
-                            st.markdown(f"""
-                                <div style="border-left: 2px solid #e2e8f0; margin-left: -10px; padding-left: 20px; padding-bottom: 20px;">
-                                    <div style="font-weight: 500; margin-bottom: 5px; color: #334155;">
-                                        {status_icon} {question_preview}
-                                    </div>
-                                </div>
-                            """, unsafe_allow_html=True)
+                    question_preview = q_info.get('pergunta', 'N/A')[:65] + "..."
+                    header_label = f"{status_emoji} [{timestamp.strftime('%H:%M')}] Questão {q_num}: {question_preview}"
+                    
+                    with st.expander(header_label, expanded=False):
+                        # Busca interações do chat para esta questão
+                        chat_interactions = get_user_chat_interactions(student_id, entry.get('case_id'))
+                        
+                        # Exibe card detalhado
+                        from ui_helpers import answer_detail_card
+                        
+                        detail_html = answer_detail_card(
+                            question_text=q_info.get('pergunta', 'N/A'),
+                            student_answer=result.get('user_answer', None),
+                            expected_answer=q_info.get('resposta_esperada', None),
+                            feedback=result.get('feedback', None),
+                            classification=classification if classification else ('CORRETA' if is_correct else 'INCORRETA'),
+                            components=[f"Questão {q_num}"],
+                            difficulty="N/A",
+                            time_spent=format_duration(entry.get('duration_seconds', 0)),
+                            points=result.get('points_gained', 0)
+                        )
+                        
+                        st.markdown(detail_html, unsafe_allow_html=True)
+                        
+                        # Mostra interações do chat se houver
+                        if chat_interactions:
+                            st.markdown(f"<div style='margin-top: 1rem; margin-bottom: 0.5rem; font-weight: 600; font-size: 1rem;'>{icon('chat', '#ec4899', 20)} Interações do Chat ({len(chat_interactions)})</div>", unsafe_allow_html=True)
                             
-                            # Detalhes (expansível)
-                            with st.expander("Ver detalhes (Completo)", expanded=False):
-                                # Busca interações do chat para esta questão
-                                # Tenta buscar por case_id primeiro
-                                chat_interactions = get_user_chat_interactions(student_id, entry.get('case_id'))
+                            for chat_idx, interaction in enumerate(chat_interactions):
+                                chat_time = interaction.get('timestamp', '')
+                                if isinstance(chat_time, str):
+                                    try:
+                                        chat_time = datetime.fromisoformat(chat_time).strftime('%H:%M:%S')
+                                    except:
+                                        chat_time = 'N/A'
                                 
-                                # Fallback simples se não achar (opcional, pode ser complexo implementar aqui agora)
+                                user_msg = interaction.get('user_message', '')
+                                bot_msg = interaction.get('bot_response', '')
                                 
-                                # Exibe card detalhado
-                                from ui_helpers import answer_detail_card
-                                
-                                detail_html = answer_detail_card(
-                                    question_text=q_info.get('pergunta', 'N/A'),
-                                    student_answer=result.get('user_answer', None), # Passa None para ativar fallback
-                                    expected_answer=q_info.get('resposta_esperada', None),
-                                    feedback=result.get('feedback', None),
-                                    classification=classification if classification else ('CORRETA' if is_correct else 'INCORRETA'),
-                                    components=[f"Questão {q_num}"],
-                                    difficulty="N/A",
-                                    time_spent=format_duration(entry.get('duration_seconds', 0)),
-                                    points=result.get('points_gained', 0)
-                                )
-                                
-                                st.markdown(detail_html, unsafe_allow_html=True)
-                                
-                                # Mostra interações do chat se houver
-                                if chat_interactions:
-                                    st.markdown(f"#### {icon('chat', '#ec4899', 20)} Interações do Chat ({len(chat_interactions)})", unsafe_allow_html=True)
-                                    
-                                    for chat_idx, interaction in enumerate(chat_interactions):
-                                        chat_time = interaction.get('timestamp', '')
-                                        if isinstance(chat_time, str):
-                                            try:
-                                                chat_time = datetime.fromisoformat(chat_time).strftime('%H:%M:%S')
-                                            except:
-                                                chat_time = 'N/A'
-                                        
-                                        user_msg = interaction.get('user_message', '')
-                                        bot_msg = interaction.get('bot_response', '')
-                                        
-                                        st.markdown(f"""
-<div style='background: #fdf2f8; padding: 0.75rem; border-radius: 8px; margin-bottom: 0.5rem; border-left: 3px solid #ec4899;'>
-<div style='color: #475569; font-size: 0.75rem; margin-bottom: 0.25rem;'>
-{icon('schedule', '#64748b', 14)} {chat_time}
-</div>
-<div style='color: #1e293b; font-size: 0.875rem; margin-bottom: 0.5rem;'>
-<strong>{icon('person', '#3b82f6', 16)} Aluno:</strong> {user_msg}
-</div>
-<div style='color: #475569; font-size: 0.875rem;'>
-<strong>{icon('smart_toy', '#ec4899', 16)} Tutor:</strong> {bot_msg}
-</div>
+                                st.markdown(f"""
+<div style='background: var(--background-color); padding: 0.75rem; border-radius: 8px; margin-bottom: 0.5rem; border: 1px solid rgba(128, 128, 128, 0.15);'>
+    <div style='color: #8b5cf6; font-size: 0.75rem; margin-bottom: 0.25rem; font-weight: 600;'>
+        {icon('schedule', '#8b5cf6', 14)} {chat_time}
+    </div>
+    <div style='color: var(--text-color); font-size: 0.875rem; margin-bottom: 0.5rem;'>
+        <strong>{icon('person', '#3b82f6', 16)} Aluno:</strong> {user_msg}
+    </div>
+    <div style='color: var(--text-color); font-size: 0.875rem; border-top: 1px dashed rgba(128, 128, 128, 0.15); padding-top: 0.5rem; margin-top: 0.5rem;'>
+        <strong>{icon('smart_toy', '#10b981', 16)} Tutor:</strong> {bot_msg}
+    </div>
 </div>""", unsafe_allow_html=True)
 
             
@@ -1902,7 +1886,14 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
             title=f"Evolução nas Últimas 4 Semanas (Tendência: {trend.title()})",
             markers=True
         )
-        fig_evolution.update_layout(height=400)
+        fig_evolution.update_layout(
+            height=400,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(family="Inter, sans-serif", size=12),
+            xaxis=dict(gridcolor='rgba(148, 163, 184, 0.1)'),
+            yaxis=dict(gridcolor='rgba(148, 163, 184, 0.1)', range=[0, 100])
+        )
         st.plotly_chart(fig_evolution, use_container_width=True)
         
         # Indicador de tendência
@@ -1919,7 +1910,16 @@ def show_admin_tab(student_users: List[Dict]):
     """Tab de administração para gerenciar banco de dados"""
     st.markdown(f"## {icon('admin_panel_settings', '#eab308', 28)} Painel de Administração", unsafe_allow_html=True)
     
-    st.warning("**ATENÇÃO**: Esta área contém operações que podem deletar dados permanentemente!")
+    st.markdown(f"""
+        <div style="background-color: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem;">
+            <div style="color: #ef4444; font-weight: 600; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                {icon('warning', '#ef4444', 22)} Zona de Perigo (Ações Destrutivas)
+            </div>
+            <div style="color: var(--text-color); opacity: 0.8; font-size: 0.9rem;">
+                Esta área contém operações que podem deletar dados permanentemente! Tenha cuidado extra antes de prosseguir.
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
     
     st.markdown("---")
     
