@@ -128,16 +128,66 @@ def show_login_page():
                             else: st.error(msg)
     st.markdown("<div style='text-align: center; margin-top: 3rem; color: #999; font-size: 0.8em;'>Helix.AI v1.0</div>", unsafe_allow_html=True)
 
-def show_user_profile():
+def render_top_navbar():
     user = get_current_user()
-    with st.sidebar:
-        st.markdown(f"<div style='display: flex; align-items: center; gap: 0.5rem; font-size: 1.3rem; font-weight: 600;'><span class='material-icons-outlined' style='font-size: 28px;'>account_circle</span> {user['name'].split()[0]}</div>", unsafe_allow_html=True)
-        st.caption(f"{user['user_type'].title()}")
-        if st.button("Sair", key="logout_btn", use_container_width=True):
+    if not user:
+        return
+    
+    col_logo, col_menu, col_stats, col_logout = st.columns([1.5, 2.5, 4, 1])
+    
+    with col_logo:
+        st.markdown("<div class='nav-logo-text'>🧬 Helix.AI</div>", unsafe_allow_html=True)
+        
+    with col_menu:
+        if user["user_type"] == "professor":
+            c1, c2 = st.columns(2)
+            with c1:
+                is_active = st.session_state.get("professor_page", "Questões") == "Questões"
+                if st.button("Questões", key="nav_prof_q", type="primary" if is_active else "secondary", use_container_width=True):
+                    st.session_state.professor_page = "Questões"
+                    st.rerun()
+            with c2:
+                is_active = st.session_state.get("professor_page", "Questões") == "Dashboard"
+                if st.button("Dashboard", key="nav_prof_dash", type="primary" if is_active else "secondary", use_container_width=True):
+                    st.session_state.professor_page = "Dashboard"
+                    st.rerun()
+        elif user["user_type"] == "aluno":
+            st.markdown("<div style='height:100%; display:flex; align-items:center; font-weight:600; color:#10b981; margin-top:5px;'>🎓 Casos Clínicos</div>", unsafe_allow_html=True)
+        elif user["user_type"] == "admin":
+            st.markdown("<div style='height:100%; display:flex; align-items:center; font-weight:600; color:#10b981; margin-top:5px;'>⚙️ Painel Admin</div>", unsafe_allow_html=True)
+            
+    with col_stats:
+        if user["user_type"] == "aluno":
+            st.markdown(f"""
+            <div style='display: flex; justify-content: flex-end; align-items: center; gap: 1rem; height: 100%;'>
+                <div style='background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); padding: 4px 12px; border-radius: 20px; font-size: 0.9rem; color: #10b981;'>
+                    🏆 <b>{st.session_state.score}</b> pts
+                </div>
+                <div style='background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); padding: 4px 12px; border-radius: 20px; font-size: 0.9rem; color: #ef4444;'>
+                    🔥 Streak <b>{st.session_state.streak}</b>
+                </div>
+                <div class='nav-user-info'>
+                    Olá, <b>{user['name'].split()[0]}</b> <span class='role-badge'>{user['user_type']}</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown(f"""
+            <div style='display: flex; justify-content: flex-end; align-items: center; height: 100%;'>
+                <div class='nav-user-info'>
+                    Olá, <b>{user['name'].split()[0]}</b> <span class='role-badge'>{user['user_type']}</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+    with col_logout:
+        if st.button("Sair", key="nav_logout_btn", use_container_width=True):
             logout_user()
             cookie_manager.delete('auth_token')
             st.rerun()
-        st.markdown("---")
+            
+    st.markdown("<hr class='nav-divider'>", unsafe_allow_html=True)
+
 
 def init_state():
     if "session_id" not in st.session_state: st.session_state.session_id = str(uuid.uuid4())
@@ -233,28 +283,38 @@ def main():
         return
 
     init_state()
-    show_user_profile()
     user = get_current_user()
     
-    if user["user_type"] == "admin": show_admin_dashboard(); return
+    render_top_navbar()
+    
+    if user["user_type"] == "admin": 
+        show_admin_dashboard()
+        return
+        
     if user["user_type"] == "professor":
-         nav = st.sidebar.radio("Navegação", ["Questões", "Dashboard"], label_visibility="collapsed")
-         if nav == "Dashboard": show_advanced_professor_dashboard(); return
+         active_page = st.session_state.get("professor_page", "Questões")
+         if active_page == "Dashboard": 
+             show_advanced_professor_dashboard()
+             return
     
-    # --- SIDEBAR ---
-    st.sidebar.markdown("### <span class='material-icons-outlined'>emoji_events</span> Progresso", unsafe_allow_html=True)
-    c1, c2 = st.sidebar.columns(2)
-    c1.metric("Pontos", st.session_state.score)
-    c2.metric("Streak", f"{st.session_state.streak}")
-    
-    # Barra de Progresso Real
+    # --- STUDENT PROGRESS HEADER ---
     total_q = len(QUESTIONS)
     answered_q = min(len(st.session_state.used_cases), total_q)
     
-    st.sidebar.markdown(f"**Questões Concluídas:** {answered_q} de {total_q}")
-    st.sidebar.progress(answered_q / total_q if total_q > 0 else 0)
-    
-    if st.sidebar.button("Pular Questão", use_container_width=True): start_new_case()
+    # Progress metrics shown nicely below navbar
+    prog_col1, prog_col2, prog_col3 = st.columns([3, 1, 1])
+    with prog_col1:
+        st.markdown(f"**Progresso das Questões:** {answered_q} de {total_q}")
+        st.progress(answered_q / total_q if total_q > 0 else 0)
+    with prog_col2:
+        pass
+    with prog_col3:
+        if st.button("Pular Questão", key="main_skip_question", use_container_width=True):
+            start_new_case()
+            st.rerun()
+            
+    st.markdown("<hr style='margin-top: 0.5rem; margin-bottom: 1.5rem; border: 0; border-top: 1px solid rgba(128,128,128,0.15);'>", unsafe_allow_html=True)
+
     
 
 

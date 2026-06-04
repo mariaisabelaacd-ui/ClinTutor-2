@@ -236,7 +236,7 @@ def _construir_contexto_para_ia(question: Dict[str, Any], chat_history: List[Dic
 def tutor_reply_com_ia(question: Dict[str, Any], user_msg: str, chat_history: List[Dict[str, str]]) -> Generator[str, None, None]:
     contexto = _construir_contexto_para_ia(question, chat_history)
     
-    # Prepara o gabarito completo para o tutor saber todas as nuances
+    
     gabarito_completo = "\n".join([f"{k}: {v}" for k, v in question.get('referencia', {}).items()])
     if not gabarito_completo:
         gabarito_completo = question.get('resposta_esperada', 'N/A')
@@ -247,10 +247,10 @@ def tutor_reply_com_ia(question: Dict[str, Any], user_msg: str, chat_history: Li
     A resposta correta em diferentes níveis de profundidade é:
     {gabarito_completo}
 
-    **REGRAS ABSOLUTAS E INQUEBRÁVEIS (PENA DE FALHA CRÍTICA SE DESCUMPRIDAS):**
-    1. **NUNCA, JAMAIS DÊ A RESPOSTA FINAL DIRETAMENTE.** O seu papel NÃO é responder a pergunta por ele.
+    REGRAS ABSOLUTAS E INQUEBRÁVEIS (PENA DE FALHA CRÍTICA SE DESCUMPRIDAS):
+    1. NUNCA, JAMAIS DÊ A RESPOSTA FINAL DIRETAMENTE. O seu papel NÃO é responder a pergunta por ele.
     2. NUNCA diga se ele está certo ou errado logo de cara na explicação da matéria.
-    3. Use o **MÉTODO SOCRÁTICO**. Faça perguntas curtas, instigantes e que induzam o aluno a raciocinar o próximo passo da resposta.
+    3. Use o MÉTODO SOCRÁTICO. Faça perguntas curtas, instigantes e que induzam o aluno a raciocinar o próximo passo da resposta.
     4. Se o aluno pedir a resposta ou disser que não sabe de nada, não entregue. Dê uma microscópica dica conceitual e PERGUNTE DE VOLTA em seguida.
     5. Suas réplicas devem ter NO MÁXIMO 3 a 4 linhas. Evite parágrafos gigantes. Seja conversacional e direto.
 
@@ -504,17 +504,17 @@ def generate_class_criteria_analysis(answers_list: List[str]) -> Dict[str, str]:
     prompt = f"""
 Você é um Diretor Pedagógico sênior especialista em Biologia Molecular, com experiência em análise de aprendizagem.
 
-Sua tarefa é analisar DETALHADAMENTE as respostas dos alunos abaixo, que cobrem 6 questões fundamentais de Biologia Molecular (Estabilidade, Replicação, Fita Atrasada, Topoisomerases, Reparo e Consequências).
+Sua tarefa é analisar DETALHADAMENTE as respostas dos alunos abaixo, que cobrem 6 questões fundamentais de Biologia Molecular 
 
-**Respostas dos Alunos:**
+Respostas dos Alunos:
 {answers_str}
 
-**INSTRUÇÕES DETALHADAS:**
+INSTRUÇÕES DETALHADAS:
 
 Para CADA um dos 6 eixos de conhecimento abaixo, escreva uma análise RICA e PROFUNDA contendo:
-- **Domínio Coletivo:** O que a turma demonstra ter consolidado.
-- **Pontos de Atenção:** Quais as confusões conceituais ou simplificações excessivas recorrentes.
-- **Lacunas Estruturais:** Detalhes técnicos importantes (ex: nomes de enzimas, direcionalidade, tipos de ligações) que foram ignorados.
+- Domínio Coletivo: O que a turma demonstra ter consolidado.
+- Pontos de Atenção: Quais as confusões conceituais ou simplificações excessivas recorrentes.
+- Lacunas Estruturais: Detalhes técnicos importantes (ex: nomes de enzimas, direcionalidade, tipos de ligações) que foram ignorados.
 
 REGRAS ABSOLUTAS:
 - NÃO mencione os 5 critérios antigos (antiparalelismo, direcionalidade, lagging, primer, integracao) se a resposta não for sobre eles.
