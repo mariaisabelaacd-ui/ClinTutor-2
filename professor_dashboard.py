@@ -29,39 +29,46 @@ def inject_dashboard_styles():
     """Injeta estilos CSS customizados para uma visualização premium e moderna"""
     style_html = """
     <style>
+        /* Custom App Background Override */
+        .stApp {
+            background: linear-gradient(135deg, #0b0f19 0%, #111827 100%) !important;
+            color: #f8fafc !important;
+        }
+
         /* Tipografia e Títulos */
         .dash-title {
             font-family: 'Inter', sans-serif;
-            font-size: 2.2rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, #10b981 0%, #3b82f6 50%, #8b5cf6 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
         }
         
         .dash-subtitle {
-            color: #64748b !important;
-            font-size: 0.9rem !important;
-            margin-bottom: 1.5rem !important;
+            color: #94a3b8 !important;
+            font-size: 0.95rem !important;
+            margin-bottom: 2rem !important;
         }
 
         /* Glassmorphism Metric Cards */
         .premium-card {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(128, 128, 128, 0.15) !important;
-            border-radius: 16px !important;
-            padding: 1.25rem !important;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.04) !important;
+            background: rgba(17, 24, 39, 0.6) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: 20px !important;
+            padding: 1.5rem !important;
+            box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.25) !important;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
         }
         
         .premium-card:hover {
-            transform: translateY(-4px) !important;
-            border-color: #10b981 !important;
-            box-shadow: 0 12px 40px 0 rgba(16, 185, 129, 0.12) !important;
+            transform: translateY(-5px) !important;
+            border-color: rgba(16, 185, 129, 0.3) !important;
+            box-shadow: 0 15px 40px 0 rgba(16, 185, 129, 0.15) !important;
         }
         
         .premium-card-label {
@@ -70,98 +77,144 @@ def inject_dashboard_styles():
             font-weight: 600 !important;
             text-transform: uppercase !important;
             letter-spacing: 0.05em !important;
-            margin-bottom: 0.5rem !important;
+            margin-bottom: 0.75rem !important;
             display: flex !important;
             align-items: center !important;
             gap: 0.5rem !important;
         }
         
         .premium-card-value {
-            font-size: 2rem !important;
-            font-weight: 700 !important;
+            font-size: 2.25rem !important;
+            font-weight: 800 !important;
             line-height: 1.1 !important;
+            color: #f8fafc !important;
         }
 
         /* Question Cards (Q1-Q6) */
         .q-card-green {
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0.02) 100%) !important;
-            border: 1px solid rgba(16, 185, 129, 0.2) !important;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.02) 100%) !important;
+            border: 1px solid rgba(16, 185, 129, 0.15) !important;
         }
+        .q-card-green:hover {
+            border-color: rgba(16, 185, 129, 0.4) !important;
+            box-shadow: 0 15px 40px 0 rgba(16, 185, 129, 0.15) !important;
+        }
+        
         .q-card-yellow {
-            background: linear-gradient(135deg, rgba(234, 179, 8, 0.08) 0%, rgba(234, 179, 8, 0.02) 100%) !important;
-            border: 1px solid rgba(234, 179, 8, 0.2) !important;
+            background: linear-gradient(135deg, rgba(234, 179, 8, 0.1) 0%, rgba(234, 179, 8, 0.02) 100%) !important;
+            border: 1px solid rgba(234, 179, 8, 0.15) !important;
         }
+        .q-card-yellow:hover {
+            border-color: rgba(234, 179, 8, 0.4) !important;
+            box-shadow: 0 15px 40px 0 rgba(234, 179, 8, 0.15) !important;
+        }
+        
         .q-card-red {
-            background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(239, 68, 68, 0.02) 100%) !important;
-            border: 1px solid rgba(239, 68, 68, 0.2) !important;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.02) 100%) !important;
+            border: 1px solid rgba(239, 68, 68, 0.15) !important;
+        }
+        .q-card-red:hover {
+            border-color: rgba(239, 68, 68, 0.4) !important;
+            box-shadow: 0 15px 40px 0 rgba(239, 68, 68, 0.15) !important;
         }
         
         .q-card {
-            border-radius: 16px !important;
+            border-radius: 20px !important;
             padding: 1.5rem !important;
-            box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.03) !important;
+            box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.2) !important;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-            margin-bottom: 1rem !important;
+            margin-bottom: 1.5rem !important;
         }
         
         .q-card:hover {
-            transform: translateY(-4px) !important;
-            box-shadow: 0 16px 32px 0 rgba(0, 0, 0, 0.08) !important;
+            transform: translateY(-5px) !important;
+            box-shadow: 0 20px 40px 0 rgba(0, 0, 0, 0.35) !important;
         }
 
         /* Progress Bar */
         .q-progress-bg {
-            background: rgba(148, 163, 184, 0.15) !important;
-            border-radius: 8px !important;
+            background: rgba(255, 255, 255, 0.05) !important;
+            border-radius: 10px !important;
             height: 24px !important;
             overflow: hidden !important;
             margin-bottom: 0.75rem !important;
-            border: 1px solid rgba(128, 128, 128, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.03) !important;
         }
         
         .q-progress-bar {
             height: 100% !important;
-            border-radius: 8px !important;
+            border-radius: 10px !important;
             display: flex !important;
             align-items: center !important;
             justify-content: flex-end !important;
             padding-right: 10px !important;
-            transition: width 0.8s ease-in-out !important;
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.1) !important;
         }
 
         /* Timeline and Student Profiles */
         .student-profile-banner {
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.04) 0%, rgba(59, 130, 246, 0.04) 100%) !important;
-            border: 1px solid rgba(128, 128, 128, 0.15) !important;
-            border-radius: 16px !important;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(59, 130, 246, 0.08) 100%) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: 20px !important;
             padding: 1.5rem !important;
-            margin-bottom: 2rem !important;
-            box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.02) !important;
+            margin-bottom: 2.5rem !important;
+            box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.2) !important;
         }
 
         .chat-bubble-container {
-            background: rgba(148, 163, 184, 0.03) !important;
-            border: 1px solid rgba(128, 128, 128, 0.12) !important;
-            border-radius: 12px !important;
-            padding: 0.85rem !important;
-            margin-bottom: 0.75rem !important;
-            box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.01) !important;
-            transition: all 0.2s ease !important;
+            background: rgba(255, 255, 255, 0.02) !important;
+            border: 1px solid rgba(255, 255, 255, 0.05) !important;
+            border-radius: 14px !important;
+            padding: 1rem !important;
+            margin-bottom: 1rem !important;
+            box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.1) !important;
+            transition: all 0.25s ease !important;
         }
         
         .chat-bubble-container:hover {
-            border-color: rgba(139, 92, 246, 0.25) !important;
-            background: rgba(139, 92, 246, 0.02) !important;
+            border-color: rgba(139, 92, 246, 0.3) !important;
+            background: rgba(139, 92, 246, 0.03) !important;
         }
 
         /* Danger Zone Block */
         .danger-zone-container {
-            background: linear-gradient(135deg, rgba(239, 68, 68, 0.06) 0%, rgba(239, 68, 68, 0.02) 100%) !important;
-            border: 1px solid rgba(239, 68, 68, 0.2) !important;
-            border-radius: 16px !important;
+            background: linear-gradient(135deg, rgba(244, 63, 94, 0.1) 0%, rgba(244, 63, 94, 0.02) 100%) !important;
+            border: 1px solid rgba(244, 63, 94, 0.25) !important;
+            border-radius: 20px !important;
             padding: 1.5rem !important;
             margin-bottom: 2rem !important;
-            box-shadow: 0 8px 32px 0 rgba(239, 68, 68, 0.04) !important;
+            box-shadow: 0 10px 30px 0 rgba(244, 63, 94, 0.08) !important;
+        }
+
+        /* Form inputs & select boxes styling overrides for dark theme */
+        div[data-baseweb="select"] > div {
+            background-color: rgba(17, 24, 39, 0.8) !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+            color: #f8fafc !important;
+        }
+
+        div[data-baseweb="select"] > div:hover {
+            border-color: #10b981 !important;
+        }
+
+        div[data-testid="stTextInput"] input, div[data-testid="stTextArea"] textarea {
+            background-color: rgba(17, 24, 39, 0.8) !important;
+            color: #f8fafc !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        /* Tables and Dataframes */
+        div[data-testid="stDataFrame"] {
+            background-color: rgba(17, 24, 39, 0.6) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: 16px !important;
+        }
+
+        /* Expander headers */
+        .streamlit-expanderHeader {
+            background-color: rgba(17, 24, 39, 0.5) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            color: #f8fafc !important;
         }
     </style>
     """
@@ -1257,12 +1310,12 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
                 polar=dict(
                     radialaxis=dict(
                         visible=True, range=[0, 100],
-                        gridcolor='rgba(148, 163, 184, 0.2)',
-                        ticksuffix='%', tickfont=dict(size=10)
+                        gridcolor='rgba(255, 255, 255, 0.08)',
+                        ticksuffix='%', tickfont=dict(size=10, color='#94a3b8')
                     ),
                     angularaxis=dict(
-                        gridcolor='rgba(148, 163, 184, 0.2)',
-                        tickfont=dict(size=13, weight='bold')
+                        gridcolor='rgba(255, 255, 255, 0.08)',
+                        tickfont=dict(size=12, color='#f8fafc', weight='bold')
                     ),
                     bgcolor='rgba(0,0,0,0)'
                 ),
@@ -1693,10 +1746,10 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
             fig_ind_radar.update_layout(
                 polar=dict(
                     radialaxis=dict(visible=True, range=[0, 100],
-                                    gridcolor='rgba(148, 163, 184, 0.2)',
-                                    ticksuffix='%', tickfont=dict(size=10)),
-                    angularaxis=dict(gridcolor='rgba(148, 163, 184, 0.2)',
-                                     tickfont=dict(size=13, weight='bold')),
+                                    gridcolor='rgba(255, 255, 255, 0.08)',
+                                    ticksuffix='%', tickfont=dict(size=10, color='#94a3b8')),
+                    angularaxis=dict(gridcolor='rgba(255, 255, 255, 0.08)',
+                                     tickfont=dict(size=12, color='#f8fafc', weight='bold')),
                     bgcolor='rgba(0,0,0,0)'
                 ),
                 showlegend=False, height=380,
