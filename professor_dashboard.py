@@ -29,10 +29,10 @@ def inject_dashboard_styles():
     """Injeta estilos CSS customizados para uma visualização premium e moderna"""
     style_html = """
     <style>
-        /* Custom App Background Override */
+        /* Custom App Background Override using Streamlit variables */
         .stApp {
-            background: linear-gradient(135deg, #0b0f19 0%, #111827 100%) !important;
-            color: #f8fafc !important;
+            background: linear-gradient(135deg, var(--background-color) 0%, var(--secondary-background-color) 100%) !important;
+            color: var(--text-color) !important;
         }
 
         /* Tipografia e Títulos */
@@ -48,31 +48,31 @@ def inject_dashboard_styles():
         }
         
         .dash-subtitle {
-            color: #94a3b8 !important;
+            color: var(--text-color) !important;
+            opacity: 0.7 !important;
             font-size: 0.95rem !important;
             margin-bottom: 2rem !important;
         }
 
-        /* Glassmorphism Metric Cards */
+        /* Glassmorphism Metric Cards - Adaptable to both light and dark modes */
         .premium-card {
-            background: rgba(17, 24, 39, 0.6) !important;
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            background: var(--secondary-background-color) !important;
+            border: 1px solid rgba(128, 128, 128, 0.15) !important;
             border-radius: 20px !important;
             padding: 1.5rem !important;
-            box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.25) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
         }
         
         .premium-card:hover {
             transform: translateY(-5px) !important;
             border-color: rgba(16, 185, 129, 0.3) !important;
-            box-shadow: 0 15px 40px 0 rgba(16, 185, 129, 0.15) !important;
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.1) !important;
         }
         
         .premium-card-label {
-            color: #94a3b8 !important;
+            color: var(--text-color) !important;
+            opacity: 0.7 !important;
             font-size: 0.75rem !important;
             font-weight: 600 !important;
             text-transform: uppercase !important;
@@ -87,58 +87,58 @@ def inject_dashboard_styles():
             font-size: 2.25rem !important;
             font-weight: 800 !important;
             line-height: 1.1 !important;
-            color: #f8fafc !important;
+            color: var(--text-color) !important;
         }
 
         /* Question Cards (Q1-Q6) */
         .q-card-green {
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.02) 100%) !important;
-            border: 1px solid rgba(16, 185, 129, 0.15) !important;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0.02) 100%) !important;
+            border: 1px solid rgba(16, 185, 129, 0.18) !important;
         }
         .q-card-green:hover {
-            border-color: rgba(16, 185, 129, 0.4) !important;
-            box-shadow: 0 15px 40px 0 rgba(16, 185, 129, 0.15) !important;
+            border-color: rgba(16, 185, 129, 0.45) !important;
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.1) !important;
         }
         
         .q-card-yellow {
-            background: linear-gradient(135deg, rgba(234, 179, 8, 0.1) 0%, rgba(234, 179, 8, 0.02) 100%) !important;
-            border: 1px solid rgba(234, 179, 8, 0.15) !important;
+            background: linear-gradient(135deg, rgba(234, 179, 8, 0.08) 0%, rgba(234, 179, 8, 0.02) 100%) !important;
+            border: 1px solid rgba(234, 179, 8, 0.18) !important;
         }
         .q-card-yellow:hover {
-            border-color: rgba(234, 179, 8, 0.4) !important;
-            box-shadow: 0 15px 40px 0 rgba(234, 179, 8, 0.15) !important;
+            border-color: rgba(234, 179, 8, 0.45) !important;
+            box-shadow: 0 10px 25px rgba(234, 179, 8, 0.1) !important;
         }
         
         .q-card-red {
-            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.02) 100%) !important;
-            border: 1px solid rgba(239, 68, 68, 0.15) !important;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(239, 68, 68, 0.02) 100%) !important;
+            border: 1px solid rgba(239, 68, 68, 0.18) !important;
         }
         .q-card-red:hover {
-            border-color: rgba(239, 68, 68, 0.4) !important;
-            box-shadow: 0 15px 40px 0 rgba(239, 68, 68, 0.15) !important;
+            border-color: rgba(239, 68, 68, 0.45) !important;
+            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.1) !important;
         }
         
         .q-card {
             border-radius: 20px !important;
             padding: 1.5rem !important;
-            box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.2) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
             margin-bottom: 1.5rem !important;
         }
         
         .q-card:hover {
             transform: translateY(-5px) !important;
-            box-shadow: 0 20px 40px 0 rgba(0, 0, 0, 0.35) !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08) !important;
         }
 
         /* Progress Bar */
         .q-progress-bg {
-            background: rgba(255, 255, 255, 0.05) !important;
+            background: rgba(128, 128, 128, 0.1) !important;
             border-radius: 10px !important;
             height: 24px !important;
             overflow: hidden !important;
             margin-bottom: 0.75rem !important;
-            border: 1px solid rgba(255, 255, 255, 0.03) !important;
+            border: 1px solid rgba(128, 128, 128, 0.05) !important;
         }
         
         .q-progress-bar {
@@ -153,21 +153,21 @@ def inject_dashboard_styles():
 
         /* Timeline and Student Profiles */
         .student-profile-banner {
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(59, 130, 246, 0.08) 100%) !important;
-            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.06) 0%, rgba(59, 130, 246, 0.06) 100%) !important;
+            border: 1px solid rgba(128, 128, 128, 0.15) !important;
             border-radius: 20px !important;
             padding: 1.5rem !important;
             margin-bottom: 2.5rem !important;
-            box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.2) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
         }
 
         .chat-bubble-container {
-            background: rgba(255, 255, 255, 0.02) !important;
-            border: 1px solid rgba(255, 255, 255, 0.05) !important;
+            background: var(--secondary-background-color) !important;
+            border: 1px solid rgba(128, 128, 128, 0.12) !important;
             border-radius: 14px !important;
             padding: 1rem !important;
             margin-bottom: 1rem !important;
-            box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.1) !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03) !important;
             transition: all 0.25s ease !important;
         }
         
@@ -178,19 +178,19 @@ def inject_dashboard_styles():
 
         /* Danger Zone Block */
         .danger-zone-container {
-            background: linear-gradient(135deg, rgba(244, 63, 94, 0.1) 0%, rgba(244, 63, 94, 0.02) 100%) !important;
-            border: 1px solid rgba(244, 63, 94, 0.25) !important;
+            background: linear-gradient(135deg, rgba(244, 63, 94, 0.06) 0%, rgba(244, 63, 94, 0.01) 100%) !important;
+            border: 1px solid rgba(244, 63, 94, 0.2) !important;
             border-radius: 20px !important;
             padding: 1.5rem !important;
             margin-bottom: 2rem !important;
-            box-shadow: 0 10px 30px 0 rgba(244, 63, 94, 0.08) !important;
+            box-shadow: 0 4px 12px rgba(244, 63, 94, 0.03) !important;
         }
 
         /* Form inputs & select boxes styling overrides for dark theme */
         div[data-baseweb="select"] > div {
-            background-color: rgba(17, 24, 39, 0.8) !important;
-            border-color: rgba(255, 255, 255, 0.1) !important;
-            color: #f8fafc !important;
+            background-color: var(--secondary-background-color) !important;
+            border-color: rgba(128, 128, 128, 0.15) !important;
+            color: var(--text-color) !important;
         }
 
         div[data-baseweb="select"] > div:hover {
@@ -198,23 +198,23 @@ def inject_dashboard_styles():
         }
 
         div[data-testid="stTextInput"] input, div[data-testid="stTextArea"] textarea {
-            background-color: rgba(17, 24, 39, 0.8) !important;
-            color: #f8fafc !important;
-            border-color: rgba(255, 255, 255, 0.1) !important;
+            background-color: var(--secondary-background-color) !important;
+            color: var(--text-color) !important;
+            border-color: rgba(128, 128, 128, 0.15) !important;
         }
 
         /* Tables and Dataframes */
         div[data-testid="stDataFrame"] {
-            background-color: rgba(17, 24, 39, 0.6) !important;
-            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            background-color: var(--secondary-background-color) !important;
+            border: 1px solid rgba(128, 128, 128, 0.15) !important;
             border-radius: 16px !important;
         }
 
         /* Expander headers */
         .streamlit-expanderHeader {
-            background-color: rgba(17, 24, 39, 0.5) !important;
-            border: 1px solid rgba(255, 255, 255, 0.08) !important;
-            color: #f8fafc !important;
+            background-color: var(--secondary-background-color) !important;
+            border: 1px solid rgba(128, 128, 128, 0.15) !important;
+            color: var(--text-color) !important;
         }
     </style>
     """
@@ -364,7 +364,7 @@ def generate_student_pdf(student: Dict, basic_stats: Dict, advanced_stats: Dict,
         pdf.ln(8)
     
     # ---- ANÁLISE DE FRAQUEZAS ----
-    weak_comps = weakness.get('weakest_components', [])
+    weak_comps = weakness.get('componentes_problematicos', [])
     if weak_comps:
         pdf.set_font('Helvetica', 'B', 14)
         pdf.set_text_color(239, 68, 68)  # vermelho
@@ -372,9 +372,10 @@ def generate_student_pdf(student: Dict, basic_stats: Dict, advanced_stats: Dict,
         pdf.set_text_color(0, 0, 0)
         pdf.set_font('Helvetica', '', 9)
         for i, comp in enumerate(weak_comps[:5], 1):
-            name = comp.get('component', 'N/A')
+            name = comp.get('nome', 'N/A')
+            acuracia = comp.get('acuracia', 0.0)
             # Mostrando a defasagem (quantos pontos perderam de 1.0)
-            avg_lost = 1.0 - (rate / 100)
+            avg_lost = 1.0 - (acuracia / 100.0)
             pdf.cell(0, 6, f'  {i}. {name} (perde em media {avg_lost:.2f} pts por questao)', ln=True)
         pdf.ln(5)
     
@@ -527,7 +528,9 @@ def generate_class_pdf(turma_name: str, student_users: List[Dict], global_stats:
         pdf.ln(1)
 
         # Header da tabela
+        pdf.set_draw_color(226, 232, 240)
         pdf.set_fill_color(241, 245, 249)
+        pdf.set_text_color(71, 85, 105)
         pdf.set_font('Helvetica', 'B', 8)
         pdf.cell(80, 7, 'Questao / Topico', 1, 0, 'C', True)
         pdf.cell(25, 7, 'Tentativas', 1, 0, 'C', True)
@@ -537,25 +540,41 @@ def generate_class_pdf(turma_name: str, student_users: List[Dict], global_stats:
         pdf.ln()
 
         pdf.set_font('Helvetica', '', 8)
-        for q in sorted_qs:
+        for i, q in enumerate(sorted_qs):
             taxa = q.get('taxa_acerto', 0)
             total = q.get('total_respostas', 0)
             acertos_estim = (taxa / 100) * total
             titulo = safe_text(f'Questao {q["questao_num"]}: {q["titulo"][:45]}')
             tempo = safe_text(q.get('tempo_medio_formatado', '0s'))
 
-            # Cor de fundo pela taxa
-            if taxa < 45:
-                pdf.set_fill_color(254, 226, 226)  # vermelho claro
-            elif taxa < 75:
-                pdf.set_fill_color(254, 249, 195)  # amarelo claro
+            # Alternating background for general cells
+            if i % 2 == 0:
+                pdf.set_fill_color(255, 255, 255)
             else:
-                pdf.set_fill_color(220, 252, 231)  # verde claro
+                pdf.set_fill_color(248, 250, 252)
+
+            pdf.set_text_color(51, 65, 85)
+            pdf.set_draw_color(226, 232, 240)
 
             pdf.cell(80, 6, titulo, 1, 0, 'L', True)
             pdf.cell(25, 6, str(total), 1, 0, 'C', True)
-            pdf.cell(25, 6, f"{acertos_estim:.1f}", 1, 0, 'C', True)
+            
+            # Format acertos_estim to 1 decimal place
+            acertos_estim_str = f"{acertos_estim:.1f}" if acertos_estim % 1 != 0 else f"{int(acertos_estim)}"
+            pdf.cell(25, 6, acertos_estim_str, 1, 0, 'C', True)
             pdf.cell(30, 6, tempo, 1, 0, 'C', True)
+
+            # Badge cell for Taxa (%)
+            if taxa >= 70:
+                pdf.set_fill_color(220, 252, 231)
+                pdf.set_text_color(22, 101, 52)
+            elif taxa >= 40:
+                pdf.set_fill_color(254, 249, 195)
+                pdf.set_text_color(133, 77, 14)
+            else:
+                pdf.set_fill_color(254, 226, 226)
+                pdf.set_text_color(153, 27, 27)
+
             pdf.cell(25, 6, f"{taxa:.1f}%", 1, 0, 'C', True)
             pdf.ln()
         pdf.ln(8)
@@ -571,7 +590,9 @@ def generate_class_pdf(turma_name: str, student_users: List[Dict], global_stats:
     pdf.set_text_color(0, 0, 0)
     pdf.ln(1)
 
+    pdf.set_draw_color(226, 232, 240)
     pdf.set_fill_color(241, 245, 249)
+    pdf.set_text_color(71, 85, 105)
     pdf.set_font('Helvetica', 'B', 8)
     pdf.cell(55, 7, 'Nome', 1, 0, 'C', True)
     pdf.cell(30, 7, 'Turma', 1, 0, 'C', True)
@@ -604,12 +625,14 @@ def generate_class_pdf(turma_name: str, student_users: List[Dict], global_stats:
 
     pdf.set_font('Helvetica', '', 8)
     for i, (s, total_q, corr_q, acc) in enumerate(ranking):
-        if acc >= 70:
-            pdf.set_fill_color(220, 252, 231)
-        elif acc >= 40:
-            pdf.set_fill_color(254, 249, 195)
+        # Alternating background for general cells
+        if i % 2 == 0:
+            pdf.set_fill_color(255, 255, 255)
         else:
-            pdf.set_fill_color(254, 226, 226)
+            pdf.set_fill_color(248, 250, 252)
+
+        pdf.set_text_color(51, 65, 85)
+        pdf.set_draw_color(226, 232, 240)
 
         nome = safe_text(s.get('name', 'N/A'))[:25]
         turma = safe_text(s.get('turma', '-'))[:14]
@@ -618,7 +641,22 @@ def generate_class_pdf(turma_name: str, student_users: List[Dict], global_stats:
         pdf.cell(30, 6, turma, 1, 0, 'C', True)
         pdf.cell(20, 6, ra, 1, 0, 'C', True)
         pdf.cell(25, 6, str(total_q), 1, 0, 'C', True)
-        pdf.cell(25, 6, str(corr_q), 1, 0, 'C', True)
+        
+        # Format bizarre fractional float value for corr_q
+        corr_q_str = f"{corr_q:.1f}" if corr_q % 1 != 0 else f"{int(corr_q)}"
+        pdf.cell(25, 6, corr_q_str, 1, 0, 'C', True)
+
+        # Soft badge coloring for Taxa Acerto (%)
+        if acc >= 70:
+            pdf.set_fill_color(220, 252, 231)
+            pdf.set_text_color(22, 101, 52)
+        elif acc >= 40:
+            pdf.set_fill_color(254, 249, 195)
+            pdf.set_text_color(133, 77, 14)
+        else:
+            pdf.set_fill_color(254, 226, 226)
+            pdf.set_text_color(153, 27, 27)
+
         pdf.cell(35, 6, f'{acc:.1f}%', 1, 0, 'C', True)
         pdf.ln()
 
@@ -721,18 +759,37 @@ def generate_global_interactions_pdf(student_users: List[Dict], all_analytics: D
         pdf.ln(4)
 
         # Tabela-resumo de desempenho
+        pdf.set_draw_color(226, 232, 240)
         pdf.set_fill_color(241, 245, 249)
+        pdf.set_text_color(71, 85, 105)
         pdf.set_font('Helvetica', 'B', 8)
         col = W / 5
         for h in ['Questoes', 'Taxa Acerto', 'Corretas', 'Parciais', 'Erradas']:
             pdf.cell(col, 6, h, 1, 0, 'C', True)
         pdf.ln()
+        
+        pdf.set_text_color(51, 65, 85)
         pdf.set_font('Helvetica', '', 9)
         pdf.cell(col, 7, str(total_q),  1, 0, 'C')
-        pdf.cell(col, 7, f'{accuracy:.1f}%', 1, 0, 'C')
-        pdf.cell(col, 7, str(correct_q), 1, 0, 'C')
+        
+        # Soft badge coloring for accuracy
+        if accuracy >= 70:
+            pdf.set_fill_color(220, 252, 231)
+            pdf.set_text_color(22, 101, 52)
+        elif accuracy >= 40:
+            pdf.set_fill_color(254, 249, 195)
+            pdf.set_text_color(133, 77, 14)
+        else:
+            pdf.set_fill_color(254, 226, 226)
+            pdf.set_text_color(153, 27, 27)
+        pdf.cell(col, 7, f'{accuracy:.1f}%', 1, 0, 'C', True)
+        
+        pdf.set_text_color(51, 65, 85)
+        correct_q_str = f"{correct_q:.1f}" if correct_q % 1 != 0 else f"{int(correct_q)}"
+        pdf.cell(col, 7, correct_q_str, 1, 0, 'C')
         pdf.cell(col, 7, str(parcial_q), 1, 0, 'C')
         pdf.cell(col, 7, str(errado_q),  1, 0, 'C')
+        pdf.set_text_color(0, 0, 0)
         pdf.ln(8)
 
         # Secao de questoes
@@ -1108,7 +1165,7 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
     level_stats = get_average_user_level()
     hardest_questions = get_hardest_questions(top_n=6)
     
-    # ===== KPIs PRINCIPAIS =====
+    # ===== 1. KPIs PRINCIPAIS =====
     st.markdown(f"### {icon('push_pin', '#10b981', 24)} Métricas Principais", unsafe_allow_html=True)
     col1, col2, col3, col4, col5 = st.columns(5)
     
@@ -1180,32 +1237,244 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
     
     st.markdown("---")
     
-    # ===== INSIGHTS RÁPIDOS COM IA =====
-    st.markdown(f"### {icon('auto_awesome', '#8b5cf6', 24)} Insights Rápidos com IA", unsafe_allow_html=True)
+    # ===== 2. VISUALIZAÇÕES =====
+    col1, col2 = st.columns(2)
     
-    st.markdown("Gere um resumo instantâeno do desempenho da turma nos 5 critérios de avaliação e do padrão de uso do Tutor IA.")
+    with col1:
+        st.markdown(f"### {icon('radar', '#8b5cf6', 24)} Desempenho por Questão (1 a 6)", unsafe_allow_html=True)
+        if q_stats_data:
+            categories = [f"Q{q['questao_num']}" for q in sorted(q_stats_data, key=lambda x: x['questao_num'])]
+            values = [q['taxa_acerto'] for q in sorted(q_stats_data, key=lambda x: x['questao_num'])]
+            
+            fig_radar = go.Figure()
+            fig_radar.add_trace(go.Scatterpolar(
+                r=values + [values[0]],  # Fecha o polígono
+                theta=categories + [categories[0]],
+                fill='toself',
+                fillcolor='rgba(139, 92, 246, 0.15)',
+                line=dict(color='#8b5cf6', width=2.5),
+                marker=dict(size=8, color='#8b5cf6'),
+                name='Taxa de Acerto',
+                hovertemplate='%{theta}: %{r:.1f}%<extra></extra>'
+            ))
+            fig_radar.update_layout(
+                polar=dict(
+                    radialaxis=dict(
+                        visible=True, range=[0, 100],
+                        gridcolor='rgba(128, 128, 128, 0.2)',
+                        ticksuffix='%', tickfont=dict(size=10, color='#64748b')
+                    ),
+                    angularaxis=dict(
+                        gridcolor='rgba(128, 128, 128, 0.2)',
+                        tickfont=dict(size=12, color='#475569', weight='bold')
+                    ),
+                    bgcolor='rgba(0,0,0,0)'
+                ),
+                showlegend=False,
+                height=420,
+                margin=dict(l=60, r=60, t=30, b=30),
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)'
+            )
+            st.plotly_chart(fig_radar, use_container_width=True)
+            
+            st.markdown(f"<div style='color: #64748b; font-size: 0.85rem; text-align: center;'>{icon('lightbulb', '#eab308', 16)} Quanto maior a área, melhor o desempenho geral da turma</div>", unsafe_allow_html=True)
+        else:
+            st.info("Dados insuficientes para análise por questão")
+    
+    with col2:
+        st.markdown(f"### {icon('bar_chart', '#3b82f6', 24)} Distribuição de Alunos por Nível", unsafe_allow_html=True)
+        if level_stats.get('total_alunos', 0) > 0:
+            dist = level_stats['distribuicao']
+            
+            df_level = pd.DataFrame({
+                'Nível': ['Básico', 'Intermediário', 'Avançado'],
+                'Quantidade': [dist['basico'], dist['intermediario'], dist['avancado']]
+            })
+            
+            fig_level = px.pie(
+                df_level,
+                values='Quantidade',
+                names='Nível',
+                title="Distribuição de Alunos",
+                color='Nível',
+                color_discrete_map={
+                    'Básico': '#3b82f6',
+                    'Intermediário': '#eab308',
+                    'Avançado': '#22c55e'
+                }
+            )
+            fig_level.update_traces(textposition='inside', textinfo='percent+label')
+            fig_level.update_layout(
+                height=400,
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                font=dict(family="Inter, sans-serif", size=12),
+                legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5)
+            )
+            st.plotly_chart(fig_level, use_container_width=True)
+        else:
+            st.info("Dados insuficientes")
+            
+    st.markdown("---")
+    
+    # ===== 3. RANKING DOS ALUNOS =====
+    st.markdown(f"### {icon('emoji_events', '#f59e0b', 24)} Ranking de Alunos", unsafe_allow_html=True)
+    
+    ranking_data = []
+    for user in student_users:
+        uid = user['id']
+        u_data = all_analytics.get(uid, {})
+        case_analytics = u_data.get('case_analytics', [])
+        
+        if not case_analytics:
+            continue
+        
+        total_cases = len(case_analytics)
+        total_points = sum(float(c.get("case_result", {}).get("points_gained", 0)) for c in case_analytics)
+        
+        total_possible = 0.0
+        from logic import get_case
+        for c in case_analytics:
+            q_info = get_case(c.get('case_id', ''))
+            total_possible += q_info.get('pontuacao_maxima', 5.0)
+            
+        acc_rate = (total_points / total_possible * 100) if total_possible > 0 else 0.0
+        
+        ranking_data.append({
+            'Nome': user['name'],
+            'Email': user['email'],
+            'Questões': total_cases,
+            'Pontos': f"{total_points:.1f}",
+            'Taxa de Acerto': acc_rate
+        })
+    
+    if ranking_data:
+        df_ranking = pd.DataFrame(ranking_data)
+        df_ranking = df_ranking.sort_values('Taxa de Acerto', ascending=False)
+        
+        col_rank1, col_rank2 = st.columns(2)
+        
+        with col_rank1:
+            st.markdown(f"#### {icon('star', '#eab308', 20)} Top 10 Melhores Desempenhos", unsafe_allow_html=True)
+            top_10 = df_ranking.head(10).copy()
+            top_10['Taxa de Acerto'] = top_10['Taxa de Acerto'].apply(lambda x: f"{x:.1f}%")
+            st.dataframe(top_10, use_container_width=True, hide_index=True)
+        
+        with col_rank2:
+            st.markdown(f"#### {icon('priority_high', '#ef4444', 20)} Alunos que Precisam de Atenção", unsafe_allow_html=True)
+            need_attention = df_ranking.sort_values('Taxa de Acerto', ascending=True).head(10).copy()
+            
+            if not need_attention.empty:
+                need_attention['Taxa de Acerto'] = need_attention['Taxa de Acerto'].apply(lambda x: f"{x:.1f}%")
+                st.dataframe(need_attention, use_container_width=True, hide_index=True)
+            else:
+                st.success("Todos os alunos estão com bom desempenho!")
+    else:
+        st.info("Nenhum aluno respondeu questões ainda")
+        
+    st.markdown("---")
+    
+    # ===== 4. CARDS DE QUESTÕES DETALHADOS =====
+    st.markdown(f"### {icon('quiz', '#10b981', 24)} Painel de Questões — Visão Detalhada", unsafe_allow_html=True)
+    st.markdown(f"<div style='color: #64748b; font-size: 0.9rem; margin-bottom: 1rem;'>{icon('info', '#64748b', 16)} Cada card mostra o desempenho da turma em uma questão específica do módulo de Biologia Molecular.</div>", unsafe_allow_html=True)
+    
+    if q_stats_data:
+        from logic import QUESTIONS as ALL_QUESTIONS_OV
+        sorted_stats = sorted(q_stats_data, key=lambda x: x['questao_num'])
+        
+        for row_idx in range(0, len(sorted_stats), 2):
+            cols = st.columns(2)
+            for col_idx in range(2):
+                q_idx = row_idx + col_idx
+                if q_idx >= len(sorted_stats):
+                    break
+                q = sorted_stats[q_idx]
+                
+                with cols[col_idx]:
+                    taxa = q['taxa_acerto']
+                    total = q['total_respostas']
+                    tempo = q.get('tempo_medio_formatado', '0s')
+                    titulo = q['titulo'][:65]
+                    
+                    if taxa >= 70:
+                        q_class = "q-card-green"
+                        sc = "#10b981"
+                        sl, si = "Bom", "check_circle"
+                    elif taxa >= 40:
+                        q_class = "q-card-yellow"
+                        sc = "#eab308"
+                        sl, si = "Atenção", "warning"
+                    else:
+                        q_class = "q-card-red"
+                        sc = "#ef4444"
+                        sl, si = "Crítico", "error"
+                    
+                    bw = max(taxa, 3)
+                    full_q_text = ALL_QUESTIONS_OV[q['questao_num'] - 1]['pergunta'] if q['questao_num'] <= len(ALL_QUESTIONS_OV) else titulo
+                    
+                    card_html = f"""
+                    <div class="q-card {q_class}">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div style="background: {sc}; color: white; font-weight: 700; font-size: 1.1rem; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px {sc}40;">Q{q['questao_num']}</div>
+                                <div style="font-weight: 600; font-size: 0.9rem; color: var(--text-color); line-height: 1.3; max-width: 280px;">{titulo}</div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 4px; background: {sc}18; padding: 2px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; color: {sc};">
+                                {icon(si, sc, 14)} {sl}
+                            </div>
+                        </div>
+                        <div class="q-progress-bg">
+                            <div class="q-progress-bar" style="background: linear-gradient(90deg, {sc}88, {sc}); width: {bw}%;">
+                                <span style="color: white; font-weight: 700; font-size: 0.85rem; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">{taxa:.1f}%</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: space-around; gap: 0.5rem; margin-top: 0.75rem;">
+                            <div style="text-align: center; flex: 1;">
+                                <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">{icon('people', '#64748b', 13)} Respostas</div>
+                                <div style="font-size: 1.1rem; font-weight: 600; color: var(--text-color);">{total}</div>
+                            </div>
+                            <div style="width: 1px; background: rgba(148, 163, 184, 0.2);"></div>
+                            <div style="text-align: center; flex: 1;">
+                                <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">{icon('schedule', '#64748b', 13)} Tempo Médio</div>
+                                <div style="font-size: 1.1rem; font-weight: 600; color: var(--text-color);">{tempo}</div>
+                            </div>
+                            <div style="width: 1px; background: rgba(148, 163, 184, 0.2);"></div>
+                            <div style="text-align: center; flex: 1;">
+                                <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">{icon('track_changes', sc, 13)} Acerto</div>
+                                <div style="font-size: 1.1rem; font-weight: 700; color: {sc};">{taxa:.1f}%</div>
+                            </div>
+                        </div>
+                    </div>
+                    """
+                    st.markdown(card_html, unsafe_allow_html=True)
+                    with st.expander("Ler questão completa", expanded=False):
+                        st.markdown(f"**Questão {q['questao_num']}**: {full_q_text}")
+    else:
+        st.info("Nenhuma questão foi respondida ainda.")
+        
+    st.markdown("---")
+    
+    # ===== 5. INSIGHTS RÁPIDOS COM IA =====
+    st.markdown(f"### {icon('auto_awesome', '#8b5cf6', 24)} Insights Rápidos com IA", unsafe_allow_html=True)
+    st.markdown("Gere um resumo instantâneo do desempenho da turma nos 5 critérios de avaliação e do padrão de uso do Tutor IA.")
     
     if st.button("Atualizar Análises com IA", icon=":material/psychology:", type="primary"):
         with st.spinner("Analisando respostas e conversas com a IA... Isso pode levar alguns segundos."):
-            
             col_insight1, col_insight2 = st.columns([1.5, 1])
-            
             with col_insight1:
                 from logic import generate_class_criteria_analysis
-                # Busca amostras recentes globais
                 recent_answers = []
                 for uid, data in all_analytics.items():
                     if uid in [s['id'] for s in student_users]:
                         cases = data.get('case_analytics', [])
-                        for c in cases[-5:]: # ultimas 5 tentantivas de cada aluno
+                        for c in cases[-5:]:
                             ans = c.get('case_result', {}).get('user_answer')
                             if ans:
                                 recent_answers.append(ans)
                 
-                # Embaralha e pega 15
                 import random
                 random.shuffle(recent_answers)
-                
                 criteria_analysis = generate_class_criteria_analysis(recent_answers[:15])
                 
                 st.markdown(f"#### {icon('psychology', '#8b5cf6', 22)} Análise de IA por Eixos de Conhecimento (1 a 6)", unsafe_allow_html=True)
@@ -1214,7 +1483,6 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
                     
             with col_insight2:
                 from logic import generate_ai_usage_preview
-                # Coleta amostras recentes de uso do chat
                 chat_samples = []
                 for uid, data in all_analytics.items():
                     if uid in [s['id'] for s in student_users]:
@@ -1234,11 +1502,14 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
                 st.markdown("#### Padrão de Uso do Tutor")
                 st.success(f"{ai_usage}")
     else:
-            st.info("Clique no botão acima para carregar as análises em tempo real.", icon=":material/arrow_upward:")
+        st.info("Clique no botão acima para carregar as análises em tempo real.", icon=":material/arrow_upward:")
 
     st.markdown("---")
     
-    # PDF de Visão Geral (Agora em 3 colunas)
+    # ===== 6. EXPORTAÇÃO DE RELATÓRIOS (PDFs) =====
+    st.markdown(f"### {icon('description', '#10b981', 24)} Exportação de Relatórios", unsafe_allow_html=True)
+    st.markdown("Baixe os dados e análises da turma consolidados em arquivos PDF prontos para impressão ou arquivamento.")
+    
     col_pdf1, col_pdf2, col_pdf3 = st.columns(3)
     with col_pdf1:
         pdf_bytes_class = generate_class_pdf(turma_filter, student_users, global_stats, q_stats_data)
@@ -1280,238 +1551,6 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
                     )
                 except Exception as e:
                     st.error(f"Erro ao gerar o PDF da IA: {e}")
-            
-    st.markdown("---")
-    
-    # ===== VISUALIZAÇÕES =====
-    
-    # Linha 1: Radar de Desempenho por Questão + Distribuição por Nível
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown(f"### {icon('radar', '#8b5cf6', 24)} Desempenho por Questão (1 a 6)", unsafe_allow_html=True)
-        if q_stats_data:
-            # Radar chart para visualizar todas as 6 questões de uma vez
-            categories = [f"Q{q['questao_num']}" for q in sorted(q_stats_data, key=lambda x: x['questao_num'])]
-            values = [q['taxa_acerto'] for q in sorted(q_stats_data, key=lambda x: x['questao_num'])]
-            
-            fig_radar = go.Figure()
-            fig_radar.add_trace(go.Scatterpolar(
-                r=values + [values[0]],  # Fecha o polígono
-                theta=categories + [categories[0]],
-                fill='toself',
-                fillcolor='rgba(139, 92, 246, 0.15)',
-                line=dict(color='#8b5cf6', width=2.5),
-                marker=dict(size=8, color='#8b5cf6'),
-                name='Taxa de Acerto',
-                hovertemplate='%{theta}: %{r:.1f}%<extra></extra>'
-            ))
-            fig_radar.update_layout(
-                polar=dict(
-                    radialaxis=dict(
-                        visible=True, range=[0, 100],
-                        gridcolor='rgba(255, 255, 255, 0.08)',
-                        ticksuffix='%', tickfont=dict(size=10, color='#94a3b8')
-                    ),
-                    angularaxis=dict(
-                        gridcolor='rgba(255, 255, 255, 0.08)',
-                        tickfont=dict(size=12, color='#f8fafc', weight='bold')
-                    ),
-                    bgcolor='rgba(0,0,0,0)'
-                ),
-                showlegend=False,
-                height=420,
-                margin=dict(l=60, r=60, t=30, b=30),
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)'
-            )
-            st.plotly_chart(fig_radar, use_container_width=True)
-            
-            # Legenda explicativa
-            st.markdown(f"<div style='color: #64748b; font-size: 0.85rem; text-align: center;'>{icon('lightbulb', '#eab308', 16)} Quanto maior a área, melhor o desempenho geral da turma</div>", unsafe_allow_html=True)
-        else:
-            st.info("Dados insuficientes para análise por questão")
-    
-    with col2:
-        st.markdown(f"### {icon('bar_chart', '#3b82f6', 24)} Distribuição de Alunos por Nível", unsafe_allow_html=True)
-        if level_stats.get('total_alunos', 0) > 0:
-            dist = level_stats['distribuicao']
-            
-            df_level = pd.DataFrame({
-                'Nível': ['Básico', 'Intermediário', 'Avançado'],
-                'Quantidade': [dist['basico'], dist['intermediario'], dist['avancado']]
-            })
-            
-            fig_level = px.pie(
-                df_level,
-                values='Quantidade',
-                names='Nível',
-                title="Distribuição de Alunos",
-                color='Nível',
-                color_discrete_map={
-                    'Básico': '#3b82f6',
-                    'Intermediário': '#eab308',
-                    'Avançado': '#22c55e'
-                }
-            )
-            fig_level.update_traces(textposition='inside', textinfo='percent+label')
-            fig_level.update_layout(
-                height=400,
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)',
-                font=dict(family="Inter, sans-serif", size=12),
-                legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5)
-            )
-            st.plotly_chart(fig_level, use_container_width=True)
-        else:
-            st.info("Dados insuficientes")
-    
-    # ===== CARDS DE QUESTÕES DETALHADOS =====
-    st.markdown(f"### {icon('quiz', '#10b981', 24)} Painel de Questões — Visão Detalhada", unsafe_allow_html=True)
-    st.markdown(f"<div style='color: #64748b; font-size: 0.9rem; margin-bottom: 1rem;'>{icon('info', '#64748b', 16)} Cada card mostra o desempenho da turma em uma questão específica do módulo de Biologia Molecular.</div>", unsafe_allow_html=True)
-    
-    if q_stats_data:
-        from logic import QUESTIONS as ALL_QUESTIONS_OV
-        sorted_stats = sorted(q_stats_data, key=lambda x: x['questao_num'])
-        
-        # Exibe em 2 colunas, 3 linhas
-        for row_idx in range(0, len(sorted_stats), 2):
-            cols = st.columns(2)
-            for col_idx in range(2):
-                q_idx = row_idx + col_idx
-                if q_idx >= len(sorted_stats):
-                    break
-                q = sorted_stats[q_idx]
-                
-                with cols[col_idx]:
-                    taxa = q['taxa_acerto']
-                    total = q['total_respostas']
-                    tempo = q.get('tempo_medio_formatado', '0s')
-                    titulo = q['titulo'][:65]
-                    
-                    # Cores por taxa de acerto
-                    if taxa >= 70:
-                        q_class = "q-card-green"
-                        sc = "#10b981"
-                        sl, si = "Bom", "check_circle"
-                    elif taxa >= 40:
-                        q_class = "q-card-yellow"
-                        sc = "#eab308"
-                        sl, si = "Atenção", "warning"
-                    else:
-                        q_class = "q-card-red"
-                        sc = "#ef4444"
-                        sl, si = "Crítico", "error"
-                    
-                    bw = max(taxa, 3)
-                    
-                    # Full question text
-                    full_q_text = ALL_QUESTIONS_OV[q['questao_num'] - 1]['pergunta'] if q['questao_num'] <= len(ALL_QUESTIONS_OV) else titulo
-                    
-                    card_html = f"""
-                    <div class="q-card {q_class}">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
-                            <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                <div style="background: {sc}; color: white; font-weight: 700; font-size: 1.1rem; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px {sc}40;">Q{q['questao_num']}</div>
-                                <div style="font-weight: 600; font-size: 0.9rem; color: var(--text-color); line-height: 1.3; max-width: 280px;">{titulo}</div>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 4px; background: {sc}18; padding: 2px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; color: {sc};">
-                                {icon(si, sc, 14)} {sl}
-                            </div>
-                        </div>
-                        <div class="q-progress-bg">
-                            <div class="q-progress-bar" style="background: linear-gradient(90deg, {sc}88, {sc}); width: {bw}%;">
-                                <span style="color: white; font-weight: 700; font-size: 0.85rem; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">{taxa:.1f}%</span>
-                            </div>
-                        </div>
-                        <div style="display: flex; justify-content: space-around; gap: 0.5rem; margin-top: 0.75rem;">
-                            <div style="text-align: center; flex: 1;">
-                                <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">{icon('people', '#64748b', 13)} Respostas</div>
-                                <div style="font-size: 1.1rem; font-weight: 600; color: var(--text-color);">{total}</div>
-                            </div>
-                            <div style="width: 1px; background: rgba(148, 163, 184, 0.2);"></div>
-                            <div style="text-align: center; flex: 1;">
-                                <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">{icon('schedule', '#64748b', 13)} Tempo Médio</div>
-                                <div style="font-size: 1.1rem; font-weight: 600; color: var(--text-color);">{tempo}</div>
-                            </div>
-                            <div style="width: 1px; background: rgba(148, 163, 184, 0.2);"></div>
-                            <div style="text-align: center; flex: 1;">
-                                <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">{icon('track_changes', sc, 13)} Acerto</div>
-                                <div style="font-size: 1.1rem; font-weight: 700; color: {sc};">{taxa:.1f}%</div>
-                            </div>
-                        </div>
-                    </div>
-                    """
-                    
-                    st.markdown(card_html, unsafe_allow_html=True)
-                    with st.expander("Ler questão completa", expanded=False):
-                        st.markdown(f"**Questão {q['questao_num']}**: {full_q_text}")
-
-    else:
-        st.info("Nenhuma questão foi respondida ainda.")
-    
-    st.markdown("---")
-    
-    # Linha 3: Ranking de Alunos
-    st.markdown(f"### {icon('emoji_events', '#f59e0b', 24)} Ranking de Alunos", unsafe_allow_html=True)
-    
-    # Prepara dados para ranking
-    ranking_data = []
-    for user in student_users:
-        uid = user['id']
-        u_data = all_analytics.get(uid, {})
-        case_analytics = u_data.get('case_analytics', [])
-        
-        if not case_analytics:
-            continue
-        
-        total_cases = len(case_analytics)
-        
-        # Recalcula pontos totais de forma simples
-        total_points = sum(float(c.get("case_result", {}).get("points_gained", 0)) for c in case_analytics)
-        
-        # Calcula taxa média baseada nos pontos possíveis
-        total_possible = 0.0
-        from logic import get_case
-        for c in case_analytics:
-            q_info = get_case(c.get('case_id', ''))
-            total_possible += q_info.get('pontuacao_maxima', 5.0)
-            
-        acc_rate = (total_points / total_possible * 100) if total_possible > 0 else 0.0
-        
-        
-        ranking_data.append({
-            'Nome': user['name'],
-            'Email': user['email'],
-            'Questões': total_cases,
-            'Pontos': f"{total_points:.1f}",
-            'Taxa de Acerto': acc_rate
-        })
-    
-    if ranking_data:
-        df_ranking = pd.DataFrame(ranking_data)
-        df_ranking = df_ranking.sort_values('Taxa de Acerto', ascending=False)
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown(f"#### {icon('star', '#eab308', 20)} Top 10 Melhores Desempenhos", unsafe_allow_html=True)
-            top_10 = df_ranking.head(10).copy()
-            top_10['Taxa de Acerto'] = top_10['Taxa de Acerto'].apply(lambda x: f"{x:.1f}%")
-            st.dataframe(top_10, use_container_width=True, hide_index=True)
-        
-        with col2:
-            st.markdown(f"#### {icon('priority_high', '#ef4444', 20)} Alunos que Precisam de Atenção", unsafe_allow_html=True)
-            # Alunos com menor taxa de acerto (ordenados do pior para o melhor)
-            need_attention = df_ranking.sort_values('Taxa de Acerto', ascending=True).head(10).copy()
-            
-            if not need_attention.empty:
-                need_attention['Taxa de Acerto'] = need_attention['Taxa de Acerto'].apply(lambda x: f"{x:.1f}%")
-                st.dataframe(need_attention, use_container_width=True, hide_index=True)
-            else:
-                st.success("Todos os alunos estão com bom desempenho!")
-    else:
-        st.info("Nenhum aluno respondeu questões ainda")
 
 def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict):
     """Tab de análise individual com perfil detalhado de cada aluno"""
@@ -1746,10 +1785,10 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
             fig_ind_radar.update_layout(
                 polar=dict(
                     radialaxis=dict(visible=True, range=[0, 100],
-                                    gridcolor='rgba(255, 255, 255, 0.08)',
-                                    ticksuffix='%', tickfont=dict(size=10, color='#94a3b8')),
-                    angularaxis=dict(gridcolor='rgba(255, 255, 255, 0.08)',
-                                     tickfont=dict(size=12, color='#f8fafc', weight='bold')),
+                                    gridcolor='rgba(128, 128, 128, 0.2)',
+                                    ticksuffix='%', tickfont=dict(size=10, color='#64748b')),
+                    angularaxis=dict(gridcolor='rgba(128, 128, 128, 0.2)',
+                                     tickfont=dict(size=12, color='#475569', weight='bold')),
                     bgcolor='rgba(0,0,0,0)'
                 ),
                 showlegend=False, height=380,
