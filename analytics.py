@@ -1092,14 +1092,12 @@ def get_all_answers_by_category(limit_per_category: int = 20) -> Dict[str, List[
     Returns:
         Um dicionário: { "Nome da Categoria": ["Resposta ruim 1", "Resposta ruim 2"] }
     """
-    # Mapeamento de QID para o Tópico dos 6 Eixos
+    # Mapeamento de QID para o Tópico dos 4 Eixos
     qid_to_axis = {
-        "q1_dna_interacoes": "1. Estabilidade e Interações do DNA",
-        "q2_dna_polimerase": "2. Replicação: Direcionalidade e Limitações da Polimerase",
-        "q3_fita_atrasada": "3. Fita Atrasada e Fragmentos de Okazaki",
-        "q4_topoisomerases": "4. Problemas Mecânicos e Papel das Topoisomerases",
-        "q5_reparo_lesoes": "5. Mecanismos de Reparo (BER/NER) e Lesões",
-        "q6_falha_reparo": "6. Checkpoints do Ciclo Celular e Evolução Tumoral"
+        "q1_expressao_genica_eucariotos": "1. Regulação Transcricional em Eucariotos",
+        "q2_mrna_trna_sintese_proteica": "2. Síntese Proteica e Papel do mRNA/tRNA",
+        "q3_etapas_traducao_sitios": "3. Etapas da Tradução e Sítios Ribossomais",
+        "q4_operons_lac_trp": "4. Operons de Regulação Gênica Procariótica"
     }
     
     # Coleta de respostas por eixo

@@ -61,73 +61,87 @@ SAVE_PATH = os.path.join(DATA_DIR, "progresso_gamificado.json")
 
 # =============================
 # Base de Conhecimento: Genética e Biologia Molecular
-# =============================
+# =====================
 QUESTIONS: List[Dict[str, Any]] = [
     {
-      "id": "q1_dna_interacoes",
-      "pergunta": "A dupla hélice do DNA é mantida por diferentes tipos de interações químicas. Explique quais são essas forças, onde cada uma atua na estrutura e o que acontece com a molécula quando elas são rompidas.",
-      "componentes_conhecimento": ["Interações Químicas", "Estabilidade do DNA", "Conformação do DNA"],
-      "referencia": {
-          "Básico": "A dupla hélice é mantida por ligações de hidrogênio entre as bases nitrogenadas complementares (A=T com duas ligações; G≡C com três) e por ligações covalentes no backbone (esqueleto / cadeia principal) de açúcar e fosfato. Quando rompidas, as fitas se separam. Na célula, isso é feito por helicases.",
-          "Médio": "Além das ligações de hidrogênio, forças de empilhamento (base stacking) entre bases adjacentes — interações hidrofóbicas e de van der Waals — contribuem igualmente para a estabilidade. A repulsão dos grupos fosfato negativos é uma força desestabilizadora neutralizada por histonas e cátions.",
-          "Avançado": "A estabilidade não é uniforme ao longo da sequência — regiões A-T são menos estáveis e constituem pontos preferenciais de abertura, como origens de replicação. O DNA pode adotar conformações A, B ou Z dependendo de hidratação, superenrolamento (supercoiling) e contexto proteico. As forças de empilhamento são anisotrópicas e sequência-dependentes. Proteínas HMG e topoisomerases modulam ativamente o estado conformacional in vivo."
-      },
-      "pontuacao_maxima": 3
+        "id": "q1_expressao_genica_eucariotos",
+        "pergunta": "Explique como a expressão gênica pode ser regulada em eucariotos.",
+        "componentes_conhecimento": ["Regulação Gênica", "Promotores e Fatores de Transcrição", "Organização da Cromatina"],
+        "referencia": {
+            "Básico": {
+                "parametros": "O aluno reconhece que a regulação gênica eucariótica é mais complexa que a bacteriana (controlada por promotores, fatores de transcrição, organização da cromatina, enhancers, silenciadores e ligantes/receptores).",
+                "resposta_exemplo": "Em eucariotos, a expressão gênica pode ser controlada por promotores, fatores de transcrição e pela organização da cromatina. Regiões como enhancers podem aumentar a transcrição, enquanto silenciadores podem reduzi-la. Alguns ligantes também podem ativar receptores que influenciam a expressão de genes."
+            },
+            "Intermediário": {
+                "parametros": "O aluno explica os principais elementos regulatórios (interação de promotores como organizadores da maquinaria, enhancers com fatores ativadores, silenciadores com repressores, e papel da acetilação de histonas deixando o DNA acessível vs desacetilação compactando a cromatina).",
+                "resposta_exemplo": "A transcrição em eucariotos depende da interação entre promotores, fatores de transcrição, enhancers e silenciadores. Promotores são regiões próximas ao gene onde a maquinaria de transcrição se organiza. Enhancers aumentam a transcrição ao favorecer a ação de fatores ativadores, enquanto silenciadores reduzem a expressão gênica. A cromatina também influencia esse processo: histonas acetiladas tendem a deixar o DNA mais acessível, favorecendo a transcrição, enquanto a desacetilação tende a compactar a cromatina e reduzir a expressão."
+            },
+            "Avançado": {
+                "parametros": "O aluno integra cromatina (hiperacetilação vs desacetilação), regulação combinatória transcricional (promotores basais, enhancers/silenciadores modulam intensidade por fatores ativadores/repressores) e sinalização celular (ligantes lipofílicos ativando receptores intracelulares como fatores de transcrição vs ligantes hidrofílicos ativando receptores de membrana e cascatas de sinalização/fosforilação).",
+                "resposta_exemplo": "A regulação gênica em eucariotos é combinatória e pode ocorrer em vários níveis. No nível transcricional, promotores recrutam a maquinaria basal, enquanto enhancers e silenciadores modulam a intensidade da transcrição por meio da ligação de fatores ativadores ou repressores. A conformação da cromatina é decisiva: hiperacetilação de histonas favorece uma cromatina mais aberta e transcrição mais eficiente; desacetilação favorece compactação e repressão. Ligantes lipofílicos podem atravessar a membrana e ativar receptores intracelulares que atuam como fatores de transcrição. Ligantes hidrofílicos, por sua vez, geralmente ativam receptores de membrana, iniciando cascatas de sinalização que podem fosforilar fatores reguladores e alterar a expressão gênica."
+            }
+        },
+        "pontuacao_maxima": 3
     },
     {
-      "id": "q2_dna_polimerase_limitacoes",
-      "pergunta": "A DNA polimerase é a principal enzima da replicação, mas sozinha ela não consegue copiar o DNA. Explique quais são as suas limitações estruturais e funcionais e como a célula resolve cada uma delas para garantir que a replicação ocorra com fidelidade.",
-      "componentes_conhecimento": ["DNA Polimerase", "Mecanismos de Replicação", "Fidelidade da Replicação"],
-      "referencia": {
-          "Básico": "A DNA polimerase precisa de fita molde, iniciador (primer) com extremidade 3'-OH e não consegue iniciar síntese do zero. A primase fornece o iniciador (primer) de RNA. A polimerase só sintetiza 5'→3' e corrige erros pelo proofreading (revisão / atividade corretora).",
-          "Médio": "A incapacidade de iniciar é contornada pela primase (RNA polimerase que não exige iniciador). A energia vem da hidrólise do pirofosfato do dNTP incorporado. O proofreading (revisão) usa o sítio exonuclease 3'→5' da própria polimerase. A processividade é garantida pelo grampo deslizante (sliding clamp). Os iniciadores (primers) são removidos pela DNA pol I (procariotos) após a síntese.",
-          "Avançado": "A direcionalidade 5'→3' é vantagem evolutiva: permite proofreading (revisão) sem destruir a fonte de energia. Em eucariotos, Pol α inicia com iniciador (primer) acoplado, depois é substituída por Pol ε (fita líder / leading strand) e Pol δ (fita atrasada / lagging strand) após recrutamento do PCNA (grampo deslizante eucariótico). Pol δ também atua no NER (reparo por excisão de nucleotídeo) e MMR (reparo de mau-pareamento), integrando replicação e reparo."
-      },
-      "pontuacao_maxima": 3
+        "id": "q2_mrna_trna_sintese_proteica",
+        "pergunta": "Explique como o RNA mensageiro é interpretado durante a síntese proteica e qual é o papel dos tRNAs nesse processo.",
+        "componentes_conhecimento": ["Síntese Proteica", "Códons e Anticódons", "tRNA e Tradução"],
+        "referencia": {
+            "Básico": {
+                "parametros": "O aluno compreende a ideia geral de que o mRNA orienta a produção de proteínas, sendo lido em códons (trincas de bases) que indicam aminoácidos, e os tRNAs transportam os aminoácidos até o ribossomo.",
+                "resposta_exemplo": "O RNA mensageiro carrega a informação genética copiada do DNA. Durante a tradução, ele é lido em grupos de três bases chamados códons. Cada códon indica um aminoácido. Os tRNAs transportam os aminoácidos até o ribossomo e ajudam a formar a proteína."
+            },
+            "Intermediário": {
+                "parametros": "O aluno explica a relação entre códon, anticódon e aminoácido (mRNA lido 5' para 3' em códons, tRNAs com anticódons complementares, e papel crítico das aminoacil-tRNA sintetases na ligação correta entre aminoácido e tRNA).",
+                "resposta_exemplo": "O mRNA é lido no sentido 5' para 3', em trincas chamadas códons. Cada códon corresponde a um aminoácido ou a um sinal de parada. Os tRNAs possuem anticódons complementares aos códons do mRNA e carregam aminoácidos específicos. A ligação correta entre aminoácido e tRNA é feita pelas aminoacil-tRNA sintetases, que são essenciais para a fidelidade da tradução."
+            },
+            "Avançado": {
+                "parametros": "O aluno explica a fidelidade da tradução e propriedades do código genético (código degenerado, universal e não sobreposto, tRNAs como adaptadores moleculares, papel da aminoacil-tRNA sintetase e flexibilidade de pareamento da terceira base - wobble position).",
+                "resposta_exemplo": "Durante a tradução, o mRNA é lido no sentido 5' para 3', em códons de três nucleotídeos. O código genético é degenerado, pois mais de um códon pode codificar o mesmo aminoácido; é praticamente universal; e não é lido de forma sobreposta. Os tRNAs funcionam como adaptadores moleculares: seus anticódons reconhecem códons do mRNA e sua extremidade carrega o aminoácido correspondente. A aminoacil-tRNA sintetase garante que cada tRNA receba o aminoácido correto. A wobble position permite certa flexibilidade no pareamento da terceira base do códon, contribuindo para que um mesmo tRNA reconheça mais de um códon sinônimo."
+            }
+        },
+        "pontuacao_maxima": 3
     },
     {
-      "id": "q3_replicacao_fita_atrasada",
-      "pergunta": "As duas fitas do DNA são copiadas de formas diferentes durante a replicação. Explique por que isso acontece e descreva, passo a passo, como a fita que apresenta maior dificuldade para ser copiada é sintetizada e processada até gerar uma fita contínua e completa.",
-      "componentes_conhecimento": ["Antiparalelismo", "Fragmentos de Okazaki", "Mecanismo da Fita Atrasada"],
-      "referencia": {
-          "Básico": "O antiparalelismo faz com que apenas uma fita — fita líder (leading strand) — possa ser copiada continuamente. A outra — fita atrasada (lagging strand) — é copiada em fragmentos de Okazaki, cada um iniciado por um iniciador (primer), depois unidos pela ligase.",
-          "Médio": "A síntese da fita atrasada (lagging strand) é cíclica: primase sintetiza o iniciador (primer), a pol III extende a fita até o fragmento anterior. A DNA pol I remove o iniciador e preenche (síntese por substituição / nick translation). A ligase sela com NAD+/ATP. Em eucariotos os fragmentos são menores (~100-200 nt) por causa dos nucleossomos.",
-          "Avançado": "O modelo do trombone (trombone model) mantém ambas as polimerases acopladas no replissomo. Em eucariotos, Pol δ realiza deslocamento de fita (strand displacement)."
-      },
-      "pontuacao_maxima": 3
+        "id": "q3_etapas_traducao_sitios",
+        "pergunta": "Descreva as principais etapas da tradução e explique a função dos sítios A, P e E do ribossomo.",
+        "componentes_conhecimento": ["Etapas da Tradução", "Ribossomo e Sítios A, P, E", "Iniciação e Elongação"],
+        "referencia": {
+            "Básico": {
+                "parametros": "O aluno identifica as etapas principais da tradução (iniciação onde começa a leitura, elongação onde aminoácidos são adicionados, e terminação onde a proteína é liberada no códon de parada).",
+                "resposta_exemplo": "A tradução ocorre no ribossomo e possui três etapas principais: iniciação, elongação e terminação. Na iniciação, o ribossomo começa a leitura do mRNA. Na elongação, os aminoácidos são adicionados à cadeia em crescimento. Na terminação, a proteína é liberada quando o ribossomo encontra um códon de parada."
+            },
+            "Intermediário": {
+                "parametros": "O aluno descreve os sítios ribossômicos e o movimento dos tRNAs (sítio A recebe o aminoacil-tRNA, sítio P mantém o peptidil-tRNA com a cadeia em crescimento, sítio E permite a saída do tRNA descarregado, formação de ligações peptídicas e deslocamento/translocação do ribossomo).",
+                "resposta_exemplo": "Durante a tradução, o ribossomo organiza a entrada e saída dos tRNAs. O sítio A recebe o aminoacil-tRNA com o próximo aminoácido. O sítio P mantém o tRNA ligado à cadeia polipeptídica em crescimento. O sítio E permite a saída do tRNA descarregado. Na elongação, o ribossomo forma ligações peptídicas e se desloca ao longo do mRNA. A tradução termina quando um códon de parada é reconhecido por fatores de liberação."
+            },
+            "Avançado": {
+                "parametros": "O aluno integra direção de leitura (mRNA 5' para 3', cadeia N-terminal para C-terminal), iniciação específica (sequência Shine-Dalgarno em procariotos vs quepe 5'/cap em eucariotos), fatores de liberação na terminação, e o impacto regulatório de estruturas secundárias estáveis do mRNA.",
+                "resposta_exemplo": "A tradução começa com a iniciação, quando o ribossomo se posiciona no mRNA e reconhece o códon de início. Em procariotos, a sequência Shine-Dalgarno ajuda a alinhar o ribossomo ao códon inicial. Em eucariotos, a iniciação depende de fatores específicos e do reconhecimento da extremidade 5' do mRNA. Durante a elongação, o mRNA é lido no sentido 5' para 3', enquanto a cadeia polipeptídica cresce do N-terminal para o C-terminal. O sítio A recebe o novo aminoacil-tRNA, o sítio P mantém a cadeia em crescimento e o sítio E libera o tRNA descarregado. Na terminação, fatores de liberação reconhecem códons de parada e promovem a liberação da proteína. Estruturas secundárias muito estáveis no mRNA podem dificultar a iniciação ou o avanço do ribossomo, reduzindo a eficiência da tradução."
+            }
+        },
+        "pontuacao_maxima": 3
     },
     {
-      "id": "q4_problemas_mecanicos_topoisomerases",
-      "pergunta": "A abertura da dupla fita durante a replicação cria problemas mecânicos que precisam ser resolvidos para que a forquilha avance. Identifique esses problemas e explique como as enzimas envolvidas os resolvem — e o que acontece quando uma delas é inibida por um fármaco.",
-      "componentes_conhecimento": ["Topoisomerases", "Superenrolamento", "Inibidores Enzimáticos"],
-      "referencia": {
-          "Básico": "A helicase abre a fita; as proteínas SSB (SSBPs / proteínas de ligação à fita simples) estabilizam a fita simples; topoisomerases resolvem o superenrolamento (supercoiling). A ciprofloxacina inibe a DNA girase (DNA gyrase) bacteriana, bloqueando a replicação.",
-          "Médio": "A DNA girase (gyrase) introduz superenrolamentos negativos cortando transitoriamente as duas fitas. A ciprofloxacina estabiliza o complexo covalente girase-DNA, gerando quebras letais. O etoposídeo age analogamente sobre a topoisomerase II eucariótica — útil em quimioterapia mas genotóxico.",
-          "Avançado": "A seletividade da ciprofloxacina deve-se às diferenças estruturais entre GyrA/B e Top2α/β. A camptotecina inibe a topoisomerase I eucariótica. O complexo CMG eucariótico acopla velocidade da helicase à síntese para evitar excesso de fita simples exposta que ativaria a via de resposta ao dano ao DNA (DDR)."
-      },
-      "pontuacao_maxima": 3
-    },
-    {
-      "id": "q5_lesoes_e_reparo",
-      "pergunta": "Escolha dois tipos de lesão quimicamente distintos, explique como cada um é formado, qual é a consequência para a informação genética se não for reparado e como a célula os identifica e corrige.",
-      "componentes_conhecimento": ["Lesões no DNA", "Mecanismos de Reparo (BER/NER)", "Mutagênese"],
-      "referencia": {
-          "Básico": "Despurinação perde a base, gerando sítio AP (sítio abásico / sítio apurídico) — polimerase insere nucleotídeo incorreto. Dímeros de pirimidina por UV bloqueiam a polimerase. Ambos são corrigidos por excisão de base (BER / REB) ou excisão de nucleotídeo (NER / REN).",
-          "Médio": "Reparo por excisão de base (BER / REB) para lesões pontuais: glicosilase remove a base → AP endonuclease → polimerase → ligase. Reparo por excisão de nucleotídeo (NER / REN) para dímeros: remove oligonucleotídeo ~25-30 nt contendo a lesão. Fotorreativação (photoreactivation) em bactérias usa energia luminosa para reverter o dímero diretamente. Deaminação (desaminação) de metil-citosina gera timina — difícil de reconhecer como lesão.",
-          "Avançado": "O NER acoplado à transcrição (TC-NER) é ativado pelo bloqueio da RNA pol II e é prioritário. Defeitos no NER causam xeroderma pigmentosum, síndrome de Cockayne e tricotiodistrofia. O reparo de mau-pareamento (MMR) depende de metilação (procariotos) ou quebras de fita simples transitórias (nicks) em eucariotos para identificar a fita com erro. Perda do MMR causa instabilidade de microssatélites — síndrome de Lynch."
-      },
-      "pontuacao_maxima": 3
-    },
-    {
-      "id": "q6_consequencias_falha_reparo",
-      "pergunta": "Uma célula em divisão apresenta simultaneamente uma lesão na fita molde e um erro de incorporação de nucleotídeo cometido pela polimerase. Compare os mecanismos disponíveis para corrigir cada um desses problemas, explique por que o momento em que a correção ocorre é crítico e o que acontece se ambos não forem resolvidos antes da próxima divisão.",
-      "componentes_conhecimento": ["Revisão e MMR", "Síntese Translesão", "Checkpoints do Ciclo Celular"],
-      "referencia": {
-          "Básico": "O proofreading (revisão / atividade corretora) corrige erros durante a síntese; o MMR (reparo de mau-pareamento) atua depois. Lesões bloqueiam a polimerase e precisam ser reparadas ou contornadas. Erros não corrigidos geram mutações transmitidas às filhas.",
-          "Médio": "O MMR (reparo de mau-pareamento) depende de marcadores de identidade da fita — metilação em procariotos; quebras de fita simples transitórias (nicks) em eucariotos — e tem janela temporal estreita. Lesões durante a replicação podem ser contornadas por síntese translesão (TLS / síntese sobre lesão) com polimerases de baixa fidelidade, ou reparadas por recombinação homóloga (HR / RH) usando a cromátide irmã. Acúmulo de danos ativa p53 → senescência ou apoptose.",
-          "Avançado": "A via de resposta ao dano ao DNA impõe pontos de checagem (checkpoints) para garantir tempo de reparo. A recombinação homóloga (HR / RH) é restrita às fases S/G2 (cromátide irmã disponível); a junção de extremidades não homólogas (NHEJ / JENH) opera em todo o ciclo mas é mutagênica. O colapso da forquilha replicativa (replication fork collapse) ativa a HR de emergência. Perda de função (loss of function) de p53 permite tolerância a danos e progressão tumoral — conexão direta entre falha nos sistemas de reparo e oncogênese."
-      },
-      "pontuacao_maxima": 3
+        "id": "q4_operons_lac_trp",
+        "pergunta": "Explique o que é um operon e compare o funcionamento geral do operon lac e do operon do triptofano.",
+        "componentes_conhecimento": ["Operons Lac/Trp", "Metabolismo Bacteriano", "Repressão e Indução"],
+        "referencia": {
+            "Básico": {
+                "parametros": "O aluno reconhece que operons são conjuntos de genes bacterianos regulados juntos, e distingue que o operon lac é ativado por lactose e o operon trp é reprimido por triptofano.",
+                "resposta_exemplo": "Um operon é um conjunto de genes bacterianos regulados em conjunto. O operon lac está relacionado ao metabolismo da lactose e tende a ser ativado quando há lactose disponível. O operon do triptofano está relacionado à síntese de triptofano e tende a ser reprimido quando há triptofano suficiente."
+            },
+            "Intermediário": {
+                "parametros": "O aluno explica a lógica regulatória dos dois operons (lac: repressor bloqueia operador; lactose/alolactose inativa repressor liberando a transcrição - indutível; trp: triptofano atua como correpressor e ativa o repressor bloqueando a transcrição - regressível/repressível).",
+                "resposta_exemplo": "No operon lac, o repressor normalmente bloqueia a transcrição ao se ligar ao operador. Quando há lactose, seu derivado alolactose liga-se ao repressor e impede sua ligação ao DNA, permitindo a transcrição dos genes envolvidos no metabolismo da lactose. Por isso, o operon lac é indutível. No operon do triptofano, o triptofano atua como correpressor: quando está abundante, liga-se ao repressor e favorece o bloqueio da transcrição. Por isso, é um sistema repressível."
+            },
+            "Avançado": {
+                "parametros": "O aluno integra estrutura, função e lógica metabólica dos operons (mRNA policistrônico contendo promotor, operador e genes estruturais; regulação alostérica dos repressores; e o mecanismo de atenuação específico do operon trp regulado pela velocidade do ribossomo).",
+                "resposta_exemplo": "Operons são unidades de regulação típicas de procariotos, nas quais genes relacionados são transcritos em um mesmo mRNA policistrônico. Em geral, incluem promotor, operador e genes estruturais. O operon lac é ativado quando a lactose está disponível, pois a alolactose inativa o repressor e permite a transcrição dos genes necessários ao uso da lactose. Já o operon trp é reprimido quando o triptofano está abundante, pois o triptofano atua como correpressor e ativa o repressor. Além disso, o operon trp pode sofrer atenuação, ajustando a transcrição conforme a disponibilidade de triptofano."
+            }
+        },
+        "pontuacao_maxima": 3
     }
 ]
 
@@ -143,47 +157,74 @@ LEVEL_MAP = {
 def evaluate_answer_with_ai(question_data: Dict, user_answer: str) -> Dict[str, Any]:
     # Extrai as referências disponíveis
     referencias = question_data.get('referencia', {})
-    ref_basico = referencias.get('Básico', '')
-    ref_medio = referencias.get('Médio', '')
-    ref_avancado = referencias.get('Avançado', '')
+    
+    ref_basico = referencias.get('Básico', {})
+    if isinstance(ref_basico, dict):
+        basico_p = ref_basico.get('parametros', '')
+        basico_e = ref_basico.get('resposta_exemplo', '')
+        ref_basico_str = f"Parâmetros: {basico_p}\nExemplo de resposta: {basico_e}"
+    else:
+        ref_basico_str = str(ref_basico)
+        
+    ref_medio = referencias.get('Intermediário', referencias.get('Médio', {}))
+    if isinstance(ref_medio, dict):
+        medio_p = ref_medio.get('parametros', '')
+        medio_e = ref_medio.get('resposta_exemplo', '')
+        ref_medio_str = f"Parâmetros: {medio_p}\nExemplo de resposta: {medio_e}"
+    else:
+        ref_medio_str = str(ref_medio)
+        
+    ref_avancado = referencias.get('Avançado', {})
+    if isinstance(ref_avancado, dict):
+        avancado_p = ref_avancado.get('parametros', '')
+        avancado_e = ref_avancado.get('resposta_exemplo', '')
+        ref_avancado_str = f"Parâmetros: {avancado_p}\nExemplo de resposta: {avancado_e}"
+    else:
+        ref_avancado_str = str(ref_avancado)
 
     prompt = f"""
-Você é um avaliador acadêmico preciso para uma plataforma de ensino de Genética e Biologia Molecular.
-Sua tarefa é avaliar a resposta do aluno e classificá-la em um de cinco níveis: "Avançado", "Médio", "Básico", "Parcial" ou "Incorreto".
+Você é um avaliador acadêmico extremamente rígido e criterioso para uma plataforma de ensino de Genética e Biologia Molecular.
+Sua tarefa é avaliar a resposta acumulada do aluno para a pergunta abaixo e classificá-la em um de cinco níveis: "Avançado", "Médio", "Básico", "Parcial" ou "Incorreto".
 
 Pergunta: {question_data.get('pergunta')}
 
 ---
-**GABARITOS DE REFERÊNCIA:**
+**CRITÉRIOS DE AVALIAÇÃO RÍGIDOS:**
 
-NÍVEL BÁSICO: {ref_basico}
-NÍVEL MÉDIO (Inclui o Básico e adiciona): {ref_medio}
-NÍVEL AVANÇADO (Inclui o Médio e adiciona profundidade): {ref_avancado}
+1. **NÍVEL BÁSICO**:
+   - Parâmetro exigido: {ref_basico_str}
+   - Para obter este nível, o aluno precisa atingir o parâmetro básico de forma clara.
+
+2. **NÍVEL MÉDIO / INTERMEDIÁRIO**:
+   - Parâmetro exigido: {ref_medio_str}
+   - Para obter este nível, o aluno deve atender plenamente o parâmetro básico E o parâmetro intermediário.
+
+3. **NÍVEL AVANÇADO**:
+   - Parâmetro exigido: {ref_avancado_str}
+   - Para obter este nível, o aluno deve integrar com precisão todos os parâmetros anteriores E demonstrar domínio avançado conforme o parâmetro avançado.
+
+4. **PARCIAL**:
+   - Se o aluno mencionou alguns conceitos ou termos corretos, mas não atendeu por completo sequer o critério "Básico".
+
+5. **INCORRETO**:
+   - Se a resposta é incorreta, vaga, irrelevante ou não atende a nenhum parâmetro.
+
 ---
+**REGRA DE AVALIAÇÃO ESTRITA**:
+- Seja rigoroso. Se faltar qualquer detalhe mencionado nos parâmetros do nível intermediário, o aluno NÃO pode obter nível "Médio". Se faltar qualquer detalhe do avançado, ele NÃO pode obter nível "Avançado".
+- Se a resposta for genérica, classifique no nível inferior aplicável.
 
 **RESPOSTA DO ALUNO:**
 {user_answer}
 
-**TABELA RÍGIDA DE PONTUAÇÃO (OBRIGATÓRIO):**
-1. **Incorreto (0.0 pts)**: A resposta está errada, é irrelevante ou não aborda nenhum ponto dos gabaritos.
-2. **Parcial (0.5 pts)**: O aluno menciona alguns termos corretos, mas não consegue formar uma explicação completa nem mesmo do nível básico.
-3. **Básico (1.0 pt)**: O aluno demonstra a compreensão fundamental descrita no gabarito básico.
-4. **Médio (2.0 pts)**: O aluno aborda os pontos do gabarito básico e inclui conhecimentos do nível médio (ex: forças de empilhamento, processividade, energia, etc).
-5. **Avançado (3.0 pts)**: O aluno demonstra domínio profundo, citando detalhes técnicos, nomes de proteínas específicas ou contextos conformacionais/moleculares descritos no nível avançado.
-
-**DIRETRIZES:**
-- Classifique no nível mais alto que o aluno preencheu satisfatoriamente.
-- O feedback deve ser construtivo, indicando o que ele alcançou e o que faltou para o próximo nível.
-- **ATENÇÃO EXTREMA**: Se o nível for "Básico", os pontos DEVEM ser 1.0. Se for "Médio", DEVEM ser 2.0. Nunca misture níveis e pontos fora da tabela acima.
-
-Retorne SUA AVALIAÇÃO ESTRITAMENTE NESTE FORMATO JSON VÁLIDO:
+Retorne sua avaliação estritamente neste formato JSON:
 {{
   "level": "Avançado" | "Médio" | "Básico" | "Parcial" | "Incorreto",
   "points": 3.0, 2.0, 1.0, 0.5 ou 0.0,
   "classification": "AVANÇADO", "MÉDIO", "BÁSICO", "PARCIAL" ou "INCORRETO",
-  "feedback": "Texto claro explicando a classificação."
+  "feedback": "Feedback detalhado contendo APENAS a lista dos erros ou pontos de omissão cometidos pelo aluno na resposta, guiando-o de forma construtiva sobre o que ele precisa adicionar ou corrigir para melhorar, sem revelar a resposta pronta."
 }}
-NÃO RETORNE TEXTO FORA DO JSON.
+NÃO RETORNE NENHUM OUTRO TEXTO FORA DO OBJETO JSON.
 """
     # Retry logic for Rate Limits (429) & 503 errors
     import time
@@ -209,18 +250,20 @@ NÃO RETORNE TEXTO FORA DO JSON.
                  # Fallback manual em caso de erro no JSON
                 lower_text = text.lower()
                 if "avançado" in lower_text or "avancado" in lower_text:
-                    return {"level": "Avançado", "points": 3, "classification": "AVANÇADO", "feedback": text}
+                    return {"level": "Avançado", "points": 3.0, "classification": "AVANÇADO", "feedback": text}
                 elif "médio" in lower_text or "medio" in lower_text:
-                    return {"level": "Médio", "points": 2, "classification": "MÉDIO", "feedback": text}
+                    return {"level": "Médio", "points": 2.0, "classification": "MÉDIO", "feedback": text}
                 elif "básico" in lower_text or "basico" in lower_text:
-                    return {"level": "Básico", "points": 1, "classification": "BÁSICO", "feedback": text}
+                    return {"level": "Básico", "points": 1.0, "classification": "BÁSICO", "feedback": text}
+                elif "parcial" in lower_text:
+                    return {"level": "Parcial", "points": 0.5, "classification": "PARCIAL", "feedback": text}
                 else:
-                    return {"level": "Incorreto", "points": 0, "classification": "INCORRETO", "feedback": text}
+                    return {"level": "Incorreto", "points": 0.0, "classification": "INCORRETO", "feedback": text}
                 
         except Exception as e:
             print(f"[Avaliador IA] Tentativa {attempt+1}/{max_retries} falhou: {e}")
             if attempt == max_retries - 1:
-                return {"level": "Incorreto", "points": 0, "classification": "INCORRETO", "feedback": f"Erro IA: {e}"}
+                return {"level": "Incorreto", "points": 0.0, "classification": "INCORRETO", "feedback": f"Erro IA: {e}"}
             time.sleep(1) 
 
 def _construir_contexto_para_ia(question: Dict[str, Any], chat_history: List[Dict[str, str]]) -> str:
@@ -233,34 +276,57 @@ def _construir_contexto_para_ia(question: Dict[str, Any], chat_history: List[Dic
             ctx += f"- {role}: {turn['content']}\n"
     return ctx
 
-def tutor_reply_com_ia(question: Dict[str, Any], user_msg: str, chat_history: List[Dict[str, str]]) -> Generator[str, None, None]:
+def tutor_reply_com_ia(question: Dict[str, Any], user_msg: str, chat_history: List[Dict[str, str]], current_level: str = "Incorreto") -> Generator[str, None, None]:
     contexto = _construir_contexto_para_ia(question, chat_history)
     
+    referencias = question.get('referencia', {})
     
-    gabarito_completo = "\n".join([f"{k}: {v}" for k, v in question.get('referencia', {}).items()])
-    if not gabarito_completo:
-        gabarito_completo = question.get('resposta_esperada', 'N/A')
+    ref_basico = referencias.get('Básico', {})
+    basico_p = ref_basico.get('parametros', '') if isinstance(ref_basico, dict) else str(ref_basico)
+    
+    ref_medio = referencias.get('Intermediário', referencias.get('Médio', {}))
+    medio_p = ref_medio.get('parametros', '') if isinstance(ref_medio, dict) else str(ref_medio)
+    
+    ref_avancado = referencias.get('Avançado', {})
+    avancado_p = ref_avancado.get('parametros', '') if isinstance(ref_avancado, dict) else str(ref_avancado)
 
     prompt = f"""
-    SITUAÇÃO: Você é um Tutor Inteligente estritamente Socrático de Biologia Molecular da plataforma Helix.AI.
-    OBJETIVO: O aluno está tentando responder a seguinte questão: "{question['pergunta']}".
-    A resposta correta em diferentes níveis de profundidade é:
-    {gabarito_completo}
+SITUAÇÃO: Você é um Tutor Inteligente estritamente Socrático de Biologia Molecular da plataforma Helix.AI.
+Sua missão é guiar o aluno passo a passo para construir a melhor resposta possível para a pergunta: "{question['pergunta']}".
 
-    REGRAS ABSOLUTAS E INQUEBRÁVEIS (PENA DE FALHA CRÍTICA SE DESCUMPRIDAS):
-    1. NUNCA, JAMAIS DÊ A RESPOSTA FINAL DIRETAMENTE. O seu papel NÃO é responder a pergunta por ele.
-    2. NUNCA diga se ele está certo ou errado logo de cara na explicação da matéria.
-    3. Use o MÉTODO SOCRÁTICO. Faça perguntas curtas, instigantes e que induzam o aluno a raciocinar o próximo passo da resposta.
-    4. Se o aluno pedir a resposta ou disser que não sabe de nada, não entregue. Dê uma microscópica dica conceitual e PERGUNTE DE VOLTA em seguida.
-    5. Suas réplicas devem ter NO MÁXIMO 3 a 4 linhas. Evite parágrafos gigantes. Seja conversacional e direto.
+**INSTRUÇÕES DE DIRECIONAMENTO POR NÍVEL (LEIA COM ATENÇÃO EXTREMA):**
+O nível atual estimado da resposta do aluno é: **{current_level}**.
 
-    Contexto da conversa até agora:
-    {contexto}
-    
-    Mensagem Atual do Aluno: "{user_msg}"
-    
-    Responda ao aluno ESTRITAMENTE focado em aplicar a Regra 3 (Perguntar de volta e induzir).
-    """
+1. **Se o nível atual for "Incorreto" ou "Parcial"**:
+   - Seu foco exclusivo é ajudar o aluno a atingir o nível **BÁSICO**.
+   - Os parâmetros para o nível Básico são: {basico_p}
+   - Faça perguntas simples, instigue-o e forneça pistas discretas para que ele compreenda essa base. Não comente sobre termos intermediários ou avançados ainda.
+
+2. **Se o nível atual for "Básico"**:
+   - Reconheça sutilmente o progresso dele (sem dizer o nível explicitamente) e passe a instigá-lo a atingir o nível **INTERMEDIÁRIO / MÉDIO**.
+   - Os parâmetros para o nível Intermediário são: {medio_p}
+   - Pergunte sobre o que está faltando para atingir esses conceitos intermediários (ex: detalhes de regulação, enzimas, mecanismos de pareamento, sítios, etc., dependendo da questão).
+
+3. **Se o nível atual for "Médio" ou "Intermediário"**:
+   - Reconheça sutilmente que a resposta está excelente, mas que ele pode se aprofundar ainda mais para atingir o nível **AVANÇADO**.
+   - Os parâmetros para o nível Avançado são: {avancado_p}
+   - Faça perguntas que o levem a refletir sobre os detalhes mecânicos, termodinâmicos, evolutivos ou de sinalização avançados exigidos por este nível.
+
+4. **Se o nível atual for "Avançado"**:
+   - Parabenize-o pela resposta irretocável e diga que ele atingiu a perfeição (100% de conclusão).
+   - Incentive-o a clicar no botão de concluir e avançar.
+
+**REGRAS DE CONDUTA DO TUTOR:**
+- NUNCA, JAMAIS DÊ A RESPOSTA PRONTA OU DIGA "A RESPOSTA É X". Seu papel é induzir o raciocínio.
+- NUNCA mostre pontuação como "0.5", "1.0", "3.0" ou termos de nível no seu texto. Apenas ajude-o a progredir.
+- Suas réplicas devem ser curtas (no máximo 3 a 4 linhas). Seja direto e conversacional.
+
+Contexto da conversa até agora:
+{contexto}
+
+Mensagem Atual do Aluno: "{user_msg}"
+Responda aplicando estritamente as regras acima de acordo com o nível atual dele.
+"""
     import time
     max_retries = 3
     for attempt in range(max_retries):

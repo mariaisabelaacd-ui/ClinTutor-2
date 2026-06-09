@@ -158,10 +158,12 @@ def render_top_navbar():
             
     with col_stats:
         if user["user_type"] == "aluno":
+            overall_pct = int((st.session_state.score / (3.0 * len(QUESTIONS))) * 100) if len(QUESTIONS) > 0 else 0
+            overall_pct = min(max(overall_pct, 0), 100)
             st.markdown(f"""
             <div style='display: flex; justify-content: flex-end; align-items: center; gap: 1rem; height: 100%;'>
                 <div style='background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); padding: 4px 12px; border-radius: 20px; font-size: 0.9rem; color: #10b981;'>
-                    🏆 <b>{st.session_state.score}</b> pts
+                    🏆 <b>{overall_pct}%</b> Concluído
                 </div>
                 <div style='background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); padding: 4px 12px; border-radius: 20px; font-size: 0.9rem; color: #ef4444;'>
                     🔥 Streak <b>{st.session_state.streak}</b>
@@ -346,25 +348,34 @@ Como você explicaria ou por onde gostaria de começar a responder a essa pergun
             eval_data = st.session_state.get("current_evaluation")
             if eval_data:
                 level = eval_data.get("level", "Incorreto")
-                points = float(eval_data.get("points", 0))
                 feedback = eval_data.get("feedback", "")
                 classification = eval_data.get("classification", "INCORRETO")
                 
+                level_pct_map = {
+                    "Incorreto": 0,
+                    "Parcial": 30,
+                    "Básico": 60,
+                    "Médio": 80,
+                    "Intermediário": 80,
+                    "Avançado": 100
+                }
+                pct = level_pct_map.get(level, 0)
+                
                 if classification != "INCORRETO":
-                    # Coloca a avaliação em formato de balão do Tutor
                     with st.chat_message("assistant", avatar="🎓"):
                         if level == "Avançado":
                             st.markdown(f"""
-                            🎯 **Avaliação de Desempenho:**
-                            Você atingiu o nível **Avançado**! Excelente explicação conceitual.
+                            🎯 **Conclusão da Resposta: 100%**
+                            Excelente explicação conceitual! Você abordou todos os pontos necessários.
                             
                             **Feedback do Tutor:** {feedback}
                             """, unsafe_allow_html=True)
+                            st.progress(1.0)
                             
                             student_messages = [m["content"] for m in st.session_state.chat if m["role"] == "user"]
                             combined_ans = "\n".join(student_messages)
                             
-                            if st.button("Concluir Questão e Avançar (+3.0 pts) 🚀", key="chat_finish_q", type="primary", use_container_width=True):
+                            if st.button("Concluir Questão e Avançar 🚀", key="chat_finish_q", type="primary", use_container_width=True):
                                 result = finalize_question_response(case, combined_ans, eval_data)
                                 st.session_state.score += result["points_gained"]
                                 st.session_state.streak += 1
@@ -385,12 +396,13 @@ Como você explicaria ou por onde gostaria de começar a responder a essa pergun
                                 start_new_case()
                                 st.rerun()
                         else:
-                            # Parcial, Básico ou Médio
                             st.markdown(f"""
-                            🌟 **Avaliação de Desempenho:**
-                            Você atingiu o nível **{level}** (Pontuação estimada: **{points:.1f} / 3.0**).
-                            
-                            **Feedback do Tutor:** {feedback}
+                            🌟 **Progresso da Resposta: {pct}%**
+                            """, unsafe_allow_html=True)
+                            st.progress(pct / 100.0)
+                            st.markdown(f"""
+                            **Orientações e Feedback do Tutor:**
+                            {feedback}
                             
                             O que você deseja fazer agora?
                             """, unsafe_allow_html=True)
@@ -399,7 +411,7 @@ Como você explicaria ou por onde gostaria de começar a responder a essa pergun
                             with btn_col1:
                                 student_messages = [m["content"] for m in st.session_state.chat if m["role"] == "user"]
                                 combined_ans = "\n".join(student_messages)
-                                if st.button(f"Avançar com {points:.1f} pts ➡️", key="chat_advance_q", type="primary", use_container_width=True):
+                                if st.button("Concluir e Salvar Resposta ➡️", key="chat_advance_q", type="primary", use_container_width=True):
                                     result = finalize_question_response(case, combined_ans, eval_data)
                                     st.session_state.score += result["points_gained"]
                                     st.session_state.streak += 1
@@ -431,7 +443,19 @@ Como você explicaria ou por onde gostaria de começar a responder a essa pergun
                 with st.chat_message("user"): 
                     st.markdown(q_msg)
                     
-            # 2. Resposta do Tutor
+            # 2. Avaliar as respostas acumuladas primeiro, para alimentar o tutor inteligente com o nível real
+            with st.spinner("Avaliando seu progresso..."):
+                student_messages = [msg["content"] for msg in st.session_state.chat if msg["role"] == "user"]
+                combined_ans = "\n".join(student_messages)
+                current_level = "Incorreto"
+                try:
+                    eval_result = evaluate_answer_with_ai(case, combined_ans)
+                    st.session_state.current_evaluation = eval_result
+                    current_level = eval_result.get("level", "Incorreto")
+                except Exception as e:
+                    print(f"Erro ao avaliar progresso: {e}")
+                    
+            # 3. Resposta do Tutor baseada no nível atual estimado
             with st.spinner("O Tutor está pensando..."):
                 case_adapted = case.copy()
                 case_adapted['titulo'] = case['pergunta']
@@ -442,7 +466,7 @@ Como você explicaria ou por onde gostaria de começar a responder a essa pergun
                 
                 full_resp = ""
                 try:
-                    gen = tutor_reply_com_ia(case_adapted, q_msg, st.session_state.chat)
+                    gen = tutor_reply_com_ia(case_adapted, q_msg, st.session_state.chat, current_level=current_level)
                     with chat_container:
                         with st.chat_message("assistant"):
                             ph = st.empty()
@@ -456,7 +480,7 @@ Como você explicaria ou por onde gostaria de começar a responder a essa pergun
                     
             st.session_state.chat.append({"role": "assistant", "content": full_resp})
             
-            # 3. Registrar no Firestore
+            # 4. Registrar no Firestore
             user = get_current_user()
             if user and st.session_state.current_case_id:
                 log_chat_interaction(
@@ -467,16 +491,6 @@ Como você explicaria ou por onde gostaria de começar a responder a essa pergun
                     response_time=None
                 )
                 
-            # 4. Avaliar as respostas acumuladas
-            with st.spinner("Avaliando seu progresso..."):
-                student_messages = [msg["content"] for msg in st.session_state.chat if msg["role"] == "user"]
-                combined_ans = "\n".join(student_messages)
-                try:
-                    eval_result = evaluate_answer_with_ai(case, combined_ans)
-                    st.session_state.current_evaluation = eval_result
-                except Exception as e:
-                    print(f"Erro ao avaliar progresso: {e}")
-                    
             st.rerun()
 
 if __name__ == "__main__":
