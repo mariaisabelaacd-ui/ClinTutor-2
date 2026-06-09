@@ -222,7 +222,7 @@ Retorne sua avaliação estritamente neste formato JSON:
   "level": "Avançado" | "Médio" | "Básico" | "Parcial" | "Incorreto",
   "points": 3.0, 2.0, 1.0, 0.5 ou 0.0,
   "classification": "AVANÇADO", "MÉDIO", "BÁSICO", "PARCIAL" ou "INCORRETO",
-  "feedback": "Feedback detalhado contendo APENAS a lista dos erros ou pontos de omissão cometidos pelo aluno na resposta, guiando-o de forma construtiva sobre o que ele precisa adicionar ou corrigir para melhorar, sem revelar a resposta pronta."
+  "feedback": "Feedback detalhado e direto ao aluno em tom acolhedor e construtivo (ex: 'Sua resposta está muito boa porque você explicou X, parabéns! Porém, para ficar completa, faltou abordar Y...'). Deve destacar os pontos fortes da resposta do aluno, explicar de forma clara por que ela é considerada boa ou parcial/insuficiente, e listar o que ele precisa complementar ou corrigir para melhorar, sem entregar a resposta pronta."
 }}
 NÃO RETORNE NENHUM OUTRO TEXTO FORA DO OBJETO JSON.
 """
@@ -277,8 +277,6 @@ def _construir_contexto_para_ia(question: Dict[str, Any], chat_history: List[Dic
     return ctx
 
 def tutor_reply_com_ia(question: Dict[str, Any], user_msg: str, chat_history: List[Dict[str, str]], current_level: str = "Incorreto") -> Generator[str, None, None]:
-    contexto = _construir_contexto_para_ia(question, chat_history)
-    
     referencias = question.get('referencia', {})
     
     ref_basico = referencias.get('Básico', {})
@@ -290,8 +288,7 @@ def tutor_reply_com_ia(question: Dict[str, Any], user_msg: str, chat_history: Li
     ref_avancado = referencias.get('Avançado', {})
     avancado_p = ref_avancado.get('parametros', '') if isinstance(ref_avancado, dict) else str(ref_avancado)
 
-    prompt = f"""
-SITUAÇÃO: Você é um Tutor Inteligente estritamente Socrático de Biologia Molecular da plataforma Helix.AI.
+    system_prompt = f"""Você é um Tutor Inteligente estritamente Socrático de Biologia Molecular da plataforma Helix.AI.
 Sua missão é guiar o aluno passo a passo para construir a melhor resposta possível para a pergunta: "{question['pergunta']}".
 
 **INSTRUÇÕES DE DIRECIONAMENTO POR NÍVEL (LEIA COM ATENÇÃO EXTREMA):**
@@ -319,14 +316,18 @@ O nível atual estimado da resposta do aluno é: **{current_level}**.
 **REGRAS DE CONDUTA DO TUTOR:**
 - NUNCA, JAMAIS DÊ A RESPOSTA PRONTA OU DIGA "A RESPOSTA É X". Seu papel é induzir o raciocínio.
 - NUNCA mostre pontuação como "0.5", "1.0", "3.0" ou termos de nível no seu texto. Apenas ajude-o a progredir.
+- Como esta é uma conversa contínua, NÃO repita saudações (como "Olá!", "Tudo bem?", etc.) e não dê boas-vindas se a conversa já começou. Vá direto ao assunto ou responda ao que o aluno disse.
 - Suas réplicas devem ser curtas (no máximo 3 a 4 linhas). Seja direto e conversacional.
-
-Contexto da conversa até agora:
-{contexto}
-
-Mensagem Atual do Aluno: "{user_msg}"
-Responda aplicando estritamente as regras acima de acordo com o nível atual dele.
 """
+
+    messages = [{"role": "system", "content": system_prompt}]
+    
+    # Adiciona as últimas 8 mensagens do histórico para dar continuidade
+    for msg in chat_history[-8:]:
+        role = msg["role"]
+        api_role = "assistant" if role == "assistant" else "user"
+        messages.append({"role": api_role, "content": msg["content"]})
+
     import time
     max_retries = 3
     for attempt in range(max_retries):
@@ -338,7 +339,7 @@ Responda aplicando estritamente as regras acima de acordo com o nível atual del
         try:
             stream = client.chat.completions.create(
                 model=MODEL_NAME, 
-                messages=[{"role": "user", "content": prompt}],
+                messages=messages,
                 temperature=0.7,
                 stream=True
             )
