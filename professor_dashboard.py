@@ -216,6 +216,78 @@ def inject_dashboard_styles():
             border: 1px solid rgba(128, 128, 128, 0.15) !important;
             color: var(--text-color) !important;
         }
+
+        /* Custom Chat bubbles styling */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 20px;
+            border-radius: 16px;
+            background: var(--background-color);
+            border: 1px solid rgba(128, 128, 128, 0.15);
+            max-height: 600px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .chat-message-row {
+            display: flex;
+            width: 100%;
+            margin-bottom: 4px;
+        }
+
+        .chat-message-row.student-row {
+            justify-content: flex-end;
+        }
+
+        .chat-message-row.tutor-row {
+            justify-content: flex-start;
+        }
+
+        .chat-bubble {
+            max-width: 80%;
+            padding: 12px 18px;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        .student-bubble {
+            background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%) !important;
+            color: #ffffff !important;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .student-bubble * {
+            color: #ffffff !important;
+        }
+
+        .tutor-bubble {
+            background: var(--secondary-background-color) !important;
+            color: var(--text-color) !important;
+            border-bottom-left-radius: 4px;
+            border: 1px solid rgba(128, 128, 128, 0.18) !important;
+        }
+
+        .chat-message-info {
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .student-bubble .chat-message-info {
+            color: rgba(255, 255, 255, 0.8) !important;
+        }
+
+        .tutor-bubble .chat-message-info {
+            color: #10b981 !important;
+        }
     </style>
     """
     st.markdown(style_html, unsafe_allow_html=True)
@@ -1139,6 +1211,7 @@ def show_advanced_professor_dashboard():
         with tab3:
             show_admin_tab(student_users)
 
+
 def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
     """Tab de visão geral com estatísticas gerais de todos os alunos"""
     st.markdown(f"## {icon('bar_chart', '#10b981', 28)} Visão Geral da Turma", unsafe_allow_html=True)
@@ -1155,358 +1228,16 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
             st.info(f"Nenhum aluno encontrado na turma {turma_filter}.")
             return
     
-    # Carrega estatísticas globais
+    # Carrega dados
     global_stats = get_global_stats()
     q_stats_data = []
     try:
         q_stats_data = get_question_stats()
     except Exception:
         q_stats_data = []
-    level_stats = get_average_user_level()
     hardest_questions = get_hardest_questions(top_n=6)
     
-    # ===== 1. KPIs PRINCIPAIS =====
-    st.markdown(f"### {icon('push_pin', '#10b981', 24)} Métricas Principais", unsafe_allow_html=True)
-    col1, col2, col3, col4, col5 = st.columns(5)
-    
-    with col1:
-        draw_premium_metric_card(
-            "Total de Alunos",
-            str(len(student_users)),
-            icon_name="people",
-            icon_color="#3b82f6"
-        )
-    
-    with col2:
-        draw_premium_metric_card(
-            "Média Geral",
-            f"{global_stats.get('average_accuracy_rate', 0):.1f}%",
-            icon_name="track_changes",
-            icon_color="#10b981"
-        )
-    
-    with col3:
-        # Questão com maior dificuldade - Novo foco em Questões 1-6
-        if hardest_questions:
-            hardest_q = hardest_questions[0]['questao_num']
-            hardest_acc = hardest_questions[0]['taxa_acerto']
-            st.markdown(f"""
-                <div class="premium-card" style="border-color: rgba(239, 68, 68, 0.2) !important;">
-                    <div class="premium-card-label" style="color: #ef4444 !important;">
-                        {icon('warning', '#ef4444', 20)} Questão Mais Difícil
-                    </div>
-                    <div class="premium-card-value" style="color: #ef4444;">
-                        Questão {hardest_q}
-                    </div>
-                    <div style='color: #64748b; font-size: 0.8rem; margin-top: 0.25rem;'>Taxa: {hardest_acc:.1f}%</div>
-                </div>
-            """, unsafe_allow_html=True)
-        else:
-            draw_premium_metric_card("Questão Mais Difícil", "N/A", "warning", "#ef4444", "Sem dados")
-    
-    with col4:
-        # Nível médio - Custom display para consistência visual
-        nivel_map = {1: "Básico", 2: "Intermediário", 3: "Avançado"}
-        nivel_medio = nivel_map.get(level_stats.get('nivel_medio', 1), "Básico")
-        nivel_colors = {
-            "Básico": "#3b82f6",
-            "Intermediário": "#eab308", 
-            "Avançado": "#22c55e"
-        }
-        color = nivel_colors.get(nivel_medio, "#3b82f6")
-        
-        st.markdown(f"""
-            <div class="premium-card" style="border-color: rgba(16, 185, 129, 0.2) !important;">
-                <div class="premium-card-label" style="color: {color} !important;">
-                    {icon('bar_chart', color, 20)} Nível Médio
-                </div>
-                <div class="premium-card-value" style="color: {color};">
-                    {nivel_medio}
-                </div>
-                <div style='color: #64748b; font-size: 0.8rem; margin-top: 0.25rem;'>Desempenho Geral</div>
-            </div>
-        """, unsafe_allow_html=True)
-    
-    with col5:
-        draw_premium_metric_card(
-            "Questões Respondidas",
-            str(global_stats.get('total_cases', 0)),
-            icon_name="quiz",
-            icon_color="#8b5cf6"
-        )
-    
-    st.markdown("---")
-    
-    # ===== 2. VISUALIZAÇÕES =====
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown(f"### {icon('radar', '#8b5cf6', 24)} Desempenho por Questão (1 a 6)", unsafe_allow_html=True)
-        if q_stats_data:
-            categories = [f"Q{q['questao_num']}" for q in sorted(q_stats_data, key=lambda x: x['questao_num'])]
-            values = [q['taxa_acerto'] for q in sorted(q_stats_data, key=lambda x: x['questao_num'])]
-            
-            fig_radar = go.Figure()
-            fig_radar.add_trace(go.Scatterpolar(
-                r=values + [values[0]],  # Fecha o polígono
-                theta=categories + [categories[0]],
-                fill='toself',
-                fillcolor='rgba(139, 92, 246, 0.15)',
-                line=dict(color='#8b5cf6', width=2.5),
-                marker=dict(size=8, color='#8b5cf6'),
-                name='Taxa de Acerto',
-                hovertemplate='%{theta}: %{r:.1f}%<extra></extra>'
-            ))
-            fig_radar.update_layout(
-                polar=dict(
-                    radialaxis=dict(
-                        visible=True, range=[0, 100],
-                        gridcolor='rgba(128, 128, 128, 0.2)',
-                        ticksuffix='%', tickfont=dict(size=10, color='#64748b')
-                    ),
-                    angularaxis=dict(
-                        gridcolor='rgba(128, 128, 128, 0.2)',
-                        tickfont=dict(size=12, color='#475569', weight='bold')
-                    ),
-                    bgcolor='rgba(0,0,0,0)'
-                ),
-                showlegend=False,
-                height=420,
-                margin=dict(l=60, r=60, t=30, b=30),
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)'
-            )
-            st.plotly_chart(fig_radar, use_container_width=True)
-            
-            st.markdown(f"<div style='color: #64748b; font-size: 0.85rem; text-align: center;'>{icon('lightbulb', '#eab308', 16)} Quanto maior a área, melhor o desempenho geral da turma</div>", unsafe_allow_html=True)
-        else:
-            st.info("Dados insuficientes para análise por questão")
-    
-    with col2:
-        st.markdown(f"### {icon('bar_chart', '#3b82f6', 24)} Distribuição de Alunos por Nível", unsafe_allow_html=True)
-        if level_stats.get('total_alunos', 0) > 0:
-            dist = level_stats['distribuicao']
-            
-            df_level = pd.DataFrame({
-                'Nível': ['Básico', 'Intermediário', 'Avançado'],
-                'Quantidade': [dist['basico'], dist['intermediario'], dist['avancado']]
-            })
-            
-            fig_level = px.pie(
-                df_level,
-                values='Quantidade',
-                names='Nível',
-                title="Distribuição de Alunos",
-                color='Nível',
-                color_discrete_map={
-                    'Básico': '#3b82f6',
-                    'Intermediário': '#eab308',
-                    'Avançado': '#22c55e'
-                }
-            )
-            fig_level.update_traces(textposition='inside', textinfo='percent+label')
-            fig_level.update_layout(
-                height=400,
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)',
-                font=dict(family="Inter, sans-serif", size=12),
-                legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5)
-            )
-            st.plotly_chart(fig_level, use_container_width=True)
-        else:
-            st.info("Dados insuficientes")
-            
-    st.markdown("---")
-    
-    # ===== 3. RANKING DOS ALUNOS =====
-    st.markdown(f"### {icon('emoji_events', '#f59e0b', 24)} Ranking de Alunos", unsafe_allow_html=True)
-    
-    ranking_data = []
-    for user in student_users:
-        uid = user['id']
-        u_data = all_analytics.get(uid, {})
-        case_analytics = u_data.get('case_analytics', [])
-        
-        if not case_analytics:
-            continue
-        
-        total_cases = len(case_analytics)
-        total_points = sum(float(c.get("case_result", {}).get("points_gained", 0)) for c in case_analytics)
-        
-        total_possible = 0.0
-        from logic import get_case
-        for c in case_analytics:
-            q_info = get_case(c.get('case_id', ''))
-            total_possible += q_info.get('pontuacao_maxima', 5.0)
-            
-        acc_rate = (total_points / total_possible * 100) if total_possible > 0 else 0.0
-        
-        ranking_data.append({
-            'Nome': user['name'],
-            'Email': user['email'],
-            'Questões': total_cases,
-            'Pontos': f"{total_points:.1f}",
-            'Taxa de Acerto': acc_rate
-        })
-    
-    if ranking_data:
-        df_ranking = pd.DataFrame(ranking_data)
-        df_ranking = df_ranking.sort_values('Taxa de Acerto', ascending=False)
-        
-        col_rank1, col_rank2 = st.columns(2)
-        
-        with col_rank1:
-            st.markdown(f"#### {icon('star', '#eab308', 20)} Top 10 Melhores Desempenhos", unsafe_allow_html=True)
-            top_10 = df_ranking.head(10).copy()
-            top_10['Taxa de Acerto'] = top_10['Taxa de Acerto'].apply(lambda x: f"{x:.1f}%")
-            st.dataframe(top_10, use_container_width=True, hide_index=True)
-        
-        with col_rank2:
-            st.markdown(f"#### {icon('priority_high', '#ef4444', 20)} Alunos que Precisam de Atenção", unsafe_allow_html=True)
-            need_attention = df_ranking.sort_values('Taxa de Acerto', ascending=True).head(10).copy()
-            
-            if not need_attention.empty:
-                need_attention['Taxa de Acerto'] = need_attention['Taxa de Acerto'].apply(lambda x: f"{x:.1f}%")
-                st.dataframe(need_attention, use_container_width=True, hide_index=True)
-            else:
-                st.success("Todos os alunos estão com bom desempenho!")
-    else:
-        st.info("Nenhum aluno respondeu questões ainda")
-        
-    st.markdown("---")
-    
-    # ===== 4. CARDS DE QUESTÕES DETALHADOS =====
-    st.markdown(f"### {icon('quiz', '#10b981', 24)} Painel de Questões — Visão Detalhada", unsafe_allow_html=True)
-    st.markdown(f"<div style='color: #64748b; font-size: 0.9rem; margin-bottom: 1rem;'>{icon('info', '#64748b', 16)} Cada card mostra o desempenho da turma em uma questão específica do módulo de Biologia Molecular.</div>", unsafe_allow_html=True)
-    
-    if q_stats_data:
-        from logic import QUESTIONS as ALL_QUESTIONS_OV
-        sorted_stats = sorted(q_stats_data, key=lambda x: x['questao_num'])
-        
-        for row_idx in range(0, len(sorted_stats), 2):
-            cols = st.columns(2)
-            for col_idx in range(2):
-                q_idx = row_idx + col_idx
-                if q_idx >= len(sorted_stats):
-                    break
-                q = sorted_stats[q_idx]
-                
-                with cols[col_idx]:
-                    taxa = q['taxa_acerto']
-                    total = q['total_respostas']
-                    tempo = q.get('tempo_medio_formatado', '0s')
-                    titulo = q['titulo'][:65]
-                    
-                    if taxa >= 70:
-                        q_class = "q-card-green"
-                        sc = "#10b981"
-                        sl, si = "Bom", "check_circle"
-                    elif taxa >= 40:
-                        q_class = "q-card-yellow"
-                        sc = "#eab308"
-                        sl, si = "Atenção", "warning"
-                    else:
-                        q_class = "q-card-red"
-                        sc = "#ef4444"
-                        sl, si = "Crítico", "error"
-                    
-                    bw = max(taxa, 3)
-                    full_q_text = ALL_QUESTIONS_OV[q['questao_num'] - 1]['pergunta'] if q['questao_num'] <= len(ALL_QUESTIONS_OV) else titulo
-                    
-                    card_html = f"""
-                    <div class="q-card {q_class}">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
-                            <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                <div style="background: {sc}; color: white; font-weight: 700; font-size: 1.1rem; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px {sc}40;">Q{q['questao_num']}</div>
-                                <div style="font-weight: 600; font-size: 0.9rem; color: var(--text-color); line-height: 1.3; max-width: 280px;">{titulo}</div>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 4px; background: {sc}18; padding: 2px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; color: {sc};">
-                                {icon(si, sc, 14)} {sl}
-                            </div>
-                        </div>
-                        <div class="q-progress-bg">
-                            <div class="q-progress-bar" style="background: linear-gradient(90deg, {sc}88, {sc}); width: {bw}%;">
-                                <span style="color: white; font-weight: 700; font-size: 0.85rem; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">{taxa:.1f}%</span>
-                            </div>
-                        </div>
-                        <div style="display: flex; justify-content: space-around; gap: 0.5rem; margin-top: 0.75rem;">
-                            <div style="text-align: center; flex: 1;">
-                                <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">{icon('people', '#64748b', 13)} Respostas</div>
-                                <div style="font-size: 1.1rem; font-weight: 600; color: var(--text-color);">{total}</div>
-                            </div>
-                            <div style="width: 1px; background: rgba(148, 163, 184, 0.2);"></div>
-                            <div style="text-align: center; flex: 1;">
-                                <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">{icon('schedule', '#64748b', 13)} Tempo Médio</div>
-                                <div style="font-size: 1.1rem; font-weight: 600; color: var(--text-color);">{tempo}</div>
-                            </div>
-                            <div style="width: 1px; background: rgba(148, 163, 184, 0.2);"></div>
-                            <div style="text-align: center; flex: 1;">
-                                <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">{icon('track_changes', sc, 13)} Acerto</div>
-                                <div style="font-size: 1.1rem; font-weight: 700; color: {sc};">{taxa:.1f}%</div>
-                            </div>
-                        </div>
-                    </div>
-                    """
-                    st.markdown(card_html, unsafe_allow_html=True)
-                    with st.expander("Ler questão completa", expanded=False):
-                        st.markdown(f"**Questão {q['questao_num']}**: {full_q_text}")
-    else:
-        st.info("Nenhuma questão foi respondida ainda.")
-        
-    st.markdown("---")
-    
-    # ===== 5. INSIGHTS RÁPIDOS COM IA =====
-    st.markdown(f"### {icon('auto_awesome', '#8b5cf6', 24)} Insights Rápidos com IA", unsafe_allow_html=True)
-    st.markdown("Gere um resumo instantâneo do desempenho da turma nos 5 critérios de avaliação e do padrão de uso do Tutor IA.")
-    
-    if st.button("Atualizar Análises com IA", icon=":material/psychology:", type="primary"):
-        with st.spinner("Analisando respostas e conversas com a IA... Isso pode levar alguns segundos."):
-            col_insight1, col_insight2 = st.columns([1.5, 1])
-            with col_insight1:
-                from logic import generate_class_criteria_analysis
-                recent_answers = []
-                for uid, data in all_analytics.items():
-                    if uid in [s['id'] for s in student_users]:
-                        cases = data.get('case_analytics', [])
-                        for c in cases[-5:]:
-                            ans = c.get('case_result', {}).get('user_answer')
-                            if ans:
-                                recent_answers.append(ans)
-                
-                import random
-                random.shuffle(recent_answers)
-                criteria_analysis = generate_class_criteria_analysis(recent_answers[:15])
-                
-                st.markdown(f"#### {icon('psychology', '#8b5cf6', 22)} Análise de IA por Eixos de Conhecimento (1 a 6)", unsafe_allow_html=True)
-                for crit_name, crit_text in criteria_analysis.items():
-                    st.info(f"**{crit_name}:**\n{crit_text}")
-                    
-            with col_insight2:
-                from logic import generate_ai_usage_preview
-                chat_samples = []
-                for uid, data in all_analytics.items():
-                    if uid in [s['id'] for s in student_users]:
-                        chats = data.get('chat_interactions', [])
-                        for chat_doc in chats[-3:]:
-                            messages = chat_doc.get('messages', [])
-                            for msg in messages:
-                                if msg.get('user_message'):
-                                    chat_samples.append(msg['user_message'])
-                
-                if chat_samples:
-                    random.shuffle(chat_samples)
-                    ai_usage = generate_ai_usage_preview(chat_samples[:10])
-                else:
-                    ai_usage = "Ainda não há interações suficientes com o Tutor IA para gerar uma análise."
-                
-                st.markdown("#### Padrão de Uso do Tutor")
-                st.success(f"{ai_usage}")
-    else:
-        st.info("Clique no botão acima para carregar as análises em tempo real.", icon=":material/arrow_upward:")
-
-    st.markdown("---")
-    
-    # ===== 6. EXPORTAÇÃO DE RELATÓRIOS (PDFs) =====
+    # ===== 1. EXPORTAÇÃO DE RELATÓRIOS (PDFs) =====
     st.markdown(f"### {icon('description', '#10b981', 24)} Exportação de Relatórios", unsafe_allow_html=True)
     st.markdown("Baixe os dados e análises da turma consolidados em arquivos PDF prontos para impressão ou arquivamento.")
     
@@ -1536,12 +1267,12 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
         )
         
     with col_pdf3:
-        if st.button("Gerar Insights Pedagógicos com IA (PDF)", icon=":material/auto_awesome:", use_container_width=True, type="primary"):
+        if st.button("Gerar PDF de Insights Pedagógicos", icon=":material/auto_awesome:", use_container_width=True, type="primary"):
             with st.spinner("A IA está analisando todas as respostas por categoria. Isso pode levar alguns segundos..."):
                 try:
                     pdf_ia = generate_ai_insights_pdf(hardest_questions)
                     st.download_button(
-                        label=f"Baixar Insights com IA",
+                        label=f"Baixar Insights (PDF)",
                         icon=":material/download:",
                         data=pdf_ia,
                         file_name=f"relatorio_ia_pedagogico_{datetime.now().strftime('%Y%m%d')}.pdf",
@@ -1551,7 +1282,92 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
                     )
                 except Exception as e:
                     st.error(f"Erro ao gerar o PDF da IA: {e}")
-
+                    
+    st.markdown("---")
+    
+    # ===== 2. INSIGHTS RÁPIDOS COM IA =====
+    st.markdown(f"### {icon('auto_awesome', '#8b5cf6', 24)} Insights Rápidos das Interações (Geral)", unsafe_allow_html=True)
+    st.markdown("Gere um resumo instantâneo do desempenho da turma e do padrão de uso do Tutor IA.")
+    
+    if st.button("Atualizar Análises com IA", icon=":material/psychology:", type="secondary", key="btn_run_general_insights"):
+        with st.spinner("Analisando respostas e conversas com a IA... Isso pode levar alguns segundos."):
+            col_insight1, col_insight2 = st.columns([1.5, 1])
+            with col_insight1:
+                from logic import generate_class_criteria_analysis
+                recent_answers = []
+                for uid, data in all_analytics.items():
+                    if uid in [s['id'] for s in student_users]:
+                        cases = data.get('case_analytics', [])
+                        for c in cases[-5:]:
+                            ans = c.get('case_result', {}).get('user_answer')
+                            if ans:
+                                recent_answers.append(ans)
+                
+                import random
+                random.shuffle(recent_answers)
+                criteria_analysis = generate_class_criteria_analysis(recent_answers[:15])
+                
+                st.markdown(f"#### {icon('psychology', '#8b5cf6', 22)} Análise de IA por Eixos de Conhecimento", unsafe_allow_html=True)
+                for crit_name, crit_text in criteria_analysis.items():
+                    st.info(f"**{crit_name}:**\n{crit_text}")
+                    
+            with col_insight2:
+                from logic import generate_ai_usage_preview
+                chat_samples = []
+                for uid, data in all_analytics.items():
+                    if uid in [s['id'] for s in student_users]:
+                        chats = data.get('chat_interactions', [])
+                        for chat_doc in chats[-3:]:
+                            messages = chat_doc.get('messages', [])
+                            for msg in messages:
+                                if msg.get('user_message'):
+                                    chat_samples.append(msg['user_message'])
+                
+                if chat_samples:
+                    random.shuffle(chat_samples)
+                    ai_usage = generate_ai_usage_preview(chat_samples[:10])
+                else:
+                    ai_usage = "Ainda não há interações suficientes com o Tutor IA para gerar uma análise."
+                
+                st.markdown("#### Padrão de Uso do Tutor")
+                st.success(f"{ai_usage}")
+                
+    st.markdown("---")
+    
+    # ===== 3. INSIGHTS PEDAGÓGICOS POR QUESTÃO =====
+    st.markdown(f"### {icon('psychology', '#3b82f6', 24)} Insights Pedagógicos por Questão", unsafe_allow_html=True)
+    st.markdown("Gere análises pedagógicas baseadas em IA para identificar erros comuns e obter estratégias de intervenção por questão.")
+    
+    from logic import QUESTIONS as ALL_QUESTIONS_OV
+    q_titles = [f"Questão {i+1}: {q['pergunta'][:65]}..." for i, q in enumerate(ALL_QUESTIONS_OV)]
+    selected_q_idx = st.selectbox(
+        "Selecione a Questão para Análise",
+        range(len(q_titles)),
+        format_func=lambda x: q_titles[x],
+        key="pedagogical_q_select"
+    )
+    
+    if st.button("Gerar Análise Pedagógica da Questão", icon=":material/school:", type="primary", key="btn_run_pedagogical_insights"):
+        with st.spinner("A IA está analisando as respostas da turma para esta questão..."):
+            selected_q_id = ALL_QUESTIONS_OV[selected_q_idx]['id']
+            q_topic = q_titles[selected_q_idx]
+            
+            sample_answers = []
+            for uid, data in all_analytics.items():
+                for case in data.get('case_analytics', []):
+                    if case.get('case_id') == selected_q_id:
+                        ans = case.get('case_result', {}).get('user_answer')
+                        if ans:
+                            sample_answers.append(ans)
+            
+            if sample_answers:
+                insight_text = generate_category_insights(q_topic, sample_answers[:15])
+                st.markdown(f"#### {icon('auto_awesome', '#3b82f6', 20)} Análise Pedagógica da Questão", unsafe_allow_html=True)
+                st.info(insight_text)
+            else:
+                st.warning("Nenhuma resposta enviada para esta questão ainda, impossível gerar insights pedagógicos.")
+                
+    
 def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict):
     """Tab de análise individual com perfil detalhado de cada aluno"""
     st.markdown(f"## {icon('person', '#3b82f6', 28)} Análise Individual de Alunos", unsafe_allow_html=True)
@@ -2023,50 +1839,159 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
                         # Busca interações do chat para esta questão
                         chat_interactions = get_user_chat_interactions(student_id, entry.get('case_id'))
                         
-                        # Exibe card detalhado
-                        from ui_helpers import answer_detail_card
+                        # Renderiza o cabeçalho da questão e os gabaritos
+                        st.markdown(f"""
+                        <div style='background: var(--secondary-background-color); border: 1px solid rgba(128, 128, 128, 0.15); padding: 1.25rem; border-radius: 12px; margin-bottom: 1rem;'>
+                            <div style='font-size: 0.95rem; font-weight: 700; color: var(--text-color); margin-bottom: 0.5rem;'>
+                                {icon('quiz', '#3b82f6', 18)} Enunciado da Questão
+                            </div>
+                            <div style='font-size: 0.9rem; color: var(--text-color); opacity: 0.9; margin-bottom: 0.75rem; white-space: pre-wrap;'>{q_info.get('pergunta', 'N/A')}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
                         
-                        detail_html = answer_detail_card(
-                            question_text=q_info.get('pergunta', 'N/A'),
-                            student_answer=result.get('user_answer', None),
-                            expected_answer=q_info.get('resposta_esperada', None),
-                            feedback=result.get('feedback', None),
-                            classification=classification if classification else ('CORRETA' if is_correct else 'INCORRETA'),
-                            components=[f"Questão {q_num}"],
-                            difficulty="N/A",
-                            time_spent=format_duration(entry.get('duration_seconds', 0)),
-                            points=result.get('points_gained', 0)
-                        )
+                        # Expander para ver critérios/gabaritos
+                        ref_dict = q_info.get('referencia', {})
+                        if isinstance(ref_dict, dict) and ref_dict:
+                            with st.expander("Ver Critérios de Avaliação (Gabaritos)", expanded=False):
+                                for level_name, level_ref in ref_dict.items():
+                                    st.markdown(f"**Nível {level_name}:**")
+                                    st.markdown(f"- *Critério:* {level_ref.get('parametros', '')}")
+                                    st.markdown(f"- *Resposta Exemplo:* {level_ref.get('resposta_exemplo', '')}")
+                                    st.markdown("---")
+                                    
+                        # Constrói a conversa inteira do aluno com a IA
+                        conversation = []
                         
-                        st.markdown(detail_html, unsafe_allow_html=True)
+                        # Resposta inicial
+                        initial_answer = result.get('user_answer')
+                        initial_feedback = result.get('feedback')
                         
-                        # Mostra interações do chat se houver
+                        # Verifica duplicatas com o chat gravado
+                        has_initial_in_chat = False
                         if chat_interactions:
-                            st.markdown(f"<div style='margin-top: 1rem; margin-bottom: 0.5rem; font-weight: 600; font-size: 1rem;'>{icon('chat', '#ec4899', 20)} Interações do Chat ({len(chat_interactions)})</div>", unsafe_allow_html=True)
+                            first_msg = chat_interactions[0].get('user_message', '').strip()
+                            if initial_answer and (first_msg == initial_answer.strip() or first_msg in initial_answer or initial_answer in first_msg):
+                                has_initial_in_chat = True
+                                
+                        if not has_initial_in_chat and initial_answer:
+                            conversation.append({
+                                'sender': 'aluno',
+                                'message': initial_answer,
+                                'timestamp': timestamp.strftime('%H:%M:%S') if timestamp else ''
+                            })
+                            if initial_feedback:
+                                conversation.append({
+                                    'sender': 'tutor',
+                                    'message': initial_feedback,
+                                    'timestamp': timestamp.strftime('%H:%M:%S') if timestamp else ''
+                                })
+                                
+                        # Adiciona as mensagens subsequentes
+                        for interaction in chat_interactions:
+                            user_msg = interaction.get('user_message', '')
+                            bot_msg = interaction.get('bot_response', '')
                             
-                            for chat_idx, interaction in enumerate(chat_interactions):
-                                chat_time = interaction.get('timestamp', '')
-                                if isinstance(chat_time, str):
-                                    try:
-                                        chat_time = datetime.fromisoformat(chat_time).strftime('%H:%M:%S')
-                                    except:
-                                        chat_time = 'N/A'
+                            chat_time = interaction.get('timestamp', '')
+                            if isinstance(chat_time, str):
+                                try:
+                                    chat_time = datetime.fromisoformat(chat_time).strftime('%H:%M:%S')
+                                except:
+                                    chat_time = ''
+                            elif isinstance(chat_time, (int, float)):
+                                try:
+                                    chat_time = datetime.fromtimestamp(chat_time).strftime('%H:%M:%S')
+                                except:
+                                    chat_time = ''
+                            else:
+                                chat_time = ''
                                 
-                                user_msg = interaction.get('user_message', '')
-                                bot_msg = interaction.get('bot_response', '')
+                            if user_msg:
+                                conversation.append({
+                                    'sender': 'aluno',
+                                    'message': user_msg,
+                                    'timestamp': chat_time
+                                })
+                            if bot_msg:
+                                conversation.append({
+                                    'sender': 'tutor',
+                                    'message': bot_msg,
+                                    'timestamp': chat_time
+                                })
                                 
-                                st.markdown(f"""
-<div class="chat-bubble-container">
-    <div style='color: #8b5cf6; font-size: 0.75rem; margin-bottom: 0.25rem; font-weight: 600;'>
-        {icon('schedule', '#8b5cf6', 14)} {chat_time}
-    </div>
-    <div style='color: var(--text-color); font-size: 0.875rem; margin-bottom: 0.5rem;'>
-        <strong>{icon('person', '#3b82f6', 16)} Aluno:</strong> {user_msg}
-    </div>
-    <div style='color: var(--text-color); font-size: 0.875rem; border-top: 1px dashed rgba(128, 128, 128, 0.15); padding-top: 0.5rem; margin-top: 0.5rem;'>
-        <strong>{icon('smart_toy', '#10b981', 16)} Tutor:</strong> {bot_msg}
-    </div>
-</div>""", unsafe_allow_html=True)
+                        # RENDERIZA O CHAT
+                        st.markdown(f"#### {icon('forum', '#4f46e5', 20)} Histórico de Interações (Tutor Socrático)", unsafe_allow_html=True)
+                        
+                        chat_html = "<div class='chat-container'>"
+                        for msg in conversation:
+                            sender = msg['sender']
+                            text = msg['message']
+                            time_str = msg['timestamp']
+                            
+                            if sender == 'aluno':
+                                row_class = 'student-row'
+                                bubble_class = 'student-bubble'
+                                sender_label = "Aluno"
+                                icon_name = 'person'
+                                icon_color = '#c7d2fe'
+                            else:
+                                row_class = 'tutor-row'
+                                bubble_class = 'tutor-bubble'
+                                sender_label = "Tutor Helix.AI"
+                                icon_name = 'smart_toy'
+                                icon_color = '#10b981'
+                                
+                            time_display = f" <span style='font-size:0.7rem; opacity:0.6; margin-left:6px;'>{time_str}</span>" if time_str else ""
+                            
+                            chat_html += f"""
+                            <div class='chat-message-row {row_class}'>
+                                <div class='chat-bubble {bubble_class}'>
+                                    <div class='chat-message-info'>
+                                        <strong>{icon(icon_name, icon_color, 14)} {sender_label}</strong>{time_display}
+                                    </div>
+                                    <div style='margin-top: 4px; white-space: pre-wrap; font-size: 0.9rem;'>{text}</div>
+                                </div>
+                            </div>
+                            """
+                        chat_html += "</div>"
+                        st.markdown(chat_html, unsafe_allow_html=True)
+                        
+                        # CARD DE STATUS AVALIATIVO FINAL
+                        level_colors = {
+                            'AVANÇADO': '#22c55e',
+                            'AVANCADO': '#22c55e',
+                            'MÉDIO': '#3b82f6',
+                            'MEDIO': '#3b82f6',
+                            'BÁSICO': '#eab308',
+                            'BASICO': '#eab308',
+                            'PARCIAL': '#f97316',
+                            'INCORRETO': '#ef4444',
+                        }
+                        color_status = level_colors.get(classification, '#94a3b8')
+                        
+                        st.markdown(f"""
+                        <div style='background: rgba(148, 163, 184, 0.08); border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.15); padding: 1rem; margin-top: 1rem;'>
+                            <div style='display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;'>
+                                <div>
+                                    <span style='color: #64748b; font-size: 0.75rem; text-transform: uppercase;'>Nível Alcançado</span>
+                                    <div style='color: {color_status}; font-weight: 700; font-size: 1.15rem; display: flex; align-items: center; gap: 0.3rem;'>
+                                        {icon('military_tech', color_status, 20)} {classification.title()}
+                                    </div>
+                                </div>
+                                <div>
+                                    <span style='color: #64748b; font-size: 0.75rem; text-transform: uppercase;'>Tempo de Resolução</span>
+                                    <div style='color: var(--text-color); font-weight: 600; font-size: 1.1rem; display: flex; align-items: center; gap: 0.3rem;'>
+                                        {icon('schedule', '#64748b', 18)} {format_duration(entry.get('duration_seconds', 0))}
+                                    </div>
+                                </div>
+                                <div>
+                                    <span style='color: #64748b; font-size: 0.75rem; text-transform: uppercase;'>Pontuação Final</span>
+                                    <div style='color: {color_status}; font-weight: 700; font-size: 1.15rem; display: flex; align-items: center; gap: 0.3rem;'>
+                                        {icon('emoji_events', color_status, 20)} {result.get('points_gained', 0)} pts
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
 
             
             # Botão de download (tabela resumida)
