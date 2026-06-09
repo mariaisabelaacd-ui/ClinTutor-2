@@ -353,12 +353,9 @@ def main():
         chat_container = st.container(height=480)
         with chat_container:
             if not st.session_state.chat:
-                tags_text = ", ".join(case.get("componentes_conhecimento", []))
                 intro_text = f"""Olá! Sou seu tutor Helix.AI. Hoje vamos resolver a seguinte questão:
 
 **{case['pergunta']}**
-
-_Tópicos relacionados:_ `{tags_text}`
 
 Como você explicaria ou por onde gostaria de começar a responder a essa pergunta?"""
                 st.session_state.chat.append({"role": "assistant", "content": intro_text})
