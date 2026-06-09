@@ -183,25 +183,26 @@ def evaluate_answer_with_ai(question_data: Dict, user_answer: str) -> Dict[str, 
         ref_avancado_str = str(ref_avancado)
 
     prompt = f"""
-Você é um avaliador acadêmico extremamente rígido e criterioso para uma plataforma de ensino de Genética e Biologia Molecular.
+Você é um avaliador acadêmico justo e criterioso para uma plataforma de ensino de Genética e Biologia Molecular.
 Sua tarefa é avaliar a resposta acumulada do aluno para a pergunta abaixo e classificá-la em um de cinco níveis: "Avançado", "Médio", "Básico", "Parcial" ou "Incorreto".
 
 Pergunta: {question_data.get('pergunta')}
 
 ---
-**CRITÉRIOS DE AVALIAÇÃO RÍGIDOS:**
+**CRITÉRIOS DE AVALIAÇÃO:**
 
 1. **NÍVEL BÁSICO**:
    - Parâmetro exigido: {ref_basico_str}
-   - Para obter este nível, o aluno precisa atingir o parâmetro básico de forma clara.
+   - O aluno deve cobrir a essência do parâmetro básico. Pequenas imprecisões de linguagem não desclassificam.
 
 2. **NÍVEL MÉDIO / INTERMEDIÁRIO**:
    - Parâmetro exigido: {ref_medio_str}
-   - Para obter este nível, o aluno deve atender plenamente o parâmetro básico E o parâmetro intermediário.
+   - O aluno deve cobrir os conceitos centrais do parâmetro básico E do intermediário. Não exija terminologia perfeita; exija que a ideia central esteja correta.
 
 3. **NÍVEL AVANÇADO**:
    - Parâmetro exigido: {ref_avancado_str}
-   - Para obter este nível, o aluno deve integrar com precisão todos os parâmetros anteriores E demonstrar domínio avançado conforme o parâmetro avançado.
+   - O aluno deve demonstrar compreensão dos três níveis. Se a ideia central de cada parâmetro estiver presente e correta, classifique como Avançado mesmo que a linguagem não seja acadêmica perfeita.
+   - IMPORTANTE: Se o aluno cobriu as ideias centrais de todos os três parâmetros, classifique como "Avançado". Não invente exigências adicionais que não estejam nos parâmetros.
 
 4. **PARCIAL**:
    - Se o aluno mencionou alguns conceitos ou termos corretos, mas não atendeu por completo sequer o critério "Básico".
@@ -210,9 +211,10 @@ Pergunta: {question_data.get('pergunta')}
    - Se a resposta é incorreta, vaga, irrelevante ou não atende a nenhum parâmetro.
 
 ---
-**REGRA DE AVALIAÇÃO ESTRITA**:
-- Seja rigoroso. Se faltar qualquer detalhe mencionado nos parâmetros do nível intermediário, o aluno NÃO pode obter nível "Médio". Se faltar qualquer detalhe do avançado, ele NÃO pode obter nível "Avançado".
-- Se a resposta for genérica, classifique no nível inferior aplicável.
+**INSTRUÇÃO CRÍTICA**:
+- Avalie o CONTEÚDO, não a forma. Se o aluno expressou o conceito correto com palavras diferentes, dê crédito.
+- Só use "Parcial" ou "Incorreto" se realmente faltar conteúdo substancial.
+- Se a resposta cobriu as ideias de todos os três níveis, DEVE ser classificada como "Avançado".
 
 **RESPOSTA DO ALUNO:**
 {user_answer}
@@ -222,7 +224,7 @@ Retorne sua avaliação estritamente neste formato JSON:
   "level": "Avançado" | "Médio" | "Básico" | "Parcial" | "Incorreto",
   "points": 3.0, 2.0, 1.0, 0.5 ou 0.0,
   "classification": "AVANÇADO", "MÉDIO", "BÁSICO", "PARCIAL" ou "INCORRETO",
-  "feedback": "Feedback detalhado e direto ao aluno em tom acolhedor e construtivo (ex: 'Sua resposta está muito boa porque você explicou X, parabéns! Porém, para ficar completa, faltou abordar Y...'). Deve destacar os pontos fortes da resposta do aluno, explicar de forma clara por que ela é considerada boa ou parcial/insuficiente, e listar o que ele precisa complementar ou corrigir para melhorar, sem entregar a resposta pronta."
+  "feedback": "Feedback detalhado e direto ao aluno em tom acolhedor e construtivo. Destaque os pontos fortes, explique por que atingiu ou não o nível, e diga o que falta sem entregar a resposta pronta."
 }}
 NÃO RETORNE NENHUM OUTRO TEXTO FORA DO OBJETO JSON.
 """
@@ -388,13 +390,13 @@ Acompanhe o progresso do aluno através do nível de resposta atual:
 
 - **Se o nível atual for "Incorreto" ou "Parcial"**: Seu objetivo é ajudá-lo a formular os conceitos do Nível Básico do gabarito. Faça perguntas simples sobre o tema central para que ele crie esta base.
 - **Se o nível atual for "Básico"**: Incentive-o a construir a resposta contendo os conceitos do Nível Intermediário do gabarito. Pergunte sobre o que está faltando de elementos regulatórios ou etapas intermediárias sem dar os termos ou a resposta de bandeja.
-- **Se o nível atual for "Médio" ou "Intermediário"**: Incentive-o a complementar com os conceitos do Nível Avançado do gabarito para atingir 100% de completude.
-- **Se o nível atual for "Avançado"**: Parabenize-o calorosamente pelo excelente raciocínio e oriente-o a concluir a questão no painel.
+- **Se o nível atual for "Médio" ou "Intermediário"**: Incentive-o a complementar com os conceitos do Nível Avançado do gabarito para atingir 100% de completude. Faça UMA pergunta socrática que aponte para o que ainda falta no nível avançado, sem revelar o conceito.
 
 **Regras Adicionais**:
 - Limite suas falas a no máximo de 3 a 4 linhas. Seja conciso e direto.
 - Não repita saudações ("Olá", "Tudo bem?", etc.) se o diálogo já começou. Vá direto ao assunto.
 - Evite citar as palavras exatas ou termos da resposta nas suas perguntas socráticas (ex: se o aluno precisa falar "elongação", não use a palavra "elongação" na sua pergunta; descreva o processo para que ele cite o termo).
+- NUNCA diga ao aluno para clicar em botões, concluir no painel, ou mencione elementos da interface. Apenas faça perguntas socráticas.
 """
 
     messages = [{"role": "system", "content": system_prompt}]
