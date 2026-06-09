@@ -245,7 +245,28 @@ NÃO RETORNE NENHUM OUTRO TEXTO FORA DO OBJETO JSON.
             text = response.choices[0].message.content.strip()
             
             try:
-                return json.loads(text)
+                data = json.loads(text)
+                lvl = str(data.get("level", "Incorreto")).strip()
+                lvl_map = {
+                    "avancado": "Avançado", "avançado": "Avançado", "advanced": "Avançado",
+                    "medio": "Médio", "médio": "Médio", "intermediario": "Médio", "intermediário": "Médio", "medium": "Médio", "intermediate": "Médio",
+                    "basico": "Básico", "básico": "Básico", "basic": "Básico",
+                    "parcial": "Parcial", "partial": "Parcial",
+                    "incorreto": "Incorreto", "incorrect": "Incorreto"
+                }
+                normalized_lvl = lvl_map.get(lvl.lower(), "Incorreto")
+                data["level"] = normalized_lvl
+                data["classification"] = normalized_lvl.upper()
+                
+                pts_map = {
+                    "Avançado": 3.0,
+                    "Médio": 2.0,
+                    "Básico": 1.0,
+                    "Parcial": 0.5,
+                    "Incorreto": 0.0
+                }
+                data["points"] = pts_map.get(normalized_lvl, float(data.get("points", 0.0)))
+                return data
             except:
                  # Fallback manual em caso de erro no JSON
                 lower_text = text.lower()
@@ -277,6 +298,17 @@ def _construir_contexto_para_ia(question: Dict[str, Any], chat_history: List[Dic
     return ctx
 
 def tutor_reply_com_ia(question: Dict[str, Any], user_msg: str, chat_history: List[Dict[str, str]], current_level: str = "Incorreto") -> Generator[str, None, None]:
+    if current_level in ["Avançado", "AVANÇADO"]:
+        templates = [
+            "Parabéns! Você explicou com sucesso todos os conceitos exigidos no gabarito. O exercício está completo!",
+            "Excelente trabalho! Sua explicação atingiu 100% de completude. Ciclo finalizado com sucesso!",
+            "Muito bem! Todos os pontos da pergunta foram respondidos corretamente. O ciclo está completo!",
+            "Perfeito! Você detalhou com precisão todos os aspectos solicitados. Exercício concluído!"
+        ]
+        import random
+        yield random.choice(templates)
+        return
+
     referencias = question.get('referencia', {})
     
     ref_basico = referencias.get('Básico', {})
@@ -328,7 +360,7 @@ NUNCA forneça a resposta final, o código completo ou a solução direta para u
 1. **Use o Método Socrático**: Responda a perguntas com perguntas direcionadas que iluminem o caminho e façam o aluno conectar os pontos.
 2. **Divida para Conquistar**: Se o problema for muito complexo, ajude o aluno a dividi-lo em etapas menores e mais gerenciáveis. Pergunte: "Qual seria o primeiro passo lógico aqui?"
 3. **Identifique Lacunas**: Se o aluno errar, não diga apenas que está errado. Peça para ele explicar seu raciocínio para que ele mesmo perceba onde a lógica falhou.
-4. **Forneça Dicas Estratégicas**: Se o aluno estiver completamente travado, forneça dicas muito sutis, mas exija que ele aplique o conceito.
+4. **Forneça Dicas Estratégicas**: Se o aluno estiver completamente travado, forneça dicas muito sutis, mas exija que ele aplique o conceito. Sempre conecte de forma clara a sua pergunta ao tema principal da questão, explicando brevemente a relação (por exemplo, se a questão é sobre regulação gênica e você precisa que o aluno aborde sinalização celular, relacione como os sinais extracelulares ou ligantes levam à regulação de genes no núcleo) para que o aluno perceba a relevância e não sinta que a pergunta está fora de contexto ou desconexa.
 5. **Restrição de Encerramento (OBRIGATÓRIO)**: NENHUMA resposta sua pode terminar com uma afirmação conclusiva, um elogio vazio ou uma explicação fechada. É estritamente obrigatório que a última frase de TODA interação sua seja uma pergunta direcionada que exija dedução lógica do aluno (com exceção da mensagem de ENCERRAMENTO DEFINITIVO da LEI 4).
 6. **Protocolo Anti-Spoonfeeding**: Se o aluno cometer um erro conceitual grave, NÃO o corrija diretamente fornecendo o conceito verdadeiro. Em vez disso, isole a premissa errada do aluno e crie um cenário absurdo ou uma pergunta que faça o próprio aluno perceber que a lógica dele falhou.
 7. **Regra do Passo Único**: O processo de aprendizagem deve ocorrer um pequeno passo de cada vez. Nunca explique mais de um conceito ou etapa biológica na mesma resposta. Esconda seu conhecimento e revele-o apenas em frações, conforme o aluno acerta as perguntas.

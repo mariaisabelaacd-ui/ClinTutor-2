@@ -422,10 +422,16 @@ Como você explicaria ou por onde gostaria de começar a responder a essa pergun
                 current_level = "Incorreto"
                 try:
                     eval_result = evaluate_answer_with_ai(case, combined_ans)
-                    st.session_state.current_evaluation = eval_result
+                    if "Erro" in str(eval_result.get("feedback", "")):
+                        if st.session_state.current_evaluation:
+                            eval_result = st.session_state.current_evaluation
+                    else:
+                        st.session_state.current_evaluation = eval_result
                     current_level = eval_result.get("level", "Incorreto")
                 except Exception as e:
                     print(f"Erro ao avaliar progresso: {e}")
+                    if st.session_state.current_evaluation:
+                        current_level = st.session_state.current_evaluation.get("level", "Incorreto")
                     
             # 3. Resposta do Tutor baseada no nível atual estimado
             with st.spinner("O Tutor está pensando..."):
