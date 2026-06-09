@@ -342,35 +342,8 @@ def main():
             
         st.markdown(f"#### 📝 Questão Atual: {case['pergunta']}")
         
-        q_prog_col1, q_prog_col2 = st.columns([3, 1])
-        with q_prog_col1:
-            st.markdown(f"**Completude da sua Resposta: {current_pct}%**")
-            st.progress(current_pct / 100.0)
-        with q_prog_col2:
-            st.markdown("<div style='height: 1.1rem;'></div>", unsafe_allow_html=True)
-            if 0 < current_pct < 100:
-                if st.button("Salvar Progresso Parcial ➡️", key="save_partial_progress", use_container_width=True):
-                    student_messages = [m["content"] for m in st.session_state.chat if m["role"] == "user"]
-                    combined_ans = "\n".join(student_messages)
-                    result = finalize_question_response(case, combined_ans, eval_data)
-                    st.session_state.score += result["points_gained"]
-                    st.session_state.streak += 1
-                    nl = level_from_score(st.session_state.score)
-                    if nl > st.session_state.unlocked_level:
-                        st.session_state.unlocked_level = nl
-                        st.balloons()
-                    persist_now()
-                    try:
-                        flush_chat_buffer(user['id'], case['id'])
-                    except Exception as e:
-                        print(f"Erro ao salvar chat log: {e}")
-                    try:
-                        end_case_timer(st.session_state.current_timer_id, result)
-                        st.session_state.current_timer_id = None
-                    except:
-                        pass
-                    start_new_case()
-                    st.rerun()
+        st.markdown(f"**Completude da sua Resposta: {current_pct}%**")
+        st.progress(current_pct / 100.0)
                     
         st.markdown("<hr style='margin-top: 0.5rem; margin-bottom: 1.5rem; border: 0; border-top: 1px solid rgba(128,128,128,0.15);'>", unsafe_allow_html=True)
     
