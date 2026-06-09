@@ -324,6 +324,55 @@ def main():
                 st.rerun()
                 
         st.markdown("<hr style='margin-top: 0.5rem; margin-bottom: 1.5rem; border: 0; border-top: 1px solid rgba(128,128,128,0.15);'>", unsafe_allow_html=True)
+        
+        # --- CURRENT QUESTION & PROGRESS ---
+        eval_data = st.session_state.get("current_evaluation")
+        current_pct = 0
+        if eval_data:
+            level = eval_data.get("level", "Incorreto")
+            level_pct_map = {
+                "Incorreto": 0,
+                "Parcial": 30,
+                "Básico": 60,
+                "Médio": 80,
+                "Intermediário": 80,
+                "Avançado": 100
+            }
+            current_pct = level_pct_map.get(level, 0)
+            
+        st.markdown(f"#### 📝 Questão Atual: {case['pergunta']}")
+        
+        q_prog_col1, q_prog_col2 = st.columns([3, 1])
+        with q_prog_col1:
+            st.markdown(f"**Completude da sua Resposta: {current_pct}%**")
+            st.progress(current_pct / 100.0)
+        with q_prog_col2:
+            st.markdown("<div style='height: 1.1rem;'></div>", unsafe_allow_html=True)
+            if 0 < current_pct < 100:
+                if st.button("Salvar Progresso Parcial ➡️", key="save_partial_progress", use_container_width=True):
+                    student_messages = [m["content"] for m in st.session_state.chat if m["role"] == "user"]
+                    combined_ans = "\n".join(student_messages)
+                    result = finalize_question_response(case, combined_ans, eval_data)
+                    st.session_state.score += result["points_gained"]
+                    st.session_state.streak += 1
+                    nl = level_from_score(st.session_state.score)
+                    if nl > st.session_state.unlocked_level:
+                        st.session_state.unlocked_level = nl
+                        st.balloons()
+                    persist_now()
+                    try:
+                        flush_chat_buffer(user['id'], case['id'])
+                    except Exception as e:
+                        print(f"Erro ao salvar chat log: {e}")
+                    try:
+                        end_case_timer(st.session_state.current_timer_id, result)
+                        st.session_state.current_timer_id = None
+                    except:
+                        pass
+                    start_new_case()
+                    st.rerun()
+                    
+        st.markdown("<hr style='margin-top: 0.5rem; margin-bottom: 1.5rem; border: 0; border-top: 1px solid rgba(128,128,128,0.15);'>", unsafe_allow_html=True)
     
         # --- UNIFIED CHAT INTERFACE ---
         st.markdown("### 💬 Conversa com o Tutor")
@@ -344,96 +393,46 @@ Como você explicaria ou por onde gostaria de começar a responder a essa pergun
                 with st.chat_message(msg["role"]):
                     st.markdown(msg["content"])
             
-            # Exibir a avaliação e os botões de ação DENTRO do chat
+            # Exibir a avaliação e os botões de ação DENTRO do chat apenas quando atingir 100% (Avançado)
             eval_data = st.session_state.get("current_evaluation")
             if eval_data:
                 level = eval_data.get("level", "Incorreto")
                 feedback = eval_data.get("feedback", "")
                 classification = eval_data.get("classification", "INCORRETO")
                 
-                level_pct_map = {
-                    "Incorreto": 0,
-                    "Parcial": 30,
-                    "Básico": 60,
-                    "Médio": 80,
-                    "Intermediário": 80,
-                    "Avançado": 100
-                }
-                pct = level_pct_map.get(level, 0)
-                
-                if classification != "INCORRETO":
+                if level == "Avançado" and classification != "INCORRETO":
                     with st.chat_message("assistant", avatar="🎓"):
-                        if level == "Avançado":
-                            st.markdown(f"""
-                            🎯 **Conclusão da Resposta: 100%**
-                            Excelente explicação conceitual! Você abordou todos os pontos necessários.
-                            
-                            **Feedback do Tutor:** {feedback}
-                            """, unsafe_allow_html=True)
-                            st.progress(1.0)
-                            
-                            student_messages = [m["content"] for m in st.session_state.chat if m["role"] == "user"]
-                            combined_ans = "\n".join(student_messages)
-                            
-                            if st.button("Concluir Questão e Avançar 🚀", key="chat_finish_q", type="primary", use_container_width=True):
-                                result = finalize_question_response(case, combined_ans, eval_data)
-                                st.session_state.score += result["points_gained"]
-                                st.session_state.streak += 1
-                                nl = level_from_score(st.session_state.score)
-                                if nl > st.session_state.unlocked_level: 
-                                    st.session_state.unlocked_level = nl
-                                    st.balloons()
-                                persist_now()
-                                try:
-                                    flush_chat_buffer(user['id'], case['id'])
-                                except Exception as e:
-                                    print(f"Erro ao salvar chat log: {e}")
-                                try:
-                                    end_case_timer(st.session_state.current_timer_id, result)
-                                    st.session_state.current_timer_id = None
-                                except:
-                                    pass
-                                start_new_case()
-                                st.rerun()
-                        else:
-                            st.markdown(f"""
-                            🌟 **Progresso da Resposta: {pct}%**
-                            """, unsafe_allow_html=True)
-                            st.progress(pct / 100.0)
-                            st.markdown(f"""
-                            **Orientações e Feedback do Tutor:**
-                            {feedback}
-                            
-                            O que você deseja fazer agora?
-                            """, unsafe_allow_html=True)
-                            
-                            btn_col1, btn_col2 = st.columns(2)
-                            with btn_col1:
-                                student_messages = [m["content"] for m in st.session_state.chat if m["role"] == "user"]
-                                combined_ans = "\n".join(student_messages)
-                                if st.button("Concluir e Salvar Resposta ➡️", key="chat_advance_q", type="primary", use_container_width=True):
-                                    result = finalize_question_response(case, combined_ans, eval_data)
-                                    st.session_state.score += result["points_gained"]
-                                    st.session_state.streak += 1
-                                    nl = level_from_score(st.session_state.score)
-                                    if nl > st.session_state.unlocked_level:
-                                        st.session_state.unlocked_level = nl
-                                        st.balloons()
-                                    persist_now()
-                                    try:
-                                        flush_chat_buffer(user['id'], case['id'])
-                                    except Exception as e:
-                                        print(f"Erro ao salvar chat log: {e}")
-                                    try:
-                                        end_case_timer(st.session_state.current_timer_id, result)
-                                        st.session_state.current_timer_id = None
-                                    except:
-                                        pass
-                                    start_new_case()
-                                    st.rerun()
-                            with btn_col2:
-                                if st.button("Continuar Conversando 💬", key="chat_continue_q", use_container_width=True):
-                                    st.toast("Continue escrevendo para complementar sua resposta!", icon="💬")
+                        st.markdown(f"""
+                        🎯 **Conclusão da Resposta: 100%**
+                        Excelente explicação conceitual! Você abordou todos os pontos necessários.
+                        
+                        **Feedback do Tutor:** {feedback}
+                        """, unsafe_allow_html=True)
+                        st.progress(1.0)
+                        
+                        student_messages = [m["content"] for m in st.session_state.chat if m["role"] == "user"]
+                        combined_ans = "\n".join(student_messages)
+                        
+                        if st.button("Concluir Questão e Avançar 🚀", key="chat_finish_q", type="primary", use_container_width=True):
+                            result = finalize_question_response(case, combined_ans, eval_data)
+                            st.session_state.score += result["points_gained"]
+                            st.session_state.streak += 1
+                            nl = level_from_score(st.session_state.score)
+                            if nl > st.session_state.unlocked_level: 
+                                st.session_state.unlocked_level = nl
+                                st.balloons()
+                            persist_now()
+                            try:
+                                flush_chat_buffer(user['id'], case['id'])
+                            except Exception as e:
+                                print(f"Erro ao salvar chat log: {e}")
+                            try:
+                                end_case_timer(st.session_state.current_timer_id, result)
+                                st.session_state.current_timer_id = None
+                            except:
+                                pass
+                            start_new_case()
+                            st.rerun()
                                     
         # Input do Chat (renderizado dentro do col_center para ficar alinhado no meio!)
         if q_msg := st.chat_input("Responda à questão ou faça uma pergunta ao tutor..."):
