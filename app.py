@@ -134,54 +134,54 @@ def show_login_page():
             col_b1, col_b2 = st.columns(2)
             with col_b1:
                 if st.button("🔓 Entrar Professor", use_container_width=True):
-                    all_users = get_all_users()
-                    profs = [u for u in all_users if u.get('user_type') == 'professor']
-                    if profs:
-                        login_user(profs[0])
-                    else:
-                        login_user({
-                            'id': 'dummy_prof_id',
-                            'name': 'Professor Teste',
-                            'email': 'professor@fcmsantacasasp.edu.br',
-                            'user_type': 'professor'
-                        })
+                    st.session_state.show_bypass_role = "professor"
                     st.rerun()
             
             with col_b2:
-                if "show_student_bypass" not in st.session_state:
-                    st.session_state.show_student_bypass = False
-                
                 if st.button("🔑 Entrar Aluno", use_container_width=True):
-                    st.session_state.show_student_bypass = True
+                    st.session_state.show_bypass_role = "aluno"
                     st.rerun()
             
-            if st.session_state.get("show_student_bypass"):
+            active_role = st.session_state.get("show_bypass_role")
+            if active_role:
                 st.markdown("<div style='margin-top: 0.5rem;'></div>", unsafe_allow_html=True)
-                bypass_code = st.text_input("Código de Acesso do Aluno:", type="password", placeholder="Digite o código...")
+                bypass_code = st.text_input(f"Código de Acesso para {active_role.title()}:", type="password", placeholder="Digite o código...")
                 col_c1, col_c2 = st.columns(2)
                 with col_c1:
                     if st.button("Confirmar Código", type="primary", use_container_width=True):
                         if bypass_code == "admin_":
                             all_users = get_all_users()
-                            students = [u for u in all_users if u.get('user_type') == 'aluno']
-                            if students:
-                                login_user(students[0])
+                            if active_role == "professor":
+                                profs = [u for u in all_users if u.get('user_type') == 'professor']
+                                if profs:
+                                    login_user(profs[0])
+                                else:
+                                    login_user({
+                                        'id': 'dummy_prof_id',
+                                        'name': 'Professor Teste',
+                                        'email': 'professor@fcmsantacasasp.edu.br',
+                                        'user_type': 'professor'
+                                    })
                             else:
-                                login_user({
-                                    'id': 'dummy_student_id',
-                                    'name': 'Aluno Teste',
-                                    'email': 'aluno@aluno.fcmsantacasasp.edu.br',
-                                    'user_type': 'aluno',
-                                    'ra': '123456',
-                                    'turma': 'Biomedicina A'
-                                })
-                            st.session_state.show_student_bypass = False
+                                students = [u for u in all_users if u.get('user_type') == 'aluno']
+                                if students:
+                                    login_user(students[0])
+                                else:
+                                    login_user({
+                                        'id': 'dummy_student_id',
+                                        'name': 'Aluno Teste',
+                                        'email': 'aluno@aluno.fcmsantacasasp.edu.br',
+                                        'user_type': 'aluno',
+                                        'ra': '123456',
+                                        'turma': 'Biomedicina A'
+                                    })
+                            st.session_state.show_bypass_role = None
                             st.rerun()
                         else:
                             st.error("Código incorreto!")
                 with col_c2:
                     if st.button("Cancelar Acesso", use_container_width=True):
-                        st.session_state.show_student_bypass = False
+                        st.session_state.show_bypass_role = None
                         st.rerun()
     st.markdown("<div style='text-align: center; margin-top: 3rem; color: #999; font-size: 0.8em;'>Helix.AI v1.0</div>", unsafe_allow_html=True)
 
