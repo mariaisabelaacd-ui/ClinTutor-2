@@ -651,86 +651,8 @@ def generate_class_pdf(turma_name: str, student_users: List[Dict], global_stats:
             pdf.ln()
         pdf.ln(8)
 
-    # ---- RANKING DOS ALUNOS ----
-    from analytics import get_all_users_analytics, get_user_case_analytics
-    all_analytics = get_all_users_analytics()
-
-    pdf.set_fill_color(16, 185, 129)
-    pdf.set_text_color(255, 255, 255)
-    pdf.set_font('Helvetica', 'B', 10)
-    pdf.cell(W, 7, '  Ranking de Alunos', ln=True, fill=True)
-    pdf.set_text_color(0, 0, 0)
-    pdf.ln(1)
-
-    pdf.set_draw_color(226, 232, 240)
-    pdf.set_fill_color(241, 245, 249)
-    pdf.set_text_color(71, 85, 105)
-    pdf.set_font('Helvetica', 'B', 8)
-    pdf.cell(55, 7, 'Nome', 1, 0, 'C', True)
-    pdf.cell(30, 7, 'Turma', 1, 0, 'C', True)
-    pdf.cell(20, 7, 'RA', 1, 0, 'C', True)
-    pdf.cell(25, 7, 'Questoes', 1, 0, 'C', True)
-    pdf.cell(25, 7, 'Acertos', 1, 0, 'C', True)
-    pdf.cell(35, 7, 'Taxa Acerto (%)', 1, 0, 'C', True)
-    pdf.ln()
-
-    ranking = []
-    for s in student_users:
-        uid = s['id']
-        cas = all_analytics.get(uid, {}).get('case_analytics', [])
-        if not cas: continue
-        total_q = len(cas)
-        total_pts = sum(e.get('case_result', {}).get('points_gained', 0) for e in cas)
-        
-        # Calculo dinamico do maximo para a taxa
-        total_possible = 0.0
-        from logic import get_case
-        for e in cas:
-            q_info = get_case(e.get('case_id'))
-            total_possible += q_info.get('pontuacao_maxima', 5.0)
-            
-        corr_q = total_pts / (total_possible / total_q) if total_q > 0 and total_possible > 0 else 0.0
-        acc = (total_pts / total_possible * 100) if total_possible > 0 else 0
-        ranking.append((s, total_q, corr_q, acc))
-
-    ranking.sort(key=lambda x: x[3], reverse=True)
-
-    pdf.set_font('Helvetica', '', 8)
-    for i, (s, total_q, corr_q, acc) in enumerate(ranking):
-        # Alternating background for general cells
-        if i % 2 == 0:
-            pdf.set_fill_color(255, 255, 255)
-        else:
-            pdf.set_fill_color(248, 250, 252)
-
-        pdf.set_text_color(51, 65, 85)
-        pdf.set_draw_color(226, 232, 240)
-
-        nome = safe_text(s.get('name', 'N/A'))[:25]
-        turma = safe_text(s.get('turma', '-'))[:14]
-        ra = safe_text(s.get('ra', '-'))[:10]
-        pdf.cell(55, 6, nome, 1, 0, 'L', True)
-        pdf.cell(30, 6, turma, 1, 0, 'C', True)
-        pdf.cell(20, 6, ra, 1, 0, 'C', True)
-        pdf.cell(25, 6, str(total_q), 1, 0, 'C', True)
-        
-        # Format bizarre fractional float value for corr_q
-        corr_q_str = f"{corr_q:.1f}" if corr_q % 1 != 0 else f"{int(corr_q)}"
-        pdf.cell(25, 6, corr_q_str, 1, 0, 'C', True)
-
-        # Soft badge coloring for Taxa Acerto (%)
-        if acc >= 70:
-            pdf.set_fill_color(220, 252, 231)
-            pdf.set_text_color(22, 101, 52)
-        elif acc >= 40:
-            pdf.set_fill_color(254, 249, 195)
-            pdf.set_text_color(133, 77, 14)
-        else:
-            pdf.set_fill_color(254, 226, 226)
-            pdf.set_text_color(153, 27, 27)
-
-        pdf.cell(35, 6, f'{acc:.1f}%', 1, 0, 'C', True)
-        pdf.ln()
+    # Ranking de alunos removido por solicitação de repaginação do dashboard.
+    pass
 
     pdf.set_y(-15)
     pdf.set_font('Helvetica', 'I', 8)
@@ -1210,6 +1132,76 @@ def show_advanced_professor_dashboard():
         
         with tab3:
             show_admin_tab(student_users)
+def get_completed_cases_data(student_users: List[Dict], all_analytics: Dict) -> Dict[str, Dict[str, Dict]]:
+    """
+    Retorna um dicionário mapeando student_id -> {case_id -> dados_do_caso}
+    onde dados_do_caso inclui:
+    - 'duration_seconds': int
+    - 'turns': int (total de interações: 1 + chat_turns)
+    - 'points_gained': float
+    - 'max_points': float
+    - 'level': str
+    - 'timestamp': datetime
+    """
+    from logic import QUESTIONS
+    q_map = {q['id']: q for q in QUESTIONS}
+    
+    data_map = {}
+    for student in student_users:
+        uid = student['id']
+        user_data = all_analytics.get(uid, {})
+        case_analytics = user_data.get('case_analytics', [])
+        chat_interactions = user_data.get('chat_interactions', [])
+        
+        # Ordena por timestamp para obter o mais recente
+        def get_timestamp(x):
+            ts = x.get('timestamp')
+            if isinstance(ts, str):
+                try:
+                    return datetime.fromisoformat(ts)
+                except:
+                    return datetime.min
+            elif isinstance(ts, (int, float)):
+                try:
+                    return datetime.fromtimestamp(ts)
+                except:
+                    return datetime.min
+            return datetime.min
+            
+        sorted_cases = sorted(case_analytics, key=get_timestamp)
+        
+        student_cases = {}
+        for entry in sorted_cases:
+            cid = entry.get('case_id')
+            if not cid or cid not in q_map:
+                continue
+                
+            result = entry.get('case_result', {})
+            duration = entry.get('duration_seconds', 0)
+            points = float(result.get('points_gained', 0))
+            max_pts = float(q_map[cid].get('pontuacao_maxima', 3.0))
+            level = result.get('level', result.get('classification', 'N/A')).strip().upper()
+            
+            # Conta as interações do chat para esse caso
+            chat_turns = 0
+            for chat_doc in chat_interactions:
+                if chat_doc.get('case_id') == cid:
+                    if 'messages' in chat_doc and isinstance(chat_doc['messages'], list):
+                        chat_turns += len(chat_doc['messages'])
+                    else:
+                        chat_turns += 1
+                        
+            student_cases[cid] = {
+                'duration_seconds': duration,
+                'turns': 1 + chat_turns,
+                'points_gained': points,
+                'max_points': max_pts,
+                'level': level,
+                'timestamp': get_timestamp(entry)
+            }
+        if student_cases:
+            data_map[uid] = student_cases
+    return data_map
 
 
 def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
@@ -1237,7 +1229,161 @@ def show_general_overview_tab(student_users: List[Dict], all_analytics: Dict):
         q_stats_data = []
     hardest_questions = get_hardest_questions(top_n=6)
     
-    # ===== 1. EXPORTAÇÃO DE RELATÓRIOS (PDFs) =====
+    # NOVAS MÉTRICAS E KPIs
+    completed_cases_data = get_completed_cases_data(student_users, all_analytics)
+    
+    total_students = len(student_users)
+    total_answered = sum(len(cases) for cases in completed_cases_data.values())
+    
+    from logic import QUESTIONS
+    
+    # Calcular estatísticas por questão
+    hardest_q_id = None
+    hardest_q_num = None
+    max_avg_turns = -1
+    
+    question_overview_stats = []
+    for i, q in enumerate(QUESTIONS):
+        q_id = q['id']
+        responses = []
+        for uid, cases in completed_cases_data.items():
+            if q_id in cases:
+                responses.append(cases[q_id])
+                
+        count = len(responses)
+        avg_time = sum(r['duration_seconds'] for r in responses) / count if count > 0 else 0
+        avg_turns = sum(r['turns'] for r in responses) / count if count > 0 else 0
+        
+        question_overview_stats.append({
+            'id': q_id,
+            'num': i + 1,
+            'titulo': q['pergunta'],
+            'count': count,
+            'avg_time': avg_time,
+            'avg_turns': avg_turns
+        })
+        
+        if count > 0 and avg_turns > max_avg_turns:
+            max_avg_turns = avg_turns
+            hardest_q_id = q_id
+            hardest_q_num = i + 1
+            
+    # ===== KPIs PRINCIPAIS =====
+    st.markdown(f"### {icon('push_pin', '#10b981', 24)} Métricas Principais", unsafe_allow_html=True)
+    col_kpi1, col_kpi2, col_kpi3 = st.columns(3)
+    
+    with col_kpi1:
+        draw_premium_metric_card(
+            "Total de Alunos",
+            str(total_students),
+            icon_name="people",
+            icon_color="#3b82f6"
+        )
+        
+    with col_kpi2:
+        draw_premium_metric_card(
+            "Questões Respondidas",
+            str(total_answered),
+            icon_name="assignment",
+            icon_color="#8b5cf6"
+        )
+        
+    with col_kpi3:
+        if hardest_q_num is not None:
+            draw_premium_metric_card(
+                "Questão Mais Difícil",
+                f"Questão {hardest_q_num}",
+                icon_name="warning",
+                icon_color="#ef4444",
+                subtitle=f"Média: {max_avg_turns:.1f} interações"
+            )
+        else:
+            draw_premium_metric_card(
+                "Questão Mais Difícil",
+                "N/A",
+                icon_name="warning",
+                icon_color="#ef4444",
+                subtitle="Sem dados"
+            )
+            
+    st.markdown("---")
+    
+    # ===== PAINEL DE QUESTÕES — VISÃO DETALHADA =====
+    st.markdown(f"### {icon('quiz', '#10b981', 24)} Painel de Questões — Visão Geral", unsafe_allow_html=True)
+    st.markdown(f"<div style='color: #64748b; font-size: 0.9rem; margin-bottom: 1.5rem;'>{icon('info', '#64748b', 16)} Resumo das interações dos alunos para cada uma das 4 questões do módulo.</div>", unsafe_allow_html=True)
+    
+    for q_stat in question_overview_stats:
+        q_id = q_stat['id']
+        q_num = q_stat['num']
+        titulo = q_stat['titulo']
+        count = q_stat['count']
+        avg_time = q_stat['avg_time']
+        avg_turns = q_stat['avg_turns']
+        
+        # Calculate Avançado completion rate
+        responses = [cases[q_id] for cases in completed_cases_data.values() if q_id in cases]
+        avancado_count = sum(1 for r in responses if r['level'] in ['AVANÇADO', 'AVANCADO'])
+        avancado_rate = (avancado_count / count * 100) if count > 0 else 0
+        
+        # Dificuldade baseada em média de interações
+        if count == 0:
+            card_border_color = "rgba(148, 163, 184, 0.15)"
+            badge_bg = "#94a3b8"
+            status_label = "Sem respostas"
+        elif avg_turns < 3:
+            card_border_color = "rgba(16, 185, 129, 0.2)"
+            badge_bg = "#10b981"
+            status_label = "Fácil"
+        elif avg_turns < 5:
+            card_border_color = "rgba(234, 179, 8, 0.2)"
+            badge_bg = "#eab308"
+            status_label = "Moderada"
+        else:
+            card_border_color = "rgba(239, 68, 68, 0.2)"
+            badge_bg = "#ef4444"
+            status_label = "Desafiadora"
+            
+        st.markdown(f"""
+        <div style='background: var(--secondary-background-color); border: 1px solid {card_border_color}; 
+                    border-radius: 20px; padding: 1.5rem; margin-bottom: 1.25rem; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03); 
+                    transition: all 0.3s ease; border-left: 5px solid {badge_bg};'>
+            <div style='display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;'>
+                <div style='display: flex; align-items: center; gap: 1rem;'>
+                    <div style='background: {badge_bg}; color: white; font-weight: 800; font-size: 1.15rem; 
+                                width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; 
+                                justify-content: center; box-shadow: 0 4px 10px {badge_bg}40;'>
+                        Q{q_num}
+                    </div>
+                    <div>
+                        <div style='font-size: 1.05rem; font-weight: 700; color: var(--text-color);'>{titulo}</div>
+                        <div style='font-size: 0.8rem; color: #64748b; margin-top: 0.25rem;'>Dificuldade: <span style='font-weight: 600; color: {badge_bg};'>{status_label}</span></div>
+                    </div>
+                </div>
+                <div style='display: flex; gap: 1.5rem; flex-wrap: wrap;'>
+                    <div style='text-align: center; min-width: 90px;'>
+                        <div style='font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;'>Respondida por</div>
+                        <div style='font-size: 1.25rem; font-weight: 700; color: var(--text-color); margin-top: 0.25rem;'>{count} alunos</div>
+                    </div>
+                    <div style='text-align: center; min-width: 100px;'>
+                        <div style='font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;'>Tempo Médio</div>
+                        <div style='font-size: 1.25rem; font-weight: 700; color: var(--text-color); margin-top: 0.25rem;'>{format_duration(avg_time)}</div>
+                    </div>
+                    <div style='text-align: center; min-width: 100px;'>
+                        <div style='font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;'>Média Interações</div>
+                        <div style='font-size: 1.25rem; font-weight: 700; color: {badge_bg}; margin-top: 0.25rem;'>{avg_turns:.1f}</div>
+                    </div>
+                    <div style='text-align: center; min-width: 100px;'>
+                        <div style='font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;'>Taxa Conclusão</div>
+                        <div style='font-size: 1.25rem; font-weight: 700; color: #10b981; margin-top: 0.25rem;'>{avancado_rate:.0f}%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+    st.markdown("---")
+    
+    # ===== 3. EXPORTAÇÃO DE RELATÓRIOS (PDFs) =====
     st.markdown(f"### {icon('description', '#10b981', 24)} Exportação de Relatórios", unsafe_allow_html=True)
     st.markdown("Baixe os dados e análises da turma consolidados em arquivos PDF prontos para impressão ou arquivamento.")
     
@@ -1565,6 +1711,17 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
         level = result.get('level', result.get('classification', 'N/A')).strip().upper()
         feedback = result.get('feedback', '')
         
+        # Conta chat turns
+        chat_turns = 0
+        student_chats = all_analytics.get(student_id, {}).get('chat_interactions', [])
+        for chat_doc in student_chats:
+            if chat_doc.get('case_id') == cid:
+                if 'messages' in chat_doc and isinstance(chat_doc['messages'], list):
+                    chat_turns += len(chat_doc['messages'])
+                else:
+                    chat_turns += 1
+        turns = 1 + chat_turns
+        
         # Pega a tentativa mais recente de cada questão
         if q_num not in student_q_data or True:  # Mantém a última tentativa
             student_q_data[q_num] = {
@@ -1575,81 +1732,47 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
                 'level': level,
                 'feedback': feedback,
                 'duration': duration,
+                'turns': turns,
                 'taxa': (points / max_pts * 100) if max_pts > 0 else 0
             }
     
     if student_q_data:
-        # Radar chart individual
-        col_radar, col_summary = st.columns([1.2, 1])
+        # Resumo textual em largura total (sem gráficos)
+        answered = len(student_q_data)
+        total_q = len(ALL_QUESTIONS)
+        total_duration = sum(d['duration'] for d in student_q_data.values())
+        avg_duration_student = total_duration / answered if answered > 0 else 0
+        total_interactions_student = sum(d['turns'] for d in student_q_data.values())
         
-        with col_radar:
-            all_q_nums = list(range(1, len(ALL_QUESTIONS) + 1))
-            radar_labels = [f"Q{n}" for n in all_q_nums]
-            radar_values = [student_q_data.get(n, {}).get('taxa', 0) for n in all_q_nums]
-            
-            fig_ind_radar = go.Figure()
-            fig_ind_radar.add_trace(go.Scatterpolar(
-                r=radar_values + [radar_values[0]],
-                theta=radar_labels + [radar_labels[0]],
-                fill='toself',
-                fillcolor='rgba(59, 130, 246, 0.15)',
-                line=dict(color='#3b82f6', width=2.5),
-                marker=dict(size=8, color='#3b82f6'),
-                name='Desempenho',
-                hovertemplate='%{theta}: %{r:.1f}%<extra></extra>'
-            ))
-            fig_ind_radar.update_layout(
-                polar=dict(
-                    radialaxis=dict(visible=True, range=[0, 100],
-                                    gridcolor='rgba(128, 128, 128, 0.2)',
-                                    ticksuffix='%', tickfont=dict(size=10, color='#64748b')),
-                    angularaxis=dict(gridcolor='rgba(128, 128, 128, 0.2)',
-                                     tickfont=dict(size=12, color='#475569', weight='bold')),
-                    bgcolor='rgba(0,0,0,0)'
-                ),
-                showlegend=False, height=380,
-                margin=dict(l=60, r=60, t=20, b=20),
-                paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)'
-            )
-            st.plotly_chart(fig_ind_radar, use_container_width=True)
+        not_answered = [n for n in range(1, total_q + 1) if n not in student_q_data]
         
-        with col_summary:
-            # Resumo textual
-            answered = len(student_q_data)
-            total_q = len(ALL_QUESTIONS)
-            avg_taxa = sum(d['taxa'] for d in student_q_data.values()) / answered if answered > 0 else 0
-            total_pts = sum(d['points'] for d in student_q_data.values())
-            total_max = sum(d['max_pts'] for d in student_q_data.values())
-            
-            not_answered = [n for n in range(1, total_q + 1) if n not in student_q_data]
-            
-            st.markdown(f"""
-            <div style='background: var(--secondary-background-color); padding: 1.25rem; border-radius: 14px; 
-                        border: 1px solid rgba(59, 130, 246, 0.2);'>
-                <div style='font-size: 1rem; font-weight: 600; margin-bottom: 1rem; color: var(--text-color);'>
-                    {icon('summarize', '#3b82f6', 20)} Resumo do Aluno
-                </div>
-                <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;'>
-                    <div style='text-align: center; padding: 0.75rem; background: rgba(139, 92, 246, 0.08); border-radius: 10px;'>
-                        <div style='font-size: 0.7rem; color: #94a3b8; text-transform: uppercase;'>Respondidas</div>
-                        <div style='font-size: 1.5rem; font-weight: 700; color: #8b5cf6;'>{answered}/{total_q}</div>
-                    </div>
-                    <div style='text-align: center; padding: 0.75rem; background: rgba(16, 185, 129, 0.08); border-radius: 10px;'>
-                        <div style='font-size: 0.7rem; color: #94a3b8; text-transform: uppercase;'>Média Geral</div>
-                        <div style='font-size: 1.5rem; font-weight: 700; color: #10b981;'>{avg_taxa:.0f}%</div>
-                    </div>
-                    <div style='text-align: center; padding: 0.75rem; background: rgba(59, 130, 246, 0.08); border-radius: 10px;'>
-                        <div style='font-size: 0.7rem; color: #94a3b8; text-transform: uppercase;'>Pontos</div>
-                        <div style='font-size: 1.5rem; font-weight: 700; color: #3b82f6;'>{total_pts:.1f}/{total_max:.0f}</div>
-                    </div>
-                    <div style='text-align: center; padding: 0.75rem; background: rgba(239, 68, 68, 0.08); border-radius: 10px;'>
-                        <div style='font-size: 0.7rem; color: #94a3b8; text-transform: uppercase;'>Pendentes</div>
-                        <div style='font-size: 1.5rem; font-weight: 700; color: #ef4444;'>{len(not_answered)}</div>
-                    </div>
-                </div>
-                {"<div style='margin-top: 0.75rem; font-size: 0.85rem; color: #94a3b8;'>" + icon('pending', '#ef4444', 14) + " Questões não respondidas: " + ", ".join([f"Q{n}" for n in not_answered]) + "</div>" if not_answered else ""}
+        st.markdown(f"""
+        <div style='background: var(--secondary-background-color); padding: 1.5rem; border-radius: 20px; 
+                    border: 1px solid rgba(59, 130, 246, 0.2); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);'>
+            <div style='font-size: 1.15rem; font-weight: 700; margin-bottom: 1.25rem; color: var(--text-color); display: flex; align-items: center; gap: 0.5rem;'>
+                {icon('summarize', '#3b82f6', 22)} Resumo do Aluno
             </div>
-            """, unsafe_allow_html=True)
+            <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;'>
+                <div style='text-align: center; padding: 1rem; background: rgba(139, 92, 246, 0.06); border-radius: 12px; border: 1px solid rgba(139, 92, 246, 0.1);'>
+                    <div style='font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: 600;'>Respondidas</div>
+                    <div style='font-size: 1.75rem; font-weight: 800; color: #8b5cf6; margin-top: 0.25rem;'>{answered}/{total_q}</div>
+                </div>
+                <div style='text-align: center; padding: 1rem; background: rgba(59, 130, 246, 0.06); border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.1);'>
+                    <div style='font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: 600;'>Tempo Médio</div>
+                    <div style='font-size: 1.75rem; font-weight: 800; color: #3b82f6; margin-top: 0.25rem;'>{format_duration(avg_duration_student)}</div>
+                </div>
+                <div style='text-align: center; padding: 1rem; background: rgba(16, 185, 129, 0.06); border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.1);'>
+                    <div style='font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: 600;'>Interações</div>
+                    <div style='font-size: 1.75rem; font-weight: 800; color: #10b981; margin-top: 0.25rem;'>{total_interactions_student}</div>
+                </div>
+                <div style='text-align: center; padding: 1rem; background: rgba(239, 68, 68, 0.06); border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.1);'>
+                    <div style='font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: 600;'>Pendentes</div>
+                    <div style='font-size: 1.75rem; font-weight: 800; color: #ef4444; margin-top: 0.25rem;'>{len(not_answered)}</div>
+                </div>
+            </div>
+            {"<div style='margin-top: 1rem; font-size: 0.85rem; color: #94a3b8; display: flex; align-items: center; gap: 0.4rem;'>" + icon('pending', '#ef4444', 15) + " Questões não respondidas: " + ", ".join([f"Q{n}" for n in not_answered]) + "</div>" if not_answered else ""}
+        </div>
+        """, unsafe_allow_html=True)
         
         # Cards por questão respondida
         st.markdown(f"<div style='margin-top: 1rem;'></div>", unsafe_allow_html=True)
@@ -1682,7 +1805,12 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
             ind_card += "</div></div>"
             ind_card += f"<div style='background:rgba(148,163,184,0.12);border-radius:6px;height:10px;overflow:hidden;'>"
             ind_card += f"<div style='background:{lc};height:100%;width:{bar_w}%;border-radius:6px;'></div>"
-            ind_card += "</div></div>"
+            ind_card += "</div>"
+            ind_card += f"<div style='display:flex;justify-content:space-between;align-items:center;margin-top:0.75rem;font-size:0.8rem;color:#64748b;'>"
+            ind_card += f"<span>{icon('schedule', '#64748b', 14)} Tempo: {format_duration(qd['duration'])}</span>"
+            ind_card += f"<span>{icon('forum', '#64748b', 14)} Interações: {qd['turns']}</span>"
+            ind_card += "</div>"
+            ind_card += "</div>"
             st.markdown(ind_card, unsafe_allow_html=True)
         
         # Questões não respondidas
@@ -1838,6 +1966,7 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
                     with st.expander(header_label, expanded=False):
                         # Busca interações do chat para esta questão
                         chat_interactions = get_user_chat_interactions(student_id, entry.get('case_id'))
+                        chat_turns = 1 + len(chat_interactions)
                         
                         # Renderiza o cabeçalho da questão e os gabaritos
                         st.markdown(f"""
@@ -1984,6 +2113,12 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
                                     </div>
                                 </div>
                                 <div>
+                                    <span style='color: #64748b; font-size: 0.75rem; text-transform: uppercase;'>Interações Socráticas</span>
+                                    <div style='color: #8b5cf6; font-weight: 700; font-size: 1.15rem; display: flex; align-items: center; gap: 0.3rem;'>
+                                        {icon('forum', '#8b5cf6', 20)} {chat_turns}
+                                    </div>
+                                </div>
+                                <div>
                                     <span style='color: #64748b; font-size: 0.75rem; text-transform: uppercase;'>Pontuação Final</span>
                                     <div style='color: {color_status}; font-weight: 700; font-size: 1.15rem; display: flex; align-items: center; gap: 0.3rem;'>
                                         {icon('emoji_events', color_status, 20)} {result.get('points_gained', 0)} pts
@@ -2042,36 +2177,25 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
     trend = evolution.get('tendencia', 'estável')
     
     if weekly_perf:
-        # Prepara dados para gráfico
+        # Prepara dados para tabela
         weeks = sorted(weekly_perf.keys())
         accuracies = []
+        totals = []
         
         for week in weeks:
             data = weekly_perf[week]
             acc = (data['correct'] / data['total'] * 100) if data['total'] > 0 else 0
-            accuracies.append(acc)
-        
+            accuracies.append(f"{acc:.1f}%")
+            totals.append(data['total'])
+            
         df_evolution = pd.DataFrame({
             'Semana': weeks,
-            'Taxa de Acerto (%)': accuracies
+            'Questões Respondidas': totals,
+            'Taxa de Acerto': accuracies
         })
         
-        fig_evolution = px.line(
-            df_evolution,
-            x='Semana',
-            y='Taxa de Acerto (%)',
-            title=f"Evolução nas Últimas 4 Semanas (Tendência: {trend.title()})",
-            markers=True
-        )
-        fig_evolution.update_layout(
-            height=400,
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(family="Inter, sans-serif", size=12),
-            xaxis=dict(gridcolor='rgba(148, 163, 184, 0.1)'),
-            yaxis=dict(gridcolor='rgba(148, 163, 184, 0.1)', range=[0, 100])
-        )
-        st.plotly_chart(fig_evolution, use_container_width=True)
+        st.markdown(f"**Evolução nas Últimas 4 Semanas (Tendência: {trend.title()})**")
+        st.dataframe(df_evolution, use_container_width=True, hide_index=True)
         
         # Indicador de tendência
         if trend == 'melhorando':
