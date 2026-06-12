@@ -2071,16 +2071,16 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
                                 
                             time_display = f" <span style='font-size:0.7rem; opacity:0.6; margin-left:6px;'>{time_str}</span>" if time_str else ""
                             
-                            chat_html += f"""
-                            <div class='chat-message-row {row_class}'>
-                                <div class='chat-bubble {bubble_class}'>
-                                    <div class='chat-message-info'>
-                                        <strong>{icon(icon_name, icon_color, 14)} {sender_label}</strong>{time_display}
-                                    </div>
-                                    <div style='margin-top: 4px; white-space: pre-wrap; font-size: 0.9rem;'>{text}</div>
-                                </div>
-                            </div>
-                            """
+                            chat_html += (
+                                f"<div class='chat-message-row {row_class}'>"
+                                f"<div class='chat-bubble {bubble_class}'>"
+                                f"<div class='chat-message-info'>"
+                                f"<strong>{icon(icon_name, icon_color, 14)} {sender_label}</strong>{time_display}"
+                                f"</div>"
+                                f"<div style='margin-top: 4px; white-space: pre-wrap; font-size: 0.9rem;'>{text}</div>"
+                                f"</div>"
+                                f"</div>"
+                            )
                         chat_html += "</div>"
                         st.markdown(chat_html, unsafe_allow_html=True)
                         
