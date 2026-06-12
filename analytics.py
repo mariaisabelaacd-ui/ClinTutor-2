@@ -160,7 +160,7 @@ def flush_chat_buffer(user_id: str, case_id: str):
     
     if is_firebase_connected():
         try:
-            db = get_firestore_db()
+            db = get_db_for_user(user_id)
             chat_ref = db.collection('chat_interactions')
             chat_ref.add(entry)  # 1 documento com todas as mensagens
             print(f"SUCESSO: {len(entry['messages'])} msgs de chat salvas num unico doc Firebase")
@@ -464,11 +464,31 @@ def get_user_chat_interactions_firebase(user_id: str, case_id: str = None) -> Li
 def get_user_chat_interactions_local(user_id: str, case_id: str = None) -> List[Dict]:
     """Recupera interações do chat localmente"""
     analytics = load_analytics_local()
-    interactions = [data for data in analytics if data.get("user_id") == user_id and data.get("type") == "chat_interaction"]
+    raw_interactions = [data for data in analytics if data.get("user_id") == user_id and data.get("type") == "chat_interaction"]
     
     if case_id:
-        interactions = [data for data in interactions if data.get("case_id") == case_id]
-    
+        raw_interactions = [data for data in raw_interactions if data.get("case_id") == case_id]
+        
+    interactions = []
+    for data in raw_interactions:
+        if 'messages' in data and isinstance(data['messages'], list):
+            for msg in data['messages']:
+                interactions.append({
+                    'user_id': data.get('user_id'),
+                    'case_id': data.get('case_id'),
+                    'user_message': msg.get('user_message', ''),
+                    'bot_response': msg.get('bot_response', ''),
+                    'response_time_seconds': msg.get('response_time_seconds'),
+                    'timestamp': msg.get('timestamp', data.get('timestamp'))
+                })
+        else:
+            interactions.append(data)
+            
+    try:
+        interactions.sort(key=get_timestamp_sort_key, reverse=False)
+    except Exception:
+        pass
+        
     return interactions
 
 @st.cache_data(ttl=300, show_spinner=False)
