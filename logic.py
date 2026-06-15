@@ -142,6 +142,46 @@ QUESTIONS: List[Dict[str, Any]] = [
             }
         },
         "pontuacao_maxima": 3
+    },
+    {
+        "id": "q5_direcionalidade_dna_polimerase",
+        "pergunta": "Por que a DNA polimerase só consegue sintetizar uma nova fita de DNA em uma única direcionalidade?",
+        "componentes_conhecimento": ["Replicação do DNA", "DNA Polimerase", "Direcionalidade da Síntese"],
+        "referencia": {
+            "Básico": {
+                "parametros": "O aluno reconhece a direção da síntese (sentido 5' para 3').",
+                "resposta_exemplo": "Porque a DNA polimerase só consegue formar a nova fita no sentido 5’ para 3’."
+            },
+            "Intermediário": {
+                "parametros": "O aluno relaciona a direção da síntese à extremidade 3’.",
+                "resposta_exemplo": "A DNA polimerase sintetiza a nova fita no sentido 5’ para 3’ porque só consegue adicionar novos nucleotídeos à extremidade 3’ livre da cadeia em crescimento."
+            },
+            "Avançado": {
+                "parametros": "O aluno explica a base química da direcionalidade (adição de novos nucleotídeos ao grupo hidroxila da extremidade 3' livre).",
+                "resposta_exemplo": "A DNA polimerase só sintetiza DNA no sentido 5’→3’ porque cada novo nucleotídeo é adicionado ao grupo hidroxila da extremidade 3’ livre da cadeia em crescimento. Assim, a fita nova só pode ser alongada pela adição de nucleotídeos nessa extremidade."
+            }
+        },
+        "pontuacao_maxima": 3
+    },
+    {
+        "id": "q6_fragmentos_okazaki",
+        "pergunta": "O que são fragmentos de Okazaki e por que eles se formam durante a replicação do DNA?",
+        "componentes_conhecimento": ["Replicação do DNA", "Fragmentos de Okazaki", "Síntese Descontínua", "Fita Retardada"],
+        "referencia": {
+            "Básico": {
+                "parametros": "O aluno define os fragmentos de Okazaki (pequenos segmentos de DNA formados durante a replicação).",
+                "resposta_exemplo": "Fragmentos de Okazaki são pequenos segmentos de DNA formados durante a replicação."
+            },
+            "Intermediário": {
+                "parametros": "O aluno identifica onde eles se formam (fita retardada/atrasada) e por quê (síntese descontínua).",
+                "resposta_exemplo": "Fragmentos de Okazaki são pequenos segmentos de DNA formados na fita retardada durante a replicação. Eles se formam porque essa fita não é sintetizada de maneira contínua."
+            },
+            "Avançado": {
+                "parametros": "O aluno explica a causa da síntese descontínua (antiparalelismo das fitas e direcionalidade 5' para 3' da DNA polimerase durante a abertura da molécula).",
+                "resposta_exemplo": "Fragmentos de Okazaki são segmentos curtos de DNA sintetizados de forma descontínua na fita retardada. Eles se formam porque a DNA polimerase só sintetiza DNA no sentido 5’→3’ e, como as fitas do DNA são antiparalelas, uma das novas fitas precisa ser produzida em partes durante a abertura da molécula."
+            }
+        },
+        "pontuacao_maxima": 3
     }
 ]
 
