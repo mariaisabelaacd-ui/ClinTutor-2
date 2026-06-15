@@ -453,72 +453,217 @@ def generate_student_pdf(student: Dict, basic_stats: Dict, advanced_stats: Dict,
     
     # ---- HISTÓRICO DE RESPOSTAS ----
     if history_entries:
+        from analytics import get_user_chat_interactions
         pdf.add_page()
         pdf.set_font('Helvetica', 'B', 14)
         pdf.set_text_color(16, 185, 129)
-        pdf.cell(0, 10, 'Historico de Respostas', ln=True)
+        pdf.cell(0, 10, 'Historico de Respostas e Interacoes', ln=True)
         pdf.set_text_color(0, 0, 0)
         
-        pdf.set_font('Helvetica', 'B', 8)
-        pdf.set_fill_color(241, 245, 249)
-        pdf.cell(30, 7, 'Data', 1, 0, 'C', True)
-        pdf.cell(65, 7, 'Questao', 1, 0, 'C', True)
-        pdf.cell(35, 7, 'Componente', 1, 0, 'C', True)
-        pdf.cell(20, 7, 'Status', 1, 0, 'C', True)
-        pdf.cell(20, 7, 'Tempo', 1, 0, 'C', True)
-        pdf.cell(20, 7, 'Pontos', 1, 0, 'C', True)
-        pdf.ln()
-        
-        pdf.set_font('Helvetica', '', 7)
-        for item in history_entries[:50]:  # limita a 50 entries
+        def safe_text(txt):
+            if txt is None or txt == "": return ""
+            txt = str(txt)
+            replacements = {
+                '\u2019': "'",
+                '\u2018': "'",
+                '\u201c': '"',
+                '\u201d': '"',
+                '\u2013': '-',
+                '\u2014': '-',
+                '\u2192': '->',
+                '\u2032': "'",
+                'ª': 'a',
+                'º': 'o',
+            }
+            for char, repl in replacements.items():
+                txt = txt.replace(char, repl)
+            return txt.encode('latin-1', 'replace').decode('latin-1')
+
+        for item in history_entries[:30]:  # limita a 30 entries para evitar PDFs excessivamente longos
+            if pdf.get_y() > 210:
+                pdf.add_page()
+            
             date_str = item.get('Data', '')
-            
-            def safe_text(txt):
-                if not txt: return ""
-                return str(txt).encode('latin-1', 'replace').decode('latin-1')
-            
-            q_text = safe_text(item.get('Questao', ''))[:35]
-            comp = safe_text(item.get('Componente', ''))[:18]
+            comp = safe_text(item.get('Componente', ''))
             status = safe_text(item.get('Status', ''))
-            tempo = safe_text(item.get('Tempo', ''))
             pts = safe_text(item.get('Pontos', 0))
-            ans_text = safe_text(item.get('Resposta do Aluno', '')) # A chave mudou em professor_dashboard_new.py
-            ia_feedback = safe_text(item.get('Feedback da IA', ''))
+            tempo = safe_text(item.get('Tempo', ''))
+            ans_text = item.get('Resposta do Aluno', '')
+            ia_feedback = item.get('Feedback da IA', '')
+            case_id = item.get('case_id')
+            full_question = item.get('full_question', 'N/A')
+            classification = item.get('classification', 'N/A')
+            student_id = student.get('id')
             
-            # Cor por status
-            if status == 'Correto' or status == 'Correta':
-                pdf.set_fill_color(220, 252, 231)
-            elif status == 'Parcial':
-                pdf.set_fill_color(254, 249, 195)
-            else:
-                pdf.set_fill_color(254, 226, 226)
-            
-            pdf.cell(30, 6, date_str, 1, 0, 'C')
-            pdf.cell(65, 6, q_text, 1, 0, 'L')
-            pdf.cell(35, 6, comp, 1, 0, 'C')
-            pdf.cell(20, 6, status, 1, 0, 'C', True)
-            pdf.cell(20, 6, tempo, 1, 0, 'C')
-            pdf.cell(20, 6, pts, 1, 0, 'C')
-            pdf.ln()
-            
-            # Sub-linha da Resposta do Aluno
-            if ans_text and ans_text.lower() != 'n/a':
-                pdf.set_font('Helvetica', 'I', 7)
-                pdf.set_text_color(80, 80, 80)
-                pdf.set_x(40) # margin is at 10, shift right by 30
-                pdf.multi_cell(160, 5, f'Resposta do Aluno: {ans_text}', border=0, fill=False)
-                
-            # Sub-linha do Feedback da IA
-            if ia_feedback and ia_feedback.lower() != 'n/a':
-                pdf.set_font('Helvetica', 'I', 7)
-                pdf.set_text_color(139, 92, 246) # Roxo IA
-                pdf.set_x(40)
-                pdf.multi_cell(160, 5, f'Avaliacao da IA: {ia_feedback}', border=0, fill=False)
-                
+            # Header of this question response
+            pdf.set_font('Helvetica', 'B', 10)
+            pdf.set_text_color(16, 185, 129)
+            pdf.cell(0, 7, f"Interacao em {date_str} - Componente: {comp}", ln=True)
             pdf.set_text_color(0, 0, 0)
-            pdf.set_font('Helvetica', '', 7)
-            # FIX: reset X to default margin (10) so the next table row is not offset
+            pdf.ln(1)
+            
+            # Question Enunciado Box
+            pdf.set_fill_color(248, 250, 252)
+            pdf.set_draw_color(226, 232, 240)
+            pdf.set_font('Helvetica', 'B', 8)
+            pdf.cell(0, 5, "Enunciado da Questao:", ln=True)
+            pdf.set_font('Helvetica', '', 8)
+            pdf.set_x(12)
+            pdf.multi_cell(186, 4, safe_text(full_question), border='L', fill=True)
+            pdf.ln(3)
             pdf.set_x(10)
+            
+            # Socratic Chat History header
+            pdf.set_font('Helvetica', 'B', 9)
+            pdf.set_text_color(79, 70, 229)
+            pdf.cell(0, 5, "Historico de Interacoes (Tutor Socratico):", ln=True)
+            pdf.set_text_color(0, 0, 0)
+            pdf.ln(1)
+            
+            # Reconstruct the conversation sequence
+            chat_interactions = get_user_chat_interactions(student_id, case_id)
+            conversation = []
+            
+            has_initial_in_chat = False
+            if chat_interactions:
+                first_msg = chat_interactions[0].get('user_message', '').strip()
+                if ans_text and (first_msg == ans_text.strip() or first_msg in ans_text or ans_text in first_msg):
+                    has_initial_in_chat = True
+                    
+            if not has_initial_in_chat and ans_text and ans_text.lower() != 'n/a':
+                conversation.append({
+                    'sender': 'aluno',
+                    'message': ans_text,
+                    'timestamp': ''
+                })
+                if ia_feedback and ia_feedback.lower() != 'n/a':
+                    conversation.append({
+                        'sender': 'tutor',
+                        'message': ia_feedback,
+                        'timestamp': ''
+                    })
+                    
+            for interaction in chat_interactions:
+                user_msg = interaction.get('user_message', '')
+                bot_msg = interaction.get('bot_response', '')
+                chat_time = interaction.get('timestamp', '')
+                if isinstance(chat_time, str):
+                    try:
+                        chat_time = datetime.fromisoformat(chat_time).strftime('%H:%M:%S')
+                    except:
+                        chat_time = ''
+                elif isinstance(chat_time, (int, float)):
+                    try:
+                        chat_time = datetime.fromtimestamp(chat_time).strftime('%H:%M:%S')
+                    except:
+                        chat_time = ''
+                else:
+                    chat_time = ''
+                    
+                if user_msg:
+                    conversation.append({
+                        'sender': 'aluno',
+                        'message': user_msg,
+                        'timestamp': chat_time
+                    })
+                if bot_msg:
+                    conversation.append({
+                        'sender': 'tutor',
+                        'message': bot_msg,
+                        'timestamp': chat_time
+                    })
+            
+            # Render each dialogue turn in the PDF
+            for msg in conversation:
+                sender = msg['sender']
+                text = msg['message']
+                time_str = msg['timestamp']
+                
+                if pdf.get_y() > 255:
+                    pdf.add_page()
+                
+                if sender == 'aluno':
+                    pdf.set_x(12)
+                    pdf.set_font('Helvetica', 'B', 8)
+                    pdf.set_text_color(30, 58, 138)
+                    pdf.cell(0, 4.5, f"Aluno {time_str}:" if time_str else "Aluno:", ln=True)
+                    
+                    pdf.set_x(12)
+                    pdf.set_font('Helvetica', '', 8)
+                    pdf.set_text_color(15, 23, 42)
+                    pdf.set_fill_color(239, 246, 255)
+                    pdf.set_draw_color(191, 219, 254)
+                    pdf.multi_cell(184, 4, safe_text(text), border='L', fill=True)
+                else:
+                    pdf.set_x(12)
+                    pdf.set_font('Helvetica', 'B', 8)
+                    pdf.set_text_color(6, 78, 59)
+                    pdf.cell(0, 4.5, f"Tutor Helix.AI {time_str}:" if time_str else "Tutor Helix.AI:", ln=True)
+                    
+                    pdf.set_x(12)
+                    pdf.set_font('Helvetica', '', 8)
+                    pdf.set_text_color(15, 23, 42)
+                    pdf.set_fill_color(240, 253, 244)
+                    pdf.set_draw_color(187, 247, 208)
+                    pdf.multi_cell(184, 4, safe_text(text), border='L', fill=True)
+                
+                pdf.ln(1.5)
+                pdf.set_x(10)
+                
+            pdf.ln(1.5)
+            
+            # Bottom summary card
+            if pdf.get_y() > 245:
+                pdf.add_page()
+                
+            pdf.set_x(10)
+            pdf.set_fill_color(248, 250, 252)
+            pdf.set_draw_color(226, 232, 240)
+            pdf.rect(10, pdf.get_y(), 190, 15, 'DF')
+            y_card = pdf.get_y() + 2
+            
+            col_width = 190 / 4
+            
+            # Labels
+            pdf.set_xy(10, y_card)
+            pdf.set_font('Helvetica', 'B', 7)
+            pdf.set_text_color(100, 116, 139)
+            pdf.cell(col_width, 4, 'NIVEL ALCANCADO', 0, 0, 'C')
+            pdf.cell(col_width, 4, 'TEMPO DE RESOLUCAO', 0, 0, 'C')
+            pdf.cell(col_width, 4, 'INTERACOES SOCRATICAS', 0, 0, 'C')
+            pdf.cell(col_width, 4, 'PONTUACAO FINAL', 0, 1, 'C')
+            
+            # Values
+            pdf.set_x(10)
+            pdf.set_font('Helvetica', 'B', 8)
+            
+            level_colors = {
+                'AVANÇADO': (34, 197, 94),
+                'AVANCADO': (34, 197, 94),
+                'MÉDIO': (59, 130, 246),
+                'MEDIO': (59, 130, 246),
+                'BÁSICO': (234, 179, 8),
+                'BASICO': (234, 179, 8),
+                'PARCIAL': (249, 115, 22),
+                'INCORRETO': (239, 68, 68),
+            }
+            color_rgb = level_colors.get(classification.upper(), (148, 163, 184))
+            
+            pdf.set_text_color(*color_rgb)
+            pdf.cell(col_width, 5, safe_text(classification.title()), 0, 0, 'C')
+            
+            pdf.set_text_color(15, 23, 42)
+            pdf.cell(col_width, 5, safe_text(tempo), 0, 0, 'C')
+            
+            pdf.set_text_color(109, 40, 217)
+            pdf.cell(col_width, 5, f"{len(conversation)} turnos", 0, 0, 'C')
+            
+            pdf.set_text_color(*color_rgb)
+            pdf.cell(col_width, 5, f"{pts} pts", 0, 1, 'C')
+            
+            pdf.set_text_color(0, 0, 0)
+            pdf.set_x(10)
+            pdf.ln(10)
     
     # Rodapé
     pdf.set_y(-15)
@@ -2148,7 +2293,10 @@ def show_individual_analysis_tab(student_users: List[Dict], all_analytics: Dict)
                     'Tempo': format_duration(item['entry'].get('duration_seconds', 0)),
                     'Pontos': item['result'].get('points_gained', 0),
                     'Resposta do Aluno': item['result'].get('user_answer', 'N/A'),
-                    'Feedback da IA': item['result'].get('feedback', 'N/A')
+                    'Feedback da IA': item['result'].get('feedback', 'N/A'),
+                    'case_id': item['entry'].get('case_id'),
+                    'full_question': item['q_info'].get('pergunta', 'N/A'),
+                    'classification': item['classification']
                 })
             
             df_history = pd.DataFrame(history_summary)
