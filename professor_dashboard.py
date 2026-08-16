@@ -1089,7 +1089,7 @@ def generate_ai_insights_pdf(hardest_questions: List[Dict]) -> bytes:
     pdf.set_y(150)
     pdf.set_font('Helvetica', 'I', 11)
     texto_capa = "Este relatorio contem uma analise automatizada gerada por Inteligencia Artificial " \
-                 "cobrindo o desempenho geral da turma nas 6 questoes fundamentais de Biologia Molecular, " \
+                 "cobrindo o desempenho geral da turma nas questoes de Transporte e Membranas Biologicas, " \
                  "baseado em amostras de todas as respostas enviadas."
     pdf.multi_cell(0, 6, safe(texto_capa), align='C')
     pdf.set_text_color(0, 0, 0)
@@ -1097,7 +1097,7 @@ def generate_ai_insights_pdf(hardest_questions: List[Dict]) -> bytes:
     # ── COLETA DE RESPOSTAS POR QUESTÃO ──────────────────────────
     all_analytics_raw = get_all_users_analytics_firebase()
     
-    # Organiza respostas por questão (1-6)
+    # Organiza respostas por questão
     answers_by_question = {i+1: [] for i in range(len(ALL_QUESTIONS))}
     
     for uid, data in all_analytics_raw.items():
@@ -1121,7 +1121,7 @@ def generate_ai_insights_pdf(hardest_questions: List[Dict]) -> bytes:
     pdf.add_page()
     pdf.set_font('Helvetica', 'B', 16)
     pdf.set_text_color(139, 92, 246)
-    pdf.cell(0, 10, 'Analise Detalhada por Questao (1 a 6)', ln=True)
+    pdf.cell(0, 10, f'Analise Detalhada por Questao (1 a {len(ALL_QUESTIONS)})', ln=True)
     pdf.set_text_color(0, 0, 0)
     pdf.ln(3)
     pdf.set_font('Helvetica', 'I', 9)

@@ -1112,13 +1112,9 @@ def get_all_answers_by_category(limit_per_category: int = 20) -> Dict[str, List[
     Returns:
         Um dicionário: { "Nome da Categoria": ["Resposta ruim 1", "Resposta ruim 2"] }
     """
-    # Mapeamento de QID para o Tópico dos 4 Eixos
-    qid_to_axis = {
-        "q1_expressao_genica_eucariotos": "1. Regulação Transcricional em Eucariotos",
-        "q2_mrna_trna_sintese_proteica": "2. Síntese Proteica e Papel do mRNA/tRNA",
-        "q3_etapas_traducao_sitios": "3. Etapas da Tradução e Sítios Ribossomais",
-        "q4_operons_lac_trp": "4. Operons de Regulação Gênica Procariótica"
-    }
+    from logic import QUESTIONS
+    # Mapeamento de QID para o Tópico dos 8 Eixos
+    qid_to_axis = {q['id']: f"{q.get('topico_id', '')} — {q.get('topico_nome', '')}" for q in QUESTIONS}
     
     # Coleta de respostas por eixo
     axis_answers = {}
