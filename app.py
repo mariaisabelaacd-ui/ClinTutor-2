@@ -342,10 +342,21 @@ def start_new_case(forced_topic=None, forced_diff=None):
     except:
         pass
     
-    st.session_state.case_counter += 1
-    st.session_state.case_scored = False
-    st.session_state.last_result = None
-    st.session_state.chat = []
+    cur_topic_key = new_case.get("topico_id", "T1")
+    cur_topic_num = TOPIC_KEYS.index(cur_topic_key) + 1 if cur_topic_key in TOPIC_KEYS else 1
+    
+    # Se já há mensagens no chat, adiciona marcador de transição sem apagar o histórico anterior
+    if st.session_state.get("chat"):
+        st.session_state.chat.append({
+            "role": "assistant",
+            "content": f"📍 **Agora estamos na Questão {cur_topic_num} de 8:** *{new_case.get('topico_nome', '')}* ({new_case.get('codigo', '')}). Se tiver dúvidas conceituais, pode me perguntar!"
+        })
+    else:
+        st.session_state.chat = [{
+            "role": "assistant",
+            "content": f"Olá! Sou seu tutor **Helix.AI**. Estou aqui para tirar dúvidas e ajudar você a entender os conceitos da **Questão {cur_topic_num} de 8** (*{new_case.get('topico_nome', '')}*). Pode me perguntar qualquer dúvida!"
+        }]
+        
     st.session_state.active_chat_case_id = new_case["id"]
     st.session_state.show_next_case_btn = False
     st.session_state.current_evaluation = None
@@ -574,19 +585,13 @@ def main():
         </div>
         """, unsafe_allow_html=True)
         
-        # Garante que o chat pertença à questão atual
-        if st.session_state.get("active_chat_case_id") != case["id"]:
-            st.session_state.chat = []
-            st.session_state.insistence_count = 0
-            st.session_state.active_chat_case_id = case["id"]
-            
         chat_container = st.container(height=500)
         with chat_container:
-            if not st.session_state.chat:
+            if not st.session_state.get("chat"):
                 intro_text = f"""Olá! Sou seu tutor **Helix.AI**. Estou aqui para tirar dúvidas e ajudar você a entender os conceitos da **Questão {cur_topic_num} de 8** (*{case.get('topico_nome', '')}*).
 
 Tem dúvida sobre algum conceito, termo ou mecanismo? Pode me perguntar!"""
-                st.session_state.chat.append({"role": "assistant", "content": intro_text})
+                st.session_state.chat = [{"role": "assistant", "content": intro_text}]
                 
             for msg in st.session_state.chat:
                 with st.chat_message(msg["role"]):
