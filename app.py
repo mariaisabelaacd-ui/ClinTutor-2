@@ -413,31 +413,22 @@ def main():
     # COLUNA ESQUERDA: QUESTÃO DE MÚLTIPLA ESCOLHA & FEEDBACK
     # =========================================================================
     with col_question:
-        # Seletor das 8 Questões & Barra de Progresso
-        h_col1, h_col2, h_col3 = st.columns([2.6, 1.2, 1.2])
-        with h_col1:
-            topic_options = [f"Questão {i+1}: {k} — {v}" for i, (k, v) in enumerate(TOPICS.items())]
-            current_topic_idx = cur_topic_num - 1
-            sel_topic_str = st.selectbox(
-                "🎯 Navegar pelas 8 Questões:",
-                topic_options,
-                index=current_topic_idx,
-                key="topic_selector_8"
-            )
-            selected_topic_key = sel_topic_str.split(":")[1].split("—")[0].strip()
-            if selected_topic_key != st.session_state.get("topic_filter"):
-                start_new_case(forced_topic=selected_topic_key)
-                
-        with h_col2:
-            comp_cnt = len(st.session_state.get("completed_topics", []))
-            st.markdown(f"<div style='margin-top: 1.8rem; font-size: 0.85rem; color: #64748b;'><b>Progresso:</b> {comp_cnt}/8 Questões</div>", unsafe_allow_html=True)
-            
-        with h_col3:
-            st.markdown("<div style='margin-top: 1.6rem;'></div>", unsafe_allow_html=True)
-            if st.button("⏭️ Outra do Tópico", key="btn_skip_q", use_container_width=True):
-                start_new_case(forced_topic=cur_topic_key)
-
-        st.markdown("<div style='margin-bottom: 0.8rem;'></div>", unsafe_allow_html=True)
+        # Barra de Progresso Sequencial da Atividade (Sem Seleção Manual)
+        comp_cnt = len(st.session_state.get("completed_topics", []))
+        
+        st.markdown(f"""
+        <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;'>
+            <div style='font-size: 1.05rem; font-weight: 700; color: #10b981;'>
+                🎯 Questão {cur_topic_num} de 8
+            </div>
+            <div style='font-size: 0.85rem; font-weight: 600; color: #64748b;'>
+                <b>Progresso da Atividade:</b> {comp_cnt}/8 Concluídas
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.progress(min(comp_cnt / 8.0, 1.0))
+        
+        st.markdown("<div style='margin-bottom: 1rem;'></div>", unsafe_allow_html=True)
         
         # Card da Questão Atual
         diff_name = case.get("dificuldade", "Fácil")
