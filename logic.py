@@ -1,12 +1,33 @@
 import os
 import json
+import re
 from datetime import datetime
 from typing import Dict, List, Any, Generator
 from groq import Groq
 import streamlit as st  
 import numpy as np
 
-print("DEBUG: LOADED LOGIC.PY v4 (GROQ SDK - LLAMA 3)")
+print("DEBUG: LOADED LOGIC.PY v5 (GROQ SDK - GPT-OSS 20B & QWEN 3.6 27B)")
+
+def _extract_json(text: str) -> Dict[str, Any]:
+    """Extrai e faz parse de JSON mesmo se o modelo gerar tags <think> ou blocos markdown."""
+    if not text:
+        raise ValueError("Texto vazio recebido para extração de JSON.")
+    # Remove <think>...</think> se presente (tags de raciocínio de modelos como Qwen)
+    cleaned = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL).strip()
+    
+    # Remove blocos markdown se presentes
+    if "```json" in cleaned:
+        cleaned = cleaned.split("```json")[1].split("```")[0].strip()
+    elif "```" in cleaned:
+        cleaned = cleaned.split("```")[1].split("```")[0].strip()
+        
+    first_brace = cleaned.find('{')
+    last_brace = cleaned.rfind('}')
+    if first_brace != -1 and last_brace != -1:
+        cleaned = cleaned[first_brace:last_brace+1]
+        
+    return json.loads(cleaned)
 
 # =============================
 # CONFIGURAÇÃO DA IA (GROQ LOAD BALANCER)
@@ -49,10 +70,10 @@ def get_groq_client():
     print(f"[IA LOGGER] Requisição enviada. Usando chave Groq: {safe_key}", flush=True)
     return Groq(api_key=key)
 
-# Modelo Padrão do Groq (8B para chat rápido e tutoria)
-MODEL_NAME = "llama-3.1-8b-instant"
-# Modelo mais capaz para avaliações precisas de critérios (diferencia Parcial vs Ausente)
-EVAL_MODEL_NAME = "llama-3.3-70b-versatile"
+# Modelo Padrão do Groq (para chat rápido, tutoria socrática e previews)
+MODEL_NAME = "openai/gpt-oss-20b"
+# Modelo mais capaz para avaliações precisas de critérios e rubricas
+EVAL_MODEL_NAME = "qwen/qwen3.6-27b"
 
 APP_NAME = "Helix.AI"
 DATA_DIR = os.path.join(os.path.expanduser("~"), ".clintutor")
@@ -259,13 +280,14 @@ Pergunta: {question_data.get('pergunta')}
 **RESPOSTA DO ALUNO:**
 {user_answer}
 
-Retorne sua avaliação estritamente neste formato JSON:
+Retorne sua avaliação estritamente em formato JSON válido com a seguinte estrutura:
 {{
-  "level": "Avançado" | "Médio" | "Básico" | "Parcial" | "Incorreto",
-  "points": 3.0, 2.0, 1.0, 0.5 ou 0.0,
-  "classification": "AVANÇADO", "MÉDIO", "BÁSICO", "PARCIAL" ou "INCORRETO",
+  "level": "Avançado",
+  "points": 3.0,
+  "classification": "AVANÇADO",
   "feedback": "Feedback detalhado e direto ao aluno em tom acolhedor e construtivo. Destaque os pontos fortes, explique por que atingiu ou não o nível, e diga o que falta sem entregar a resposta pronta."
 }}
+(Os valores permitidos para "level" são: "Avançado", "Médio", "Básico", "Parcial", "Incorreto")
 NÃO RETORNE NENHUM OUTRO TEXTO FORA DO OBJETO JSON.
 """
     # Retry logic for Rate Limits (429) & 503 errors
@@ -281,13 +303,13 @@ NÃO RETORNE NENHUM OUTRO TEXTO FORA DO OBJETO JSON.
                 model=EVAL_MODEL_NAME, 
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.1,
-                response_format={"type": "json_object"}
+                max_tokens=4096
             )
             
             text = response.choices[0].message.content.strip()
             
             try:
-                data = json.loads(text)
+                data = _extract_json(text)
                 lvl = str(data.get("level", "Incorreto")).strip()
                 lvl_map = {
                     "avancado": "Avançado", "avançado": "Avançado", "advanced": "Avançado",
@@ -451,6 +473,9 @@ Acompanhe o progresso do aluno através do nível de resposta atual:
         role = msg["role"]
         api_role = "assistant" if role == "assistant" else "user"
         messages.append({"role": api_role, "content": msg["content"]})
+
+    if user_msg and (not chat_history or chat_history[-1].get("content") != user_msg):
+        messages.append({"role": "user", "content": user_msg})
 
     import time
     max_retries = 3
@@ -756,10 +781,10 @@ NÃO RETORNE TEXTO FORA DO JSON.
                 model=EVAL_MODEL_NAME,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.3,
-                response_format={"type": "json_object"}
+                max_tokens=4096
             )
             text = response.choices[0].message.content.strip()
-            return json.loads(text)
+            return _extract_json(text)
         except Exception as e:
             print(f"[Class Criteria Analysis] Tentativa {attempt+1}/{max_retries} falhou: {e}")
             if attempt == max_retries - 1:
