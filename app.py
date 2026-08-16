@@ -24,6 +24,8 @@ from analytics import (
 from admin_dashboard import show_admin_dashboard
 from professor_dashboard import show_advanced_professor_dashboard
 
+TOPIC_KEYS = list(TOPICS.keys()) # ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8']
+
 # --- GERENCIADOR DE COOKIES (SINGLETON) ---
 def get_cookie_manager():
     return stx.CookieManager()
@@ -43,7 +45,7 @@ def show_login_page():
     with col_center:
         st.markdown("<div style='text-align: center; margin-bottom: 2rem;'>", unsafe_allow_html=True)
         st.markdown(f"<h1 style='color: #11B965; font-size: 3.5em; margin:0;'>Helix.AI</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='font-size: 1.2em; opacity: 0.7;'>Plataforma adaptativa de tutoria em Genética & Fisiologia</p>", unsafe_allow_html=True)
+        st.markdown("<p style='font-size: 1.2em; opacity: 0.7;'>Plataforma adaptativa de tutoria em Fisiologia & Membranas</p>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
         with st.container(border=True):
             tab1, tab2 = st.tabs(["Entrar", "Criar Conta"])
@@ -127,7 +129,7 @@ def show_login_page():
                             else: st.error(msg)
             
             # --- ATALHOS TEMPORÁRIOS DE LOGIN PARA TESTE ---
-            st.markdown("<hr style='margin: 1.5rem 0; opacity: 0.2;'>", unsafe_allow_html=True)
+            st.markdown("<hr style='margin 1.5rem 0; opacity: 0.2;'>", unsafe_allow_html=True)
             st.markdown("<p style='text-align: center; font-size: 0.85rem; color: #64748b; margin-top: -0.5rem;'><b>Acesso de Desenvolvimento</b></p>", unsafe_allow_html=True)
             
             col_b1, col_b2 = st.columns(2)
@@ -208,7 +210,7 @@ def render_top_navbar():
                     st.session_state.professor_page = "Dashboard"
                     st.rerun()
         elif user["user_type"] == "aluno":
-            st.markdown("<div style='height:100%; display:flex; align-items:center; font-weight:600; color:#10b981; margin-top:5px;'>🎓 Modo Resolução</div>", unsafe_allow_html=True)
+            st.markdown("<div style='height:100%; display:flex; align-items:center; font-weight:600; color:#10b981; margin-top:5px;'>🎓 8 Questões de Transporte</div>", unsafe_allow_html=True)
         elif user["user_type"] == "admin":
             st.markdown("<div style='height:100%; display:flex; align-items:center; font-weight:600; color:#10b981; margin-top:5px;'>⚙️ Painel Admin</div>", unsafe_allow_html=True)
             
@@ -216,17 +218,18 @@ def render_top_navbar():
         if user["user_type"] == "aluno":
             diff = st.session_state.get("current_difficulty", "Fácil")
             diff_badge = {
-                "Fácil": "<span style='background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; color: #10b981;'>🟢 Nível Fácil</span>",
-                "Média": "<span style='background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; color: #f59e0b;'>🟡 Nível Médio</span>",
-                "Difícil": "<span style='background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; color: #ef4444;'>🔴 Nível Difícil</span>"
+                "Fácil": "<span style='background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; color: #10b981;'>🟢 Fácil</span>",
+                "Média": "<span style='background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; color: #f59e0b;'>🟡 Média</span>",
+                "Difícil": "<span style='background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; color: #ef4444;'>🔴 Difícil</span>"
             }.get(diff, "")
             
+            comp_cnt = len(st.session_state.get("completed_topics", []))
             st.markdown(f"""
             <div style='display: flex; justify-content: flex-end; align-items: center; gap: 0.8rem; height: 100%;'>
-                {diff_badge}
                 <div style='background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; color: #10b981;'>
-                    ⭐ <b>{st.session_state.score:.1f}</b> pts
+                    📊 <b>{comp_cnt}/8</b> Concluídas
                 </div>
+                {diff_badge}
                 <div style='background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; color: #ef4444;'>
                     🔥 Streak <b>{st.session_state.streak}</b>
                 </div>
@@ -271,7 +274,8 @@ def init_state():
 
     defaults = {
         "score": 0.0, "streak": 0, "unlocked_level": 1,
-        "current_difficulty": "Fácil", "topic_filter": "Todos",
+        "current_difficulty": "Fácil", "topic_filter": "T1",
+        "current_topic_idx": 0, "completed_topics": [],
         "current_case_id": None, "case_scored": False, "last_result": None,
         "chat": [], "show_next_case_btn": False, "used_cases": [],
         "current_timer_id": None, "case_counter": 0, "current_evaluation": None,
@@ -304,6 +308,7 @@ def persist_now():
         "unlocked_level": st.session_state.unlocked_level,
         "used_cases": st.session_state.used_cases,
         "current_difficulty": st.session_state.current_difficulty,
+        "completed_topics": st.session_state.get("completed_topics", []),
         "when": datetime.now().isoformat()
     })
     save_student_progress(
@@ -314,12 +319,17 @@ def persist_now():
         streak=st.session_state.streak
     )
 
-def start_new_case(forced_diff=None):
+def start_new_case(forced_topic=None, forced_diff=None):
+    if forced_topic:
+        st.session_state.topic_filter = forced_topic
+        if forced_topic in TOPIC_KEYS:
+            st.session_state.current_topic_idx = TOPIC_KEYS.index(forced_topic)
+            
     if forced_diff:
         st.session_state.current_difficulty = forced_diff
         
     diff = st.session_state.get("current_difficulty", "Fácil")
-    topic = st.session_state.get("topic_filter", "Todos")
+    topic = st.session_state.get("topic_filter", "T1")
     
     new_case = pick_adaptive_case(current_difficulty=diff, used_cases=st.session_state.used_cases, topic_filter=topic)
     st.session_state.current_case_id = new_case["id"]
@@ -336,6 +346,7 @@ def start_new_case(forced_diff=None):
     st.session_state.case_scored = False
     st.session_state.last_result = None
     st.session_state.chat = []
+    st.session_state.active_chat_case_id = new_case["id"]
     st.session_state.show_next_case_btn = False
     st.session_state.current_evaluation = None
     st.session_state.submitted_answer = False
@@ -381,6 +392,8 @@ def main():
         start_new_case()
         
     case = get_case(st.session_state.current_case_id)
+    cur_topic_key = case.get("topico_id", "T1")
+    cur_topic_num = TOPIC_KEYS.index(cur_topic_key) + 1 if cur_topic_key in TOPIC_KEYS else 1
     
     # --- 2-COLUMN SPLIT VIEW LAYOUT ---
     col_question, col_chat = st.columns([1.15, 0.85], gap="large")
@@ -389,36 +402,33 @@ def main():
     # COLUNA ESQUERDA: QUESTÃO DE MÚLTIPLA ESCOLHA & FEEDBACK
     # =========================================================================
     with col_question:
-        # Filtros de Tópico & Botão de Pular
-        h_col1, h_col2, h_col3 = st.columns([2.5, 1.2, 1.3])
+        # Seletor das 8 Questões & Barra de Progresso
+        h_col1, h_col2, h_col3 = st.columns([2.6, 1.2, 1.2])
         with h_col1:
-            topic_options = ["Todos"] + [f"{k} — {v}" for k, v in TOPICS.items()]
-            current_topic_idx = 0
-            cur_f = st.session_state.get("topic_filter", "Todos")
-            for idx, opt in enumerate(topic_options):
-                if opt.startswith(cur_f) or (cur_f == "Todos" and opt == "Todos"):
-                    current_topic_idx = idx
-                    break
-                    
-            sel_topic = st.selectbox("📚 Filtrar Tópico:", topic_options, index=current_topic_idx, key="topic_selector")
-            clean_sel_topic = sel_topic.split(" — ")[0] if " — " in sel_topic else sel_topic
-            if clean_sel_topic != st.session_state.get("topic_filter"):
-                st.session_state.topic_filter = clean_sel_topic
-                start_new_case()
+            topic_options = [f"Questão {i+1}: {k} — {v}" for i, (k, v) in enumerate(TOPICS.items())]
+            current_topic_idx = cur_topic_num - 1
+            sel_topic_str = st.selectbox(
+                "🎯 Navegar pelas 8 Questões:",
+                topic_options,
+                index=current_topic_idx,
+                key="topic_selector_8"
+            )
+            selected_topic_key = sel_topic_str.split(":")[1].split("—")[0].strip()
+            if selected_topic_key != st.session_state.get("topic_filter"):
+                start_new_case(forced_topic=selected_topic_key)
                 
         with h_col2:
-            answered_cnt = len(st.session_state.used_cases)
-            total_cnt = len(QUESTIONS)
-            st.markdown(f"<div style='margin-top: 1.8rem; font-size: 0.85rem; color: #64748b;'><b>Progresso:</b> {answered_cnt}/{total_cnt}</div>", unsafe_allow_html=True)
+            comp_cnt = len(st.session_state.get("completed_topics", []))
+            st.markdown(f"<div style='margin-top: 1.8rem; font-size: 0.85rem; color: #64748b;'><b>Progresso:</b> {comp_cnt}/8 Questões</div>", unsafe_allow_html=True)
             
         with h_col3:
             st.markdown("<div style='margin-top: 1.6rem;'></div>", unsafe_allow_html=True)
-            if st.button("⏭️ Pular Questão", key="btn_skip_q", use_container_width=True):
-                start_new_case()
+            if st.button("⏭️ Outra do Tópico", key="btn_skip_q", use_container_width=True):
+                start_new_case(forced_topic=cur_topic_key)
 
         st.markdown("<div style='margin-bottom: 0.8rem;'></div>", unsafe_allow_html=True)
         
-        # Card da Questão
+        # Card da Questão Atual
         diff_name = case.get("dificuldade", "Fácil")
         diff_color = "#10b981" if diff_name == "Fácil" else ("#f59e0b" if diff_name == "Média" else "#ef4444")
         diff_icon = "🟢" if diff_name == "Fácil" else ("🟡" if diff_name == "Média" else "🔴")
@@ -426,11 +436,11 @@ def main():
         with st.container(border=True):
             st.markdown(f"""
             <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;'>
-                <div style='font-size: 0.9rem; font-weight: 700; color: #10b981; letter-spacing: 0.5px;'>
-                    🔬 {case.get('topico_id', '')} — {case.get('topico_nome', '')}
+                <div style='font-size: 0.95rem; font-weight: 700; color: #10b981; letter-spacing: 0.5px;'>
+                    Questão {cur_topic_num} de 8 • {case.get('topico_nome', '')}
                 </div>
                 <div style='background: rgba(128,128,128,0.1); border: 1px solid rgba(128,128,128,0.2); padding: 3px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; color: {diff_color};'>
-                    {diff_icon} {diff_name} • {case.get('codigo', '')}
+                    {diff_icon} {diff_name} ({case.get('codigo', '')})
                 </div>
             </div>
             <div style='font-size: 1.15rem; font-weight: 600; line-height: 1.5; margin-bottom: 1.2rem; color: var(--text-color);'>
@@ -462,10 +472,13 @@ def main():
                         st.session_state.submitted_answer = True
                         st.session_state.current_evaluation = eval_res
                         
-                        # Progressão Adaptativa
+                        # Progressão Adaptativa & Conclusão do Tópico
                         if eval_res["is_correct"]:
                             st.session_state.score += eval_res["points_gained"]
                             st.session_state.streak += 1
+                            if cur_topic_key not in st.session_state.completed_topics:
+                                st.session_state.completed_topics.append(cur_topic_key)
+                                
                             if st.session_state.current_difficulty == "Fácil":
                                 st.session_state.current_difficulty = "Média"
                             elif st.session_state.current_difficulty == "Média":
@@ -521,14 +534,25 @@ def main():
                 st.markdown("<div style='margin-top: 1rem;'></div>", unsafe_allow_html=True)
                 
                 if is_corr:
-                    st.success(f"🎉 **Parabéns, você acertou! (+{eval_res['points_gained']:.1f} pts)**\n\n💡 **Justificativa:** {eval_res.get('correct_explanation', '')}")
-                else:
-                    st.error(f"❌ **Você marcou a alternativa {selected_opt}.**\n\n🔍 **Análise do Distrator / Erro Conceitual:**\n{eval_res.get('distractor_feedback', '')}")
+                    st.success(f"🎉 **Parabéns, você acertou a Questão {cur_topic_num}! (+{eval_res['points_gained']:.1f} pts)**\n\n💡 **Justificativa:** {eval_res.get('correct_explanation', '')}")
                     
-                st.markdown("<div style='margin-top: 1.2rem;'></div>", unsafe_allow_html=True)
-                if st.button("Próxima Questão ➡️", type="primary", use_container_width=True):
-                    start_new_case()
-                    st.rerun()
+                    st.markdown("<div style='margin-top: 1.2rem;'></div>", unsafe_allow_html=True)
+                    if cur_topic_num < 8:
+                        next_tk = TOPIC_KEYS[cur_topic_num]
+                        if st.button(f"Avançar para Questão {cur_topic_num + 1} de 8 ➡️", type="primary", use_container_width=True):
+                            start_new_case(forced_topic=next_tk)
+                    else:
+                        st.balloons()
+                        st.markdown("<div style='background: rgba(16, 185, 129, 0.2); padding: 1rem; border-radius: 10px; text-align: center; font-weight: 700; color: #10b981;'>🏆 Parabéns! Você concluiu todas as 8 questões de Transporte e Membranas!</div>", unsafe_allow_html=True)
+                        if st.button("🔄 Praticar Novamente em Nível Avançado", use_container_width=True):
+                            st.session_state.completed_topics = []
+                            start_new_case(forced_topic="T1", forced_diff="Média")
+                else:
+                    st.error(f"❌ **Você marcou a alternativa {selected_opt}.**\n\n🔍 **Análise Conceitual do Distrator:**\n{eval_res.get('distractor_feedback', '')}")
+                    
+                    st.markdown("<div style='margin-top: 1.2rem;'></div>", unsafe_allow_html=True)
+                    if st.button("Tentar Outra Questão deste Tópico 🔄", type="primary", use_container_width=True):
+                        start_new_case(forced_topic=cur_topic_key)
 
     # =========================================================================
     # COLUNA DIREITA: TUTOR SOCRÁTICO HELIX.AI (COM PROTEÇÃO 4 INSISTÊNCIAS)
@@ -541,7 +565,7 @@ def main():
                     💬 Tutor Helix.AI
                 </h3>
                 <p style='margin: 0; font-size: 0.85rem; color: #64748b;'>
-                    Tire dúvidas conceituais e receba orientações socráticas.
+                    Tire dúvidas e entenda os conceitos passo a passo.
                 </p>
             </div>
             <div style='background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 3px 8px; border-radius: 10px; font-size: 0.75rem; color: #10b981; font-weight: 600;'>
@@ -550,12 +574,18 @@ def main():
         </div>
         """, unsafe_allow_html=True)
         
+        # Garante que o chat pertença à questão atual
+        if st.session_state.get("active_chat_case_id") != case["id"]:
+            st.session_state.chat = []
+            st.session_state.insistence_count = 0
+            st.session_state.active_chat_case_id = case["id"]
+            
         chat_container = st.container(height=500)
         with chat_container:
             if not st.session_state.chat:
-                intro_text = f"""Olá! Sou seu tutor **Helix.AI**. Estou aqui para acompanhar você na resolução da questão **{case.get('codigo', '')}** (*{case.get('topico_nome', '')}*).
+                intro_text = f"""Olá! Sou seu tutor **Helix.AI**. Estou aqui para tirar dúvidas e ajudar você a entender os conceitos da **Questão {cur_topic_num} de 8** (*{case.get('topico_nome', '')}*).
 
-Tem dúvida sobre algum termo, alternativa ou princípio físico-químico? É só me perguntar!"""
+Tem dúvida sobre algum conceito, termo ou mecanismo? Pode me perguntar!"""
                 st.session_state.chat.append({"role": "assistant", "content": intro_text})
                 
             for msg in st.session_state.chat:
@@ -563,8 +593,7 @@ Tem dúvida sobre algum termo, alternativa ou princípio físico-químico? É s�
                     st.markdown(msg["content"])
                     
         # Entrada do chat
-        if q_msg := st.chat_input("Dúvida sobre a questão? Peça uma dica ao tutor..."):
-            # Verifica se o aluno está insistindo diretamente pela resposta
+        if q_msg := st.chat_input("Dúvida sobre a questão? Peça uma explicação ao tutor..."):
             insist_terms = ["resposta", "gabarito", "qual e", "qual é", "qual a", "letra", "diga a resposta", "me da a resposta", "me dá a resposta", "é a a", "é a b", "é a c", "é a d", "fala a resposta"]
             if any(term in q_msg.lower() for term in insist_terms):
                 st.session_state.insistence_count = st.session_state.get("insistence_count", 0) + 1
@@ -596,7 +625,6 @@ Tem dúvida sobre algum termo, alternativa ou princípio físico-químico? É s�
                     
             st.session_state.chat.append({"role": "assistant", "content": full_resp})
             
-            # Registra no Firestore / Analytics
             user = get_current_user()
             if user and st.session_state.current_case_id:
                 log_chat_interaction(
