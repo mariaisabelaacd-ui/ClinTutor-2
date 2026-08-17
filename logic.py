@@ -1396,14 +1396,15 @@ def get_case(cid: str) -> Dict[str, Any]:
 def evaluate_mcq_answer(question: Dict[str, Any], selected_option: str) -> Dict[str, Any]:
     """
     Avalia a alternativa selecionada pelo aluno para a questão de múltipla escolha.
-    Retorna estrutura padronizada para registro analítico e feedback pedagógico.
+    Retorna estrutura padronizada para registro analítico e feedback pedagógico,
+    detalhando por que a resposta está errada e por que ela atua como distrator.
     """
     opt = str(selected_option).upper().strip()
     gabarito = str(question.get("gabarito", "A")).upper().strip()
     is_correct = (opt == gabarito)
     
     distratores = question.get("distratores", {})
-    distractor_feedback = distratores.get(opt, "Alternativa incorreta.")
+    raw_distractor = distratores.get(opt, "Alternativa incorreta.")
     correct_explanation = distratores.get(gabarito, "Gabarito correto.")
     
     pts = float(question.get("pontuacao_maxima", 1.0)) if is_correct else 0.0
@@ -1411,13 +1412,21 @@ def evaluate_mcq_answer(question: Dict[str, Any], selected_option: str) -> Dict[
     alt_text = question.get("alternativas", {}).get(opt, "")
     gab_text = question.get("alternativas", {}).get(gabarito, "")
     
+    # Extrai o erro conceitual limpo
+    clean_error = raw_distractor
+    if ":" in raw_distractor:
+        clean_error = raw_distractor.split(":", 1)[1].strip()
+        
+    why_wrong = f"A opção **{opt} ({alt_text})** não atende corretamente às condições e princípios biológicos descritos no enunciado."
+    why_distractor = f"Esta alternativa é um **distrator elaborado** porque induz ao equívoco frequente de {clean_error}"
+    
     classification = "CORRETO" if is_correct else "INCORRETO"
     level = "Avançado" if is_correct else "Incorreto"
     
     if is_correct:
         feedback_text = f"**Excelente!** A alternativa **{gabarito}** está correta.\n\n💡 *Justificativa:* {correct_explanation}"
     else:
-        feedback_text = f"**Atenção:** A alternativa **{opt}** está incorreta.\n\n🔍 *Análise Conceitual:* {distractor_feedback}\n\n✅ *Gabarito Correto:* **{gabarito}** — {gab_text}"
+        feedback_text = f"**Atenção:** A alternativa **{opt}** está incorreta.\n\n❌ *Por que está errada:* {why_wrong}\n\n🎯 *Por que é um distrator:* {why_distractor}\n\n✅ *Gabarito Correto:* **{gabarito}** — {gab_text}"
     
     return {
         "is_correct": is_correct,
@@ -1430,7 +1439,10 @@ def evaluate_mcq_answer(question: Dict[str, Any], selected_option: str) -> Dict[
         "correct_option": gabarito,
         "user_answer": f"{opt}. {alt_text}",
         "expected_answer": f"{gabarito}. {gab_text}",
-        "distractor_feedback": distractor_feedback,
+        "distractor_feedback": raw_distractor,
+        "why_wrong": why_wrong,
+        "why_distractor": why_distractor,
+        "clean_error": clean_error,
         "correct_explanation": correct_explanation,
         "feedback": feedback_text
     }

@@ -587,10 +587,11 @@ def show_advanced_professor_dashboard():
                             </div>
                             """, unsafe_allow_html=True)
                             
-                            if not is_c and res.get("distractor_feedback"):
+                            if not is_c:
+                                why_d = res.get("why_distractor") or f"Induz ao erro comum de {res.get('distractor_feedback', '')}"
                                 st.markdown(f"""
-                                <div style='background: rgba(239, 68, 68, 0.1); border-left: 3px solid #ef4444; padding: 6px 10px; border-radius: 4px; margin-top: 6px; font-size: 0.85rem;'>
-                                    🔍 <b>Erro Conceitual:</b> {res.get('distractor_feedback', '')}
+                                <div style='background: rgba(239, 68, 68, 0.08); border-left: 3px solid #ef4444; padding: 8px 12px; border-radius: 4px; margin-top: 6px; font-size: 0.85rem;'>
+                                    <b>🎯 Análise do Distrator (Por que induz ao erro):</b><br>{why_d}
                                 </div>
                                 """, unsafe_allow_html=True)
 

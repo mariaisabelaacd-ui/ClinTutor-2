@@ -550,7 +550,17 @@ def main():
                             st.session_state.completed_topics = []
                             start_new_case(forced_topic="T1", forced_diff="Média")
                 else:
-                    st.error(f"❌ **Você marcou a alternativa {selected_opt}.**\n\n🔍 **Análise Conceitual do Distrator:**\n{eval_res.get('distractor_feedback', '')}")
+                    st.error(f"""
+### ❌ Resposta Incorreta: Alternativa {selected_opt} ({alts.get(selected_opt, '')})
+
+📌 **Por que está errada:**  
+{eval_res.get('why_wrong', 'Esta alternativa não atende aos princípios biológicos do enunciado.')}
+
+🎯 **Por que esta alternativa é um distrator (Pegadinha / Erro Comum):**  
+{eval_res.get('why_distractor', eval_res.get('distractor_feedback', ''))}
+
+💡 **Gabarito Oficial:** Alternativa **{gab_opt}** — *{alts.get(gab_opt, '')}*
+""")
                     
                     st.markdown("<div style='margin-top: 1.2rem;'></div>", unsafe_allow_html=True)
                     if st.button("Tentar Outra Questão deste Tópico 🔄", type="primary", use_container_width=True):
