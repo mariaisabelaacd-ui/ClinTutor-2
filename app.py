@@ -191,72 +191,79 @@ def render_top_navbar():
     if not user:
         return
     
-    col_logo, col_menu, col_stats, col_logout = st.columns([1.5, 2.5, 4, 1])
-    
-    with col_logo:
-        st.markdown("<div class='nav-logo-text'><span class='material-icons-outlined' style='vertical-align: middle; color:#10b981; font-size:24px; margin-right:4px;'>biotech</span> Helix.AI</div>", unsafe_allow_html=True)
+    if user["user_type"] == "aluno":
+        col_logo, col_stats, col_logout = st.columns([1.8, 7.2, 1.0])
         
-    with col_menu:
-        if user["user_type"] == "professor":
-            c1, c2 = st.columns(2)
-            with c1:
-                is_active = st.session_state.get("professor_page", "Questões") == "Questões"
-                if st.button("Questões", key="nav_prof_q", type="primary" if is_active else "secondary", use_container_width=True, icon=":material/quiz:"):
-                    st.session_state.professor_page = "Questões"
-                    st.rerun()
-            with c2:
-                is_active = st.session_state.get("professor_page", "Questões") == "Dashboard"
-                if st.button("Dashboard", key="nav_prof_dash", type="primary" if is_active else "secondary", use_container_width=True, icon=":material/dashboard:"):
-                    st.session_state.professor_page = "Dashboard"
-                    st.rerun()
-        elif user["user_type"] == "aluno":
-            cur_topic_key = st.session_state.get("topic_filter", "T1")
-            cur_topic_name = TOPICS.get(cur_topic_key, "Transporte em Membranas")
-            st.markdown(f"<div style='height:100%; display:flex; align-items:center; font-weight:600; color:#10b981; margin-top:5px;'><span class='material-icons-outlined' style='vertical-align: middle; font-size:18px; margin-right:4px;'>school</span> Estudo Dirigido de Biofísica</div>", unsafe_allow_html=True)
-        elif user["user_type"] == "admin":
-            st.markdown("<div style='height:100%; display:flex; align-items:center; font-weight:600; color:#10b981; margin-top:5px;'><span class='material-icons-outlined' style='vertical-align: middle; font-size:18px; margin-right:4px;'>settings</span> Painel Admin</div>", unsafe_allow_html=True)
+        with col_logo:
+            st.markdown("<div class='nav-logo-text'><span class='material-icons-outlined' style='vertical-align: middle; color:#10b981; font-size:24px; margin-right:4px;'>biotech</span> Helix.AI</div>", unsafe_allow_html=True)
             
-    with col_stats:
-        if user["user_type"] == "aluno":
+        with col_stats:
             diff = st.session_state.get("current_difficulty", "Fácil")
-            diff_badge = {
-                "Fácil": "<span style='background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; color: #10b981;'><span style='display:inline-block; width:7px; height:7px; border-radius:50%; background:#10b981; margin-right:4px;'></span> Fácil</span>",
-                "Média": "<span style='background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; color: #f59e0b;'><span style='display:inline-block; width:7px; height:7px; border-radius:50%; background:#f59e0b; margin-right:4px;'></span> Média</span>",
-                "Difícil": "<span style='background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; color: #ef4444;'><span style='display:inline-block; width:7px; height:7px; border-radius:50%; background:#ef4444; margin-right:4px;'></span> Difícil</span>"
-            }.get(diff, "")
+            diff_slug = "facil" if diff == "Fácil" else ("media" if diff == "Média" else "dificil")
             
             cur_topic_key = st.session_state.get("topic_filter", "T1")
             cur_topic_idx = TOPIC_KEYS.index(cur_topic_key) + 1 if cur_topic_key in TOPIC_KEYS else 1
-            cur_topic_short = TOPICS.get(cur_topic_key, "")[:22]
+            cur_topic_full = TOPICS.get(cur_topic_key, "Transporte em Membranas")
             
             st.markdown(f"""
-            <div style='display: flex; justify-content: flex-end; align-items: center; gap: 0.8rem; height: 100%;'>
-                <div style='background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; color: #3b82f6;'>
-                    <span class='material-icons-outlined' style='vertical-align: middle; font-size:16px; margin-right:3px;'>category</span> <b>Bloco {cur_topic_idx}:</b> {cur_topic_short}...
-                </div>
-                {diff_badge}
-                <div style='background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; color: #ef4444;'>
-                    <span class='material-icons-outlined' style='vertical-align: middle; font-size:16px; margin-right:3px;'>local_fire_department</span> Streak <b>{st.session_state.streak}</b>
-                </div>
-                <div class='nav-user-info'>
+            <div class='nav-stats-bar'>
+                <span class='nav-pill nav-pill-block' title='Bloco {cur_topic_idx}: {cur_topic_full}'>
+                    <span class='material-icons-outlined' style='font-size:15px;'>category</span> Bloco {cur_topic_idx}
+                </span>
+                <span class='nav-pill nav-pill-diff-{diff_slug}'>
+                    <span class='diff-dot diff-dot-{diff_slug}'></span> {diff}
+                </span>
+                <span class='nav-pill nav-pill-streak'>
+                    <span class='material-icons-outlined' style='font-size:15px;'>local_fire_department</span> Streak <b>{st.session_state.streak}</b>
+                </span>
+                <span class='nav-user-greeting'>
                     Olá, <b>{user['name'].split()[0]}</b>
-                </div>
+                </span>
             </div>
             """, unsafe_allow_html=True)
-        else:
+            
+        with col_logout:
+            if st.button("Sair", key="nav_logout_btn", use_container_width=True, icon=":material/logout:"):
+                logout_user()
+                cookie_manager.delete('auth_token')
+                st.rerun()
+                
+    else:
+        col_logo, col_menu, col_stats, col_logout = st.columns([1.6, 3.2, 4.2, 1.0])
+        
+        with col_logo:
+            st.markdown("<div class='nav-logo-text'><span class='material-icons-outlined' style='vertical-align: middle; color:#10b981; font-size:24px; margin-right:4px;'>biotech</span> Helix.AI</div>", unsafe_allow_html=True)
+            
+        with col_menu:
+            if user["user_type"] == "professor":
+                c1, c2 = st.columns(2)
+                with c1:
+                    is_active = st.session_state.get("professor_page", "Questões") == "Questões"
+                    if st.button("Questões", key="nav_prof_q", type="primary" if is_active else "secondary", use_container_width=True, icon=":material/quiz:"):
+                        st.session_state.professor_page = "Questões"
+                        st.rerun()
+                with c2:
+                    is_active = st.session_state.get("professor_page", "Questões") == "Dashboard"
+                    if st.button("Dashboard", key="nav_prof_dash", type="primary" if is_active else "secondary", use_container_width=True, icon=":material/dashboard:"):
+                        st.session_state.professor_page = "Dashboard"
+                        st.rerun()
+            elif user["user_type"] == "admin":
+                st.markdown("<div style='height:100%; display:flex; align-items:center; font-weight:600; color:#10b981; margin-top:5px;'><span class='material-icons-outlined' style='vertical-align: middle; font-size:18px; margin-right:4px;'>settings</span> Painel Admin</div>", unsafe_allow_html=True)
+                
+        with col_stats:
             st.markdown(f"""
-            <div style='display: flex; justify-content: flex-end; align-items: center; height: 100%;'>
+            <div class='nav-stats-bar'>
                 <div class='nav-user-info'>
                     Olá, <b>{user['name'].split()[0]}</b> <span class='role-badge'>{user['user_type']}</span>
                 </div>
             </div>
             """, unsafe_allow_html=True)
             
-    with col_logout:
-        if st.button("Sair", key="nav_logout_btn", use_container_width=True, icon=":material/logout:"):
-            logout_user()
-            cookie_manager.delete('auth_token')
-            st.rerun()
+        with col_logout:
+            if st.button("Sair", key="nav_logout_btn", use_container_width=True, icon=":material/logout:"):
+                logout_user()
+                cookie_manager.delete('auth_token')
+                st.rerun()
             
     st.markdown("<hr class='nav-divider'>", unsafe_allow_html=True)
 
