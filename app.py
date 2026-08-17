@@ -279,7 +279,8 @@ def init_state():
         "current_case_id": None, "case_scored": False, "last_result": None,
         "chat": [], "show_next_case_btn": False, "used_cases": [],
         "current_timer_id": None, "case_counter": 0, "current_evaluation": None,
-        "submitted_answer": False, "selected_option": None, "insistence_count": 0
+        "submitted_answer": False, "selected_option": None, "insistence_count": 0,
+        "topic_attempts": 0
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -322,6 +323,7 @@ def persist_now():
 def start_new_case(forced_topic=None, forced_diff=None):
     if forced_topic:
         st.session_state.topic_filter = forced_topic
+        st.session_state.topic_attempts = 0
         if forced_topic in TOPIC_KEYS:
             st.session_state.current_topic_idx = TOPIC_KEYS.index(forced_topic)
             
@@ -469,29 +471,41 @@ def main():
                     if not chosen:
                         st.warning("⚠️ Por favor, selecione uma alternativa antes de confirmar.")
                     else:
+                        st.session_state.topic_attempts = st.session_state.get("topic_attempts", 0) + 1
+                        attempts = st.session_state.topic_attempts
+                        
                         st.session_state.selected_option = chosen
                         eval_res = evaluate_mcq_answer(case, chosen)
                         st.session_state.submitted_answer = True
-                        st.session_state.current_evaluation = eval_res
                         
-                        # Progressão Adaptativa & Conclusão do Tópico
+                        # Progressão Adaptativa baseada em tentativas
                         if eval_res["is_correct"]:
-                            st.session_state.score += eval_res["points_gained"]
+                            if attempts == 1:
+                                earned_pts = 1.0
+                                next_diff = "Média" if st.session_state.current_difficulty == "Fácil" else "Difícil"
+                                perf_msg = f"⭐ **Excelente! Acertou de primeira!** (+1.0 pt)\n\nDemonstrou domínio conceitual sólido. Próxima questão adaptada para o nível **{next_diff}**."
+                            elif attempts == 2:
+                                earned_pts = 0.7
+                                next_diff = "Média"
+                                perf_msg = f"👍 **Muito bem! Acertou na 2ª tentativa!** (+0.7 pt)\n\nBoa correção de raciocínio. Próxima questão adaptada para o nível **{next_diff}**."
+                            else:
+                                earned_pts = 0.4
+                                next_diff = "Fácil"
+                                perf_msg = f"💡 **Conseguiu resolver após {attempts} tentativas!** (+0.4 pt)\n\nReforço conceitual ativado: a próxima questão será mantida no nível **{next_diff}** para consolidação."
+                                
+                            eval_res["points_gained"] = earned_pts
+                            eval_res["next_diff"] = next_diff
+                            eval_res["perf_msg"] = perf_msg
+                            
+                            st.session_state.score += earned_pts
                             st.session_state.streak += 1
                             if cur_topic_key not in st.session_state.completed_topics:
                                 st.session_state.completed_topics.append(cur_topic_key)
-                                
-                            if st.session_state.current_difficulty == "Fácil":
-                                st.session_state.current_difficulty = "Média"
-                            elif st.session_state.current_difficulty == "Média":
-                                st.session_state.current_difficulty = "Difícil"
+                            st.session_state.current_difficulty = next_diff
                         else:
                             st.session_state.streak = 0
-                            if st.session_state.current_difficulty == "Difícil":
-                                st.session_state.current_difficulty = "Média"
-                            elif st.session_state.current_difficulty == "Média":
-                                st.session_state.current_difficulty = "Fácil"
-                                
+                            
+                        st.session_state.current_evaluation = eval_res
                         persist_now()
                         
                         # Analytics & Timer
@@ -509,21 +523,22 @@ def main():
                 is_corr = eval_res.get("is_correct", False)
                 selected_opt = eval_res.get("selected_option", "")
                 gab_opt = eval_res.get("correct_option", "")
+                attempts = st.session_state.get("topic_attempts", 1)
                 
                 # Lista com destaque visual nas alternativas
                 for k in ["A", "B", "C", "D"]:
                     if k in alts:
                         text = alts[k]
-                        if k == gab_opt:
+                        if is_corr and k == gab_opt:
                             st.markdown(f"""
                             <div style='background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; border-radius: 8px; padding: 10px 14px; margin-bottom: 6px;'>
-                                <b>✅ {k}.</b> {text} <span style='color: #10b981; font-weight: 700; font-size: 0.85rem;'>(Gabarito Correto)</span>
+                                <b>✅ {k}.</b> {text} <span style='color: #10b981; font-weight: 700; font-size: 0.85rem;'>(Correto!)</span>
                             </div>
                             """, unsafe_allow_html=True)
-                        elif k == selected_opt and not is_corr:
+                        elif not is_corr and k == selected_opt:
                             st.markdown(f"""
                             <div style='background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; border-radius: 8px; padding: 10px 14px; margin-bottom: 6px;'>
-                                <b>❌ {k}.</b> {text} <span style='color: #ef4444; font-weight: 700; font-size: 0.85rem;'>(Sua Escolha)</span>
+                                <b>❌ {k}.</b> {text} <span style='color: #ef4444; font-weight: 700; font-size: 0.85rem;'>(Sua Escolha - Incorreta)</span>
                             </div>
                             """, unsafe_allow_html=True)
                         else:
@@ -536,13 +551,19 @@ def main():
                 st.markdown("<div style='margin-top: 1rem;'></div>", unsafe_allow_html=True)
                 
                 if is_corr:
-                    st.success(f"🎉 **Parabéns, você acertou a Questão {cur_topic_num}! (+{eval_res['points_gained']:.1f} pts)**\n\n💡 **Justificativa:** {eval_res.get('correct_explanation', '')}")
+                    st.success(f"""
+{eval_res.get('perf_msg', '🎉 Parabéns, você acertou!')}
+
+💡 **Justificativa do Gabarito (Alternativa {gab_opt}):**  
+{eval_res.get('correct_explanation', '')}
+""")
                     
                     st.markdown("<div style='margin-top: 1.2rem;'></div>", unsafe_allow_html=True)
                     if cur_topic_num < 8:
                         next_tk = TOPIC_KEYS[cur_topic_num]
-                        if st.button(f"Avançar para Questão {cur_topic_num + 1} de 8 ➡️", type="primary", use_container_width=True):
-                            start_new_case(forced_topic=next_tk)
+                        next_diff = eval_res.get("next_diff", "Média")
+                        if st.button(f"Avançar para Questão {cur_topic_num + 1} de 8 (Nível {next_diff}) ➡️", type="primary", use_container_width=True):
+                            start_new_case(forced_topic=next_tk, forced_diff=next_diff)
                     else:
                         st.balloons()
                         st.markdown("<div style='background: rgba(16, 185, 129, 0.2); padding: 1rem; border-radius: 10px; text-align: center; font-weight: 700; color: #10b981;'>🏆 Parabéns! Você concluiu todas as 8 questões de Transporte e Membranas!</div>", unsafe_allow_html=True)
@@ -551,20 +572,28 @@ def main():
                             start_new_case(forced_topic="T1", forced_diff="Média")
                 else:
                     st.error(f"""
-### ❌ Resposta Incorreta: Alternativa {selected_opt} ({alts.get(selected_opt, '')})
+### ❌ Alternativa {selected_opt} Incorreta (Tentativa {attempts})
 
-📌 **Por que está errada:**  
+📌 **Por que sua escolha está errada:**  
 {eval_res.get('why_wrong', 'Esta alternativa não atende aos princípios biológicos do enunciado.')}
 
 🎯 **Por que esta alternativa é um distrator (Pegadinha / Erro Comum):**  
 {eval_res.get('why_distractor', eval_res.get('distractor_feedback', ''))}
 
-💡 **Gabarito Oficial:** Alternativa **{gab_opt}** — *{alts.get(gab_opt, '')}*
+💬 *Dica:* Você pode usar o chat com o **Tutor Helix.AI** ao lado para tirar dúvidas conceituais antes de tentar novamente!
 """)
                     
                     st.markdown("<div style='margin-top: 1.2rem;'></div>", unsafe_allow_html=True)
-                    if st.button("Tentar Outra Questão deste Tópico 🔄", type="primary", use_container_width=True):
-                        start_new_case(forced_topic=cur_topic_key)
+                    btn_col1, btn_col2 = st.columns(2)
+                    with btn_col1:
+                        if st.button("Tentar Novamente esta Questão 🔄", type="primary", use_container_width=True):
+                            st.session_state.submitted_answer = False
+                            st.session_state.selected_option = None
+                            st.session_state.current_evaluation = None
+                            st.rerun()
+                    with btn_col2:
+                        if st.button("Outra Questão deste Tópico 🔀", use_container_width=True):
+                            start_new_case(forced_topic=cur_topic_key)
 
     # =========================================================================
     # COLUNA DIREITA: TUTOR SOCRÁTICO HELIX.AI (COM PROTEÇÃO 4 INSISTÊNCIAS)
