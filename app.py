@@ -44,8 +44,8 @@ def show_login_page():
     col_left, col_center, col_right = st.columns([1, 1.5, 1])
     with col_center:
         st.markdown("<div style='text-align: center; margin-bottom: 2rem;'>", unsafe_allow_html=True)
-        st.markdown(f"<h1 style='color: #11B965; font-size: 3.5em; margin:0;'>Helix.AI</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='font-size: 1.2em; opacity: 0.7;'>Plataforma adaptativa de tutoria em Fisiologia & Membranas</p>", unsafe_allow_html=True)
+        st.markdown(f"<h1 style='color: #11B965; font-size: 3.2em; margin:0;'><span class='material-icons-outlined' style='font-size:45px; vertical-align:middle;'>biotech</span> Helix.AI</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='font-size: 1.1em; opacity: 0.7;'>Plataforma adaptativa de tutoria em Fisiologia & Membranas</p>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
         with st.container(border=True):
             tab1, tab2 = st.tabs(["Entrar", "Criar Conta"])
@@ -56,7 +56,7 @@ def show_login_page():
                     prof_code_login = st.text_input("Código de Professor (apenas professores)", type="password", placeholder="Deixe em branco se for aluno")
                     remember_me = st.checkbox("Manter conectado por 7 dias", value=True)
                     st.markdown("")
-                    if st.form_submit_button("Acessar Sistema", type="primary", use_container_width=True):
+                    if st.form_submit_button("Acessar Sistema", type="primary", use_container_width=True, icon=":material/login:"):
                         if email and password:
                             with st.spinner("Autenticando..."):
                                 success, message, user_data = authenticate_user(email, password)
@@ -116,7 +116,7 @@ def show_login_page():
                             
                             consent_given = st.checkbox("Li e declaro que concordo com os termos de uso e privacidade", value=False)
 
-                    if st.form_submit_button("Criar Minha Conta", type="primary", use_container_width=True):
+                    if st.form_submit_button("Criar Minha Conta", type="primary", use_container_width=True, icon=":material/person_add:"):
                         if password != confirm_password: st.error("Senhas não conferem.")
                         elif len(password) < 6: st.error("Senha curta.")
                         elif user_type == 'aluno' and not consent_given:
@@ -129,17 +129,17 @@ def show_login_page():
                             else: st.error(msg)
             
             # --- ATALHOS TEMPORÁRIOS DE LOGIN PARA TESTE ---
-            st.markdown("<hr style='margin 1.5rem 0; opacity: 0.2;'>", unsafe_allow_html=True)
+            st.markdown("<hr style='margin: 1.5rem 0; opacity: 0.2;'>", unsafe_allow_html=True)
             st.markdown("<p style='text-align: center; font-size: 0.85rem; color: #64748b; margin-top: -0.5rem;'><b>Acesso de Desenvolvimento</b></p>", unsafe_allow_html=True)
             
             col_b1, col_b2 = st.columns(2)
             with col_b1:
-                if st.button("🔓 Entrar Professor", use_container_width=True):
+                if st.button("Entrar Professor", use_container_width=True, icon=":material/lock_open:"):
                     st.session_state.show_bypass_role = "professor"
                     st.rerun()
             
             with col_b2:
-                if st.button("🔑 Entrar Aluno", use_container_width=True):
+                if st.button("Entrar Aluno", use_container_width=True, icon=":material/key:"):
                     st.session_state.show_bypass_role = "aluno"
                     st.rerun()
             
@@ -149,7 +149,7 @@ def show_login_page():
                 bypass_code = st.text_input(f"Código de Acesso para {active_role.title()}:", type="password", placeholder="Digite o código...")
                 col_c1, col_c2 = st.columns(2)
                 with col_c1:
-                    if st.button("Confirmar Código", type="primary", use_container_width=True):
+                    if st.button("Confirmar Código", type="primary", use_container_width=True, icon=":material/check:"):
                         if bypass_code == "admin_":
                             all_users = get_all_users()
                             if active_role == "professor":
@@ -181,7 +181,7 @@ def show_login_page():
                         else:
                             st.error("Código incorreto!")
                 with col_c2:
-                    if st.button("Cancelar Acesso", use_container_width=True):
+                    if st.button("Cancelar Acesso", use_container_width=True, icon=":material/close:"):
                         st.session_state.show_bypass_role = None
                         st.rerun()
     st.markdown("<div style='text-align: center; margin-top: 3rem; color: #999; font-size: 0.8em;'>Helix.AI v2.0</div>", unsafe_allow_html=True)
@@ -194,44 +194,44 @@ def render_top_navbar():
     col_logo, col_menu, col_stats, col_logout = st.columns([1.5, 2.5, 4, 1])
     
     with col_logo:
-        st.markdown("<div class='nav-logo-text'>🧬 Helix.AI</div>", unsafe_allow_html=True)
+        st.markdown("<div class='nav-logo-text'><span class='material-icons-outlined' style='vertical-align: middle; color:#10b981; font-size:24px; margin-right:4px;'>biotech</span> Helix.AI</div>", unsafe_allow_html=True)
         
     with col_menu:
         if user["user_type"] == "professor":
             c1, c2 = st.columns(2)
             with c1:
                 is_active = st.session_state.get("professor_page", "Questões") == "Questões"
-                if st.button("Questões", key="nav_prof_q", type="primary" if is_active else "secondary", use_container_width=True):
+                if st.button("Questões", key="nav_prof_q", type="primary" if is_active else "secondary", use_container_width=True, icon=":material/quiz:"):
                     st.session_state.professor_page = "Questões"
                     st.rerun()
             with c2:
                 is_active = st.session_state.get("professor_page", "Questões") == "Dashboard"
-                if st.button("Dashboard", key="nav_prof_dash", type="primary" if is_active else "secondary", use_container_width=True):
+                if st.button("Dashboard", key="nav_prof_dash", type="primary" if is_active else "secondary", use_container_width=True, icon=":material/dashboard:"):
                     st.session_state.professor_page = "Dashboard"
                     st.rerun()
         elif user["user_type"] == "aluno":
-            st.markdown("<div style='height:100%; display:flex; align-items:center; font-weight:600; color:#10b981; margin-top:5px;'>🎓 8 Questões de Transporte</div>", unsafe_allow_html=True)
+            st.markdown("<div style='height:100%; display:flex; align-items:center; font-weight:600; color:#10b981; margin-top:5px;'><span class='material-icons-outlined' style='vertical-align: middle; font-size:18px; margin-right:4px;'>school</span> 8 Questões de Transporte</div>", unsafe_allow_html=True)
         elif user["user_type"] == "admin":
-            st.markdown("<div style='height:100%; display:flex; align-items:center; font-weight:600; color:#10b981; margin-top:5px;'>⚙️ Painel Admin</div>", unsafe_allow_html=True)
+            st.markdown("<div style='height:100%; display:flex; align-items:center; font-weight:600; color:#10b981; margin-top:5px;'><span class='material-icons-outlined' style='vertical-align: middle; font-size:18px; margin-right:4px;'>settings</span> Painel Admin</div>", unsafe_allow_html=True)
             
     with col_stats:
         if user["user_type"] == "aluno":
             diff = st.session_state.get("current_difficulty", "Fácil")
             diff_badge = {
-                "Fácil": "<span style='background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; color: #10b981;'>🟢 Fácil</span>",
-                "Média": "<span style='background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; color: #f59e0b;'>🟡 Média</span>",
-                "Difícil": "<span style='background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; color: #ef4444;'>🔴 Difícil</span>"
+                "Fácil": "<span style='background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; color: #10b981;'><span style='display:inline-block; width:7px; height:7px; border-radius:50%; background:#10b981; margin-right:4px;'></span> Fácil</span>",
+                "Média": "<span style='background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; color: #f59e0b;'><span style='display:inline-block; width:7px; height:7px; border-radius:50%; background:#f59e0b; margin-right:4px;'></span> Média</span>",
+                "Difícil": "<span style='background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; color: #ef4444;'><span style='display:inline-block; width:7px; height:7px; border-radius:50%; background:#ef4444; margin-right:4px;'></span> Difícil</span>"
             }.get(diff, "")
             
             comp_cnt = len(st.session_state.get("completed_topics", []))
             st.markdown(f"""
             <div style='display: flex; justify-content: flex-end; align-items: center; gap: 0.8rem; height: 100%;'>
                 <div style='background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; color: #10b981;'>
-                    📊 <b>{comp_cnt}/8</b> Concluídas
+                    <span class='material-icons-outlined' style='vertical-align: middle; font-size:16px; margin-right:3px;'>analytics</span> <b>{comp_cnt}/8</b> Concluídas
                 </div>
                 {diff_badge}
                 <div style='background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; color: #ef4444;'>
-                    🔥 Streak <b>{st.session_state.streak}</b>
+                    <span class='material-icons-outlined' style='vertical-align: middle; font-size:16px; margin-right:3px;'>local_fire_department</span> Streak <b>{st.session_state.streak}</b>
                 </div>
                 <div class='nav-user-info'>
                     Olá, <b>{user['name'].split()[0]}</b>
@@ -248,7 +248,7 @@ def render_top_navbar():
             """, unsafe_allow_html=True)
             
     with col_logout:
-        if st.button("Sair", key="nav_logout_btn", use_container_width=True):
+        if st.button("Sair", key="nav_logout_btn", use_container_width=True, icon=":material/logout:"):
             logout_user()
             cookie_manager.delete('auth_token')
             st.rerun()
@@ -351,7 +351,7 @@ def start_new_case(forced_topic=None, forced_diff=None):
     if st.session_state.get("chat"):
         st.session_state.chat.append({
             "role": "assistant",
-            "content": f"📍 **Agora estamos na Questão {cur_topic_num} de 8:** *{new_case.get('topico_nome', '')}* ({new_case.get('codigo', '')}). Se tiver dúvidas conceituais, pode me perguntar!"
+            "content": f"**Agora estamos na Questão {cur_topic_num} de 8:** *{new_case.get('topico_nome', '')}* ({new_case.get('codigo', '')}). Se tiver dúvidas conceituais, pode me perguntar!"
         })
     else:
         st.session_state.chat = [{
@@ -368,7 +368,7 @@ def start_new_case(forced_topic=None, forced_diff=None):
     st.rerun()
 
 def main():
-    st.set_page_config(page_title="Helix.AI", page_icon="🧬", layout="wide")
+    st.set_page_config(page_title="Helix.AI", page_icon="biotech", layout="wide")
     apply_custom_style()
     init_session()
     create_default_admin()
@@ -420,8 +420,8 @@ def main():
         
         st.markdown(f"""
         <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;'>
-            <div style='font-size: 1.05rem; font-weight: 700; color: #10b981;'>
-                🎯 Questão {cur_topic_num} de 8
+            <div style='font-size: 1.05rem; font-weight: 700; color: #10b981; display: flex; align-items: center; gap: 6px;'>
+                <span class='material-icons-outlined' style='font-size:20px;'>assignment</span> Questão {cur_topic_num} de 8
             </div>
             <div style='font-size: 0.85rem; font-weight: 600; color: #64748b;'>
                 <b>Progresso da Atividade:</b> {comp_cnt}/8 Concluídas
@@ -435,16 +435,15 @@ def main():
         # Card da Questão Atual
         diff_name = case.get("dificuldade", "Fácil")
         diff_color = "#10b981" if diff_name == "Fácil" else ("#f59e0b" if diff_name == "Média" else "#ef4444")
-        diff_icon = "🟢" if diff_name == "Fácil" else ("🟡" if diff_name == "Média" else "🔴")
         
         with st.container(border=True):
             st.markdown(f"""
             <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;'>
-                <div style='font-size: 0.95rem; font-weight: 700; color: #10b981; letter-spacing: 0.5px;'>
-                    Questão {cur_topic_num} de 8 • {case.get('topico_nome', '')}
+                <div style='font-size: 0.95rem; font-weight: 700; color: #10b981; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;'>
+                    <span class='material-icons-outlined' style='font-size:18px;'>science</span> Questão {cur_topic_num} de 8 • {case.get('topico_nome', '')}
                 </div>
                 <div style='background: rgba(128,128,128,0.1); border: 1px solid rgba(128,128,128,0.2); padding: 3px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; color: {diff_color};'>
-                    {diff_icon} {diff_name} ({case.get('codigo', '')})
+                    <span style='display:inline-block; width:7px; height:7px; border-radius:50%; background:{diff_color}; margin-right:4px;'></span> {diff_name} ({case.get('codigo', '')})
                 </div>
             </div>
             <div style='font-size: 1.15rem; font-weight: 600; line-height: 1.5; margin-bottom: 1.2rem; color: var(--text-color);'>
@@ -467,9 +466,9 @@ def main():
                 )
                 
                 st.markdown("<div style='margin-top: 1rem;'></div>", unsafe_allow_html=True)
-                if st.button("Confirmar Resposta 🎯", type="primary", use_container_width=True):
+                if st.button("Confirmar Resposta", type="primary", use_container_width=True, icon=":material/check_circle:"):
                     if not chosen:
-                        st.warning("⚠️ Por favor, selecione uma alternativa antes de confirmar.")
+                        st.warning("Por favor, selecione uma alternativa antes de confirmar.")
                     else:
                         st.session_state.topic_attempts = st.session_state.get("topic_attempts", 0) + 1
                         attempts = st.session_state.topic_attempts
@@ -483,15 +482,15 @@ def main():
                             if attempts == 1:
                                 earned_pts = 1.0
                                 next_diff = "Média" if st.session_state.current_difficulty == "Fácil" else "Difícil"
-                                perf_msg = f"⭐ **Excelente! Acertou de primeira!** (+1.0 pt)\n\nDemonstrou domínio conceitual sólido. Próxima questão adaptada para o nível **{next_diff}**."
+                                perf_msg = f"**Excelente! Acertou de primeira!** (+1.0 pt)\n\nDemonstrou domínio conceitual sólido. Próxima questão adaptada para o nível **{next_diff}**."
                             elif attempts == 2:
                                 earned_pts = 0.7
                                 next_diff = "Média"
-                                perf_msg = f"👍 **Muito bem! Acertou na 2ª tentativa!** (+0.7 pt)\n\nBoa correção de raciocínio. Próxima questão adaptada para o nível **{next_diff}**."
+                                perf_msg = f"**Muito bem! Acertou na 2ª tentativa!** (+0.7 pt)\n\nBoa correção de raciocínio. Próxima questão adaptada para o nível **{next_diff}**."
                             else:
                                 earned_pts = 0.4
                                 next_diff = "Fácil"
-                                perf_msg = f"💡 **Conseguiu resolver após {attempts} tentativas!** (+0.4 pt)\n\nReforço conceitual ativado: a próxima questão será mantida no nível **{next_diff}** para consolidação."
+                                perf_msg = f"**Conseguiu resolver após {attempts} tentativas!** (+0.4 pt)\n\nReforço conceitual ativado: a próxima questão será mantida no nível **{next_diff}** para consolidação."
                                 
                             eval_res["points_gained"] = earned_pts
                             eval_res["next_diff"] = next_diff
@@ -531,14 +530,16 @@ def main():
                         text = alts[k]
                         if is_corr and k == gab_opt:
                             st.markdown(f"""
-                            <div style='background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; border-radius: 8px; padding: 10px 14px; margin-bottom: 6px;'>
-                                <b>✅ {k}.</b> {text} <span style='color: #10b981; font-weight: 700; font-size: 0.85rem;'>(Correto!)</span>
+                            <div style='background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; border-radius: 8px; padding: 10px 14px; margin-bottom: 6px; display:flex; align-items:center;'>
+                                <span class='material-icons-outlined' style='color: #10b981; font-size: 20px; margin-right: 8px;'>check_circle</span>
+                                <div><b>{k}.</b> {text} <span style='color: #10b981; font-weight: 700; font-size: 0.85rem;'>(Correto!)</span></div>
                             </div>
                             """, unsafe_allow_html=True)
                         elif not is_corr and k == selected_opt:
                             st.markdown(f"""
-                            <div style='background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; border-radius: 8px; padding: 10px 14px; margin-bottom: 6px;'>
-                                <b>❌ {k}.</b> {text} <span style='color: #ef4444; font-weight: 700; font-size: 0.85rem;'>(Sua Escolha - Incorreta)</span>
+                            <div style='background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; border-radius: 8px; padding: 10px 14px; margin-bottom: 6px; display:flex; align-items:center;'>
+                                <span class='material-icons-outlined' style='color: #ef4444; font-size: 20px; margin-right: 8px;'>cancel</span>
+                                <div><b>{k}.</b> {text} <span style='color: #ef4444; font-weight: 700; font-size: 0.85rem;'>(Sua Escolha - Incorreta)</span></div>
                             </div>
                             """, unsafe_allow_html=True)
                         else:
@@ -552,9 +553,9 @@ def main():
                 
                 if is_corr:
                     st.success(f"""
-{eval_res.get('perf_msg', '🎉 Parabéns, você acertou!')}
+{eval_res.get('perf_msg', 'Parabéns, você acertou!')}
 
-💡 **Justificativa do Gabarito (Alternativa {gab_opt}):**  
+**Justificativa do Gabarito (Alternativa {gab_opt}):**  
 {eval_res.get('correct_explanation', '')}
 """)
                     
@@ -562,37 +563,37 @@ def main():
                     if cur_topic_num < 8:
                         next_tk = TOPIC_KEYS[cur_topic_num]
                         next_diff = eval_res.get("next_diff", "Média")
-                        if st.button(f"Avançar para Questão {cur_topic_num + 1} de 8 (Nível {next_diff}) ➡️", type="primary", use_container_width=True):
+                        if st.button(f"Avançar para Questão {cur_topic_num + 1} de 8 (Nível {next_diff})", type="primary", use_container_width=True, icon=":material/arrow_forward:"):
                             start_new_case(forced_topic=next_tk, forced_diff=next_diff)
                     else:
                         st.balloons()
-                        st.markdown("<div style='background: rgba(16, 185, 129, 0.2); padding: 1rem; border-radius: 10px; text-align: center; font-weight: 700; color: #10b981;'>🏆 Parabéns! Você concluiu todas as 8 questões de Transporte e Membranas!</div>", unsafe_allow_html=True)
-                        if st.button("🔄 Praticar Novamente em Nível Avançado", use_container_width=True):
+                        st.markdown("<div style='background: rgba(16, 185, 129, 0.2); padding: 1rem; border-radius: 10px; text-align: center; font-weight: 700; color: #10b981;'><span class='material-icons-outlined' style='vertical-align:middle; font-size:24px;'>emoji_events</span> Parabéns! Você concluiu todas as 8 questões de Transporte e Membranas!</div>", unsafe_allow_html=True)
+                        if st.button("Praticar Novamente em Nível Avançado", use_container_width=True, icon=":material/refresh:"):
                             st.session_state.completed_topics = []
                             start_new_case(forced_topic="T1", forced_diff="Média")
                 else:
                     st.error(f"""
-### ❌ Alternativa {selected_opt} Incorreta (Tentativa {attempts})
+### Alternativa {selected_opt} Incorreta (Tentativa {attempts})
 
-📌 **Por que sua escolha está errada:**  
+**Por que sua escolha está errada:**  
 {eval_res.get('why_wrong', 'Esta alternativa não atende aos princípios biológicos do enunciado.')}
 
-🎯 **Por que esta alternativa é um distrator (Pegadinha / Erro Comum):**  
+**Por que esta alternativa é um distrator (Pegadinha / Erro Comum):**  
 {eval_res.get('why_distractor', eval_res.get('distractor_feedback', ''))}
 
-💬 *Dica:* Você pode usar o chat com o **Tutor Helix.AI** ao lado para tirar dúvidas conceituais antes de tentar novamente!
+*Dica:* Você pode usar o chat com o **Tutor Helix.AI** ao lado para tirar dúvidas conceituais antes de tentar novamente!
 """)
                     
                     st.markdown("<div style='margin-top: 1.2rem;'></div>", unsafe_allow_html=True)
                     btn_col1, btn_col2 = st.columns(2)
                     with btn_col1:
-                        if st.button("Tentar Novamente esta Questão 🔄", type="primary", use_container_width=True):
+                        if st.button("Tentar Novamente esta Questão", type="primary", use_container_width=True, icon=":material/refresh:"):
                             st.session_state.submitted_answer = False
                             st.session_state.selected_option = None
                             st.session_state.current_evaluation = None
                             st.rerun()
                     with btn_col2:
-                        if st.button("Outra Questão deste Tópico 🔀", use_container_width=True):
+                        if st.button("Outra Questão deste Tópico", use_container_width=True, icon=":material/shuffle:"):
                             start_new_case(forced_topic=cur_topic_key)
 
     # =========================================================================
@@ -603,14 +604,14 @@ def main():
         <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;'>
             <div>
                 <h3 style='margin: 0; font-size: 1.25rem; display: flex; align-items: center; gap: 0.4rem;'>
-                    💬 Tutor Helix.AI
+                    <span class='material-icons-outlined' style='color:#10b981; font-size:22px;'>smart_toy</span> Tutor Helix.AI
                 </h3>
                 <p style='margin: 0; font-size: 0.85rem; color: #64748b;'>
                     Tire dúvidas e entenda os conceitos passo a passo.
                 </p>
             </div>
             <div style='background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 3px 8px; border-radius: 10px; font-size: 0.75rem; color: #10b981; font-weight: 600;'>
-                ⚡ Online
+                <span style='display:inline-block; width:7px; height:7px; border-radius:50%; background:#10b981; margin-right:4px;'></span> Online
             </div>
         </div>
         """, unsafe_allow_html=True)

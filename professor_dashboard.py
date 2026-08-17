@@ -99,7 +99,6 @@ def generate_class_full_pdf(students: List[Dict], all_analytics: Dict, category_
     pdf.cell(30, 8, 'Taxa Acerto', 1, 0, 'C', True)
     pdf.ln()
     
-    # Ordena categorias por taxa de acerto (menor primeiro para destacar fraquezas)
     ranked_cats = sorted(
         category_stats.values(),
         key=lambda x: (x['correct_attempts'] / x['total_attempts'] * 100) if x['total_attempts'] > 0 else 0.0
@@ -155,7 +154,7 @@ def generate_class_full_pdf(students: List[Dict], all_analytics: Dict, category_
         
     pdf.ln(6)
     
-    # ── PÁGINAS SEGUINTES: HISTÓRICO COMPLETO DE INTERAÇÕES DE CHAT ──
+    # ── PÁGINAS SEGUINTES: HISTÓRICO DE CHAT ──
     pdf.add_page()
     pdf.set_text_color(59, 130, 246)
     pdf.set_font('Helvetica', 'B', 16)
@@ -185,7 +184,7 @@ def generate_class_full_pdf(students: List[Dict], all_analytics: Dict, category_
             
             pdf.set_font('Helvetica', 'B', 9)
             pdf.set_text_color(71, 85, 105)
-            pdf.multi_cell(0, 5, safe_pdf_str(f"Questao: {q_info[:120]}"))
+            pdf.multi_cell(pdf.epw, 5, safe_pdf_str(f"Questao: {q_info[:120]}"))
             pdf.set_text_color(0, 0, 0)
             pdf.ln(1)
             
@@ -227,7 +226,6 @@ def generate_student_pdf(student: Dict, udata: Dict) -> bytes:
     pdf.set_auto_page_break(auto=True, margin=15)
     
     pdf.add_page()
-    # Cabeçalho
     pdf.set_font('Helvetica', 'B', 20)
     pdf.set_text_color(16, 185, 129)
     pdf.cell(0, 10, 'Helix.AI - Relatorio Individual do Aluno', ln=True)
@@ -246,7 +244,6 @@ def generate_student_pdf(student: Dict, udata: Dict) -> bytes:
     dur = sum(c.get('duration_seconds', 0) for c in cases)
     pts = sum(float(c.get('case_result', {}).get('points_gained', 0)) for c in cases)
     
-    # Resumo
     pdf.set_font('Helvetica', 'B', 10)
     pdf.set_fill_color(241, 245, 249)
     pdf.cell(45, 8, f'Questoes: {tot}', 1, 0, 'C', True)
@@ -255,7 +252,6 @@ def generate_student_pdf(student: Dict, udata: Dict) -> bytes:
     pdf.cell(45, 8, f'Tempo: {format_duration(dur)}', 1, 1, 'C', True)
     pdf.ln(6)
     
-    # Detalhes das Questões
     pdf.set_font('Helvetica', 'B', 12)
     pdf.set_text_color(16, 185, 129)
     pdf.cell(0, 8, 'Desempenho por Questao', ln=True)
@@ -282,7 +278,6 @@ def generate_student_pdf(student: Dict, udata: Dict) -> bytes:
         pdf.ln(3)
         
     pdf.ln(4)
-    # Chat do aluno
     pdf.set_font('Helvetica', 'B', 12)
     pdf.set_text_color(59, 130, 246)
     pdf.cell(0, 8, 'Historico de Conversas com o Tutor Helix.AI', ln=True)
@@ -323,7 +318,7 @@ def generate_student_pdf(student: Dict, udata: Dict) -> bytes:
 
 
 # =========================================================================
-# DASHBOARD PROFESSOR AVANÇADO (MINIMALISTA, 8 TÓPICOS & DRILLDOWN)
+# DASHBOARD PROFESSOR AVANÇADO (MINIMALISTA, MATERIAL ICONS & 8 TÓPICOS)
 # =========================================================================
 def show_advanced_professor_dashboard():
     all_users = get_all_users()
@@ -364,14 +359,12 @@ def show_advanced_professor_dashboard():
     total_time_seconds = 0.0
 
     for uid, udata in all_analytics.items():
-        # Chat counts
         for cdoc in udata.get("chat_interactions", []):
             if "messages" in cdoc and isinstance(cdoc["messages"], list):
                 total_chat_messages += len(cdoc["messages"])
             else:
                 total_chat_messages += 1
                 
-        # Case analytics
         for case in udata.get("case_analytics", []):
             cid = case.get("case_id")
             result = case.get("case_result", {})
@@ -403,25 +396,26 @@ def show_advanced_professor_dashboard():
     # ── INTERFACE PRINCIPAL ──
     col_t1, col_t2 = st.columns([3, 1.2])
     with col_t1:
-        st.markdown("<h2 style='margin-bottom:0;'>📊 Painel do Professor</h2>", unsafe_allow_html=True)
+        st.markdown("<h2 style='margin-bottom:0;'><span class='material-icons-outlined' style='font-size:26px; vertical-align:middle; color:#10b981;'>dashboard</span> Painel do Professor</h2>", unsafe_allow_html=True)
         st.markdown("<p style='color:#64748b; font-size:0.95rem; margin-top:-0.3rem;'>Acompanhe o desempenho da turma nos 8 tópicos de Transporte & Membranas.</p>", unsafe_allow_html=True)
     with col_t2:
         pdf_bytes = generate_class_full_pdf(student_users, all_analytics, category_stats)
         st.download_button(
-            label="📥 Baixar Relatório Geral (PDF)",
+            label="Baixar Relatório Geral (PDF)",
             data=pdf_bytes,
             file_name=f"Relatorio_Turma_HelixAI_{datetime.now().strftime('%Y%m%d')}.pdf",
             mime="application/pdf",
             type="primary",
-            use_container_width=True
+            use_container_width=True,
+            icon=":material/download:"
         )
 
     st.markdown("<hr style='margin: 0.5rem 0 1.2rem 0; opacity: 0.2;'>", unsafe_allow_html=True)
 
     tab1, tab2, tab3 = st.tabs([
-        "📊 Visão Geral & Ranking de Tópicos",
-        "👤 Análise Individual do Aluno",
-        "⚙️ Admin & Limpeza de Dados"
+        "Visão Geral & Ranking de Tópicos",
+        "Análise Individual do Aluno",
+        "Admin & Limpeza de Dados"
     ])
 
     # =========================================================================
@@ -431,22 +425,21 @@ def show_advanced_professor_dashboard():
         # KPIs Principais
         kpi1, kpi2, kpi3, kpi4 = st.columns(4)
         with kpi1:
-            st.metric("👥 Alunos Cadastrados", f"{len(student_users)}")
+            st.metric("Alunos Cadastrados", f"{len(student_users)}")
         with kpi2:
             acc_class = (total_correct_cases / total_answered_cases * 100) if total_answered_cases > 0 else 0.0
-            st.metric("🎯 Taxa Geral de Acertos", f"{acc_class:.1f}%")
+            st.metric("Taxa Geral de Acertos", f"{acc_class:.1f}%")
         with kpi3:
             avg_time = (total_time_seconds / total_answered_cases) if total_answered_cases > 0 else 0.0
-            st.metric("⏱️ Tempo Médio / Questão", format_duration(avg_time))
+            st.metric("Tempo Médio / Questão", format_duration(avg_time))
         with kpi4:
-            st.metric("💬 Mensagens com Tutor", f"{total_chat_messages}")
+            st.metric("Mensagens com Tutor", f"{total_chat_messages}")
 
         st.markdown("<div style='margin-top: 1.5rem;'></div>", unsafe_allow_html=True)
 
-        st.markdown("### 🏆 Ranking de Desempenho por Categoria (T1 a T8)")
+        st.markdown("### <span class='material-icons-outlined' style='font-size:22px; vertical-align:middle; color:#10b981;'>leaderboard</span> Ranking de Desempenho por Categoria (T1 a T8)", unsafe_allow_html=True)
         st.markdown("<p style='font-size:0.88rem; color:#64748b;'>Clique em qualquer tópico para ver o detalhamento específico de cada questão e os distratores mais assinalados.</p>", unsafe_allow_html=True)
 
-        # Ordena categorias da maior dificuldade (menor acerto) para a maior facilidade
         ranked_cats = sorted(
             category_stats.values(),
             key=lambda x: (x['correct_attempts'] / x['total_attempts'] * 100) if x['total_attempts'] > 0 else 0.0
@@ -470,16 +463,16 @@ def show_advanced_professor_dashboard():
                     st.markdown(f"**Tempo Médio:** {format_duration(avg_dur_cat)}")
                     
                 st.markdown("---")
-                st.markdown(f"#### 🔍 Questões Específicas do Tópico `{c['topico_id']}`:")
+                st.markdown(f"#### <span class='material-icons-outlined' style='font-size:18px; vertical-align:middle;'>search</span> Questões Específicas do Tópico `{c['topico_id']}`:", unsafe_allow_html=True)
                 
-                # Lista de questões da categoria
                 q_list = list(c["questions"].values())
                 for q in q_list:
                     q_tot = q["total_attempts"]
                     q_corr = q["correct_attempts"]
                     q_rate = (q_corr / q_tot * 100) if q_tot > 0 else 0.0
                     
-                    diff_tag = "🟢 Fácil" if q["dificuldade"] == "Fácil" else ("🟡 Média" if q["dificuldade"] == "Média" else "🔴 Difícil")
+                    diff_color_q = "#10b981" if q["dificuldade"] == "Fácil" else ("#f59e0b" if q["dificuldade"] == "Média" else "#ef4444")
+                    diff_tag = f"<span style='display:inline-block; width:7px; height:7px; border-radius:50%; background:{diff_color_q}; margin-right:4px;'></span> {q['dificuldade']}"
                     
                     with st.container(border=True):
                         st.markdown(f"""
@@ -492,9 +485,8 @@ def show_advanced_professor_dashboard():
                         </div>
                         """, unsafe_allow_html=True)
                         
-                        st.markdown(f"✅ **Gabarito Oficial:** Alternativa **{q['gabarito']}** — *{q['alternativas'].get(q['gabarito'], '')}*")
+                        st.markdown(f"<span class='material-icons-outlined' style='font-size:16px; vertical-align:middle; color:#10b981;'>check_circle</span> <b>Gabarito Oficial:</b> Alternativa <b>{q['gabarito']}</b> — *{q['alternativas'].get(q['gabarito'], '')}*", unsafe_allow_html=True)
                         
-                        # Mostra escolhas e distratores se houver tentativas
                         if q_tot > 0:
                             st.markdown("**Distribuição das Escolhas dos Alunos:**")
                             cols_opt = st.columns(4)
@@ -502,12 +494,13 @@ def show_advanced_professor_dashboard():
                                 cnt = q["choices_count"].get(opt_k, 0)
                                 is_gab = (opt_k == q["gabarito"])
                                 with cols_opt[idx_o]:
-                                    st.markdown(f"{'⭐ ' if is_gab else ''}**Opção {opt_k}:** {cnt} aluno(s)")
+                                    star_tag = "<span class='material-icons-outlined' style='font-size:14px; vertical-align:middle; color:#10b981;'>star</span> " if is_gab else ""
+                                    st.markdown(f"{star_tag}<b>Opção {opt_k}:</b> {cnt} aluno(s)", unsafe_allow_html=True)
                                     
                         with st.expander("Ver Análise de Distratores / Erros Conceituais desta Questão"):
                             for opt_k, dist_txt in q["distratores"].items():
                                 if opt_k != q["gabarito"]:
-                                    st.markdown(f"❌ **Distrator {opt_k}:** {dist_txt}")
+                                    st.markdown(f"<span class='material-icons-outlined' style='font-size:14px; vertical-align:middle; color:#ef4444;'>close</span> <b>Distrator {opt_k}:</b> {dist_txt}", unsafe_allow_html=True)
 
     # =========================================================================
     # TAB 2: ANÁLISE INDIVIDUAL DO ALUNO
@@ -517,25 +510,24 @@ def show_advanced_professor_dashboard():
             st.info("Nenhum aluno cadastrado no sistema ainda.")
         else:
             student_names = [f"{s.get('name', 'Aluno')} | RA: {s.get('ra', 'N/A')} | {s.get('email', '')}" for s in student_users]
-            sel_student_idx = st.selectbox("👤 Selecione o Aluno:", range(len(student_users)), format_func=lambda i: student_names[i])
+            sel_student_idx = st.selectbox("Selecione o Aluno:", range(len(student_users)), format_func=lambda i: student_names[i])
             selected_student = student_users[sel_student_idx]
             uid = selected_student["id"]
             udata = all_analytics.get(uid, {})
             cases = udata.get("case_analytics", [])
             
-            # Botão PDF individual
             student_pdf_bytes = generate_student_pdf(selected_student, udata)
             st.download_button(
-                label=f"📥 Baixar Relatório Individual ({selected_student.get('name', 'Aluno')})",
+                label=f"Baixar Relatório Individual ({selected_student.get('name', 'Aluno')})",
                 data=student_pdf_bytes,
                 file_name=f"Relatorio_{selected_student.get('ra', 'aluno')}_HelixAI.pdf",
                 mime="application/pdf",
-                type="secondary"
+                type="secondary",
+                icon=":material/download:"
             )
             
             st.markdown("<div style='margin-top: 1rem;'></div>", unsafe_allow_html=True)
             
-            # KPIs do Aluno
             tot_s = len(cases)
             corr_s = sum(1 for c in cases if c.get("case_result", {}).get("is_correct", False) or c.get("case_result", {}).get("points_gained", 0) >= 1.0)
             acc_s = (corr_s / tot_s * 100) if tot_s > 0 else 0.0
@@ -544,21 +536,20 @@ def show_advanced_professor_dashboard():
             
             s_kpi1, s_kpi2, s_kpi3, s_kpi4 = st.columns(4)
             with s_kpi1:
-                st.metric("📝 Questões Respondidas", f"{tot_s}")
+                st.metric("Questões Respondidas", f"{tot_s}")
             with s_kpi2:
-                st.metric("🎯 Taxa de Acerto", f"{acc_s:.1f}% ({corr_s}/{tot_s})")
+                st.metric("Taxa de Acerto", f"{acc_s:.1f}% ({corr_s}/{tot_s})")
             with s_kpi3:
-                st.metric("⭐ Pontos Ganhos", f"{pts_s:.1f} pts")
+                st.metric("Pontos Ganhos", f"{pts_s:.1f} pts")
             with s_kpi4:
-                st.metric("⏱️ Tempo Total", format_duration(dur_s))
+                st.metric("Tempo Total", format_duration(dur_s))
                 
             st.markdown("---")
             
             col_perf, col_chat = st.columns([1.1, 0.9], gap="large")
             
-            # Lado Esquerdo: Detalhamento por Questão & Dificuldades
             with col_perf:
-                st.markdown("### 📋 Questões Respondidas pelo Aluno")
+                st.markdown("### <span class='material-icons-outlined' style='font-size:20px; vertical-align:middle;'>assignment</span> Questões Respondidas pelo Aluno", unsafe_allow_html=True)
                 if not cases:
                     st.info("Este aluno ainda não respondeu nenhuma questão.")
                 else:
@@ -571,7 +562,7 @@ def show_advanced_professor_dashboard():
                         dur_c = c.get("duration_seconds", 0)
                         
                         card_border = "#10b981" if is_c else "#ef4444"
-                        status_tag = "✅ Correto (+1.0 pt)" if is_c else "❌ Incorreto (0.0 pt)"
+                        status_tag = f"<span class='material-icons-outlined' style='font-size:16px; vertical-align:middle; color:{card_border};'>{'check_circle' if is_c else 'cancel'}</span> {'Correto (+1.0 pt)' if is_c else 'Incorreto (0.0 pt)'}"
                         
                         with st.container(border=True):
                             st.markdown(f"""
@@ -591,13 +582,12 @@ def show_advanced_professor_dashboard():
                                 why_d = res.get("why_distractor") or f"Induz ao erro comum de {res.get('distractor_feedback', '')}"
                                 st.markdown(f"""
                                 <div style='background: rgba(239, 68, 68, 0.08); border-left: 3px solid #ef4444; padding: 8px 12px; border-radius: 4px; margin-top: 6px; font-size: 0.85rem;'>
-                                    <b>🎯 Análise do Distrator (Por que induz ao erro):</b><br>{why_d}
+                                    <b>Análise do Distrator (Por que induz ao erro):</b><br>{why_d}
                                 </div>
                                 """, unsafe_allow_html=True)
 
-            # Lado Direito: Histórico do Chat com o Tutor
             with col_chat:
-                st.markdown("### 💬 Histórico com o Tutor Helix.AI")
+                st.markdown("### <span class='material-icons-outlined' style='font-size:20px; vertical-align:middle; color:#3b82f6;'>chat</span> Histórico com o Tutor Helix.AI", unsafe_allow_html=True)
                 chat_docs = udata.get("chat_interactions", [])
                 if not chat_docs:
                     st.info("Nenhuma conversa com o tutor registrada para este aluno.")
@@ -607,7 +597,7 @@ def show_advanced_professor_dashboard():
                         cid = doc.get("case_id", "")
                         q = q_map.get(cid, {})
                         
-                        with st.expander(f"💬 Conversa na Questão: {q.get('codigo', cid)} ({q.get('topico_id', '')})", expanded=True):
+                        with st.expander(f"Conversa na Questão: {q.get('codigo', cid)} ({q.get('topico_id', '')})", expanded=True):
                             msgs = doc.get("messages", [])
                             if not msgs and "user_message" in doc:
                                 msgs = [{"user_message": doc.get("user_message", ""), "bot_response": doc.get("bot_response", "")}]
@@ -627,37 +617,37 @@ def show_advanced_professor_dashboard():
     # TAB 3: ADMIN & LIMPEZA DE DADOS
     # =========================================================================
     with tab3:
-        st.markdown("### ⚙️ Painel Administrativo de Manutenção")
+        st.markdown("### <span class='material-icons-outlined' style='font-size:22px; vertical-align:middle;'>settings</span> Painel Administrativo de Manutenção", unsafe_allow_html=True)
         st.markdown("<p style='color:#64748b;'>Ferramentas para resetar dados de testes e acompanhar a infraestrutura do banco de dados.</p>", unsafe_allow_html=True)
         
         with st.container(border=True):
-            st.markdown("<h4 style='color:#ef4444; margin-top:0;'>⚠️ Zona de Perigo (Reset de Dados)</h4>", unsafe_allow_html=True)
+            st.markdown("<h4 style='color:#ef4444; margin-top:0;'><span class='material-icons-outlined' style='font-size:20px; vertical-align:middle;'>warning</span> Zona de Manutenção (Reset de Dados)</h4>", unsafe_allow_html=True)
             st.markdown("Utilize os botões abaixo para limpar dados de testes e iniciar novas rodadas com os alunos.")
             
             c_adm1, c_adm2, c_adm3 = st.columns(3)
             with c_adm1:
-                if st.button("🗑️ Resetar Analytics da Turma", use_container_width=True):
+                if st.button("Resetar Analytics da Turma", use_container_width=True, icon=":material/delete:"):
                     res = reset_all_students_analytics()
                     log_admin_action("reset_analytics", f"Deletados {res['deleted']} registros")
                     st.success(f"Sucesso! {res['deleted']} registros de analytics removidos.")
                     st.rerun()
                     
             with c_adm2:
-                if st.button("💬 Limpar Interações de Chat", use_container_width=True):
+                if st.button("Limpar Interações de Chat", use_container_width=True, icon=":material/delete_sweep:"):
                     res = clear_all_chat_interactions()
                     log_admin_action("clear_chats", f"Deletados {res['deleted']} chats")
                     st.success(f"Sucesso! {res['deleted']} interações de chat limpas.")
                     st.rerun()
                     
             with c_adm3:
-                if st.button("🔄 Resetar Progresso dos Alunos", use_container_width=True):
+                if st.button("Resetar Progresso dos Alunos", use_container_width=True, icon=":material/restart_alt:"):
                     res = reset_all_student_progress()
                     log_admin_action("reset_progress", f"Resetados {res['updated']} alunos")
                     st.success(f"Sucesso! Progresso resetado para {res['updated']} alunos.")
                     st.rerun()
                     
         st.markdown("<div style='margin-top: 1.5rem;'></div>", unsafe_allow_html=True)
-        st.markdown("#### 📊 Estatísticas do Banco de Dados")
+        st.markdown("#### Estatísticas do Banco de Dados")
         try:
             db_stats = get_database_stats()
             s1, s2, s3, s4 = st.columns(4)
