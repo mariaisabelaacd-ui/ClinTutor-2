@@ -210,7 +210,9 @@ def render_top_navbar():
                     st.session_state.professor_page = "Dashboard"
                     st.rerun()
         elif user["user_type"] == "aluno":
-            st.markdown("<div style='height:100%; display:flex; align-items:center; font-weight:600; color:#10b981; margin-top:5px;'><span class='material-icons-outlined' style='vertical-align: middle; font-size:18px; margin-right:4px;'>school</span> 8 Questões de Transporte</div>", unsafe_allow_html=True)
+            cur_topic_key = st.session_state.get("topic_filter", "T1")
+            cur_topic_name = TOPICS.get(cur_topic_key, "Transporte em Membranas")
+            st.markdown(f"<div style='height:100%; display:flex; align-items:center; font-weight:600; color:#10b981; margin-top:5px;'><span class='material-icons-outlined' style='vertical-align: middle; font-size:18px; margin-right:4px;'>school</span> Estudo Dirigido de Biofísica</div>", unsafe_allow_html=True)
         elif user["user_type"] == "admin":
             st.markdown("<div style='height:100%; display:flex; align-items:center; font-weight:600; color:#10b981; margin-top:5px;'><span class='material-icons-outlined' style='vertical-align: middle; font-size:18px; margin-right:4px;'>settings</span> Painel Admin</div>", unsafe_allow_html=True)
             
@@ -223,11 +225,14 @@ def render_top_navbar():
                 "Difícil": "<span style='background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; color: #ef4444;'><span style='display:inline-block; width:7px; height:7px; border-radius:50%; background:#ef4444; margin-right:4px;'></span> Difícil</span>"
             }.get(diff, "")
             
-            comp_cnt = len(st.session_state.get("completed_topics", []))
+            cur_topic_key = st.session_state.get("topic_filter", "T1")
+            cur_topic_idx = TOPIC_KEYS.index(cur_topic_key) + 1 if cur_topic_key in TOPIC_KEYS else 1
+            cur_topic_short = TOPICS.get(cur_topic_key, "")[:22]
+            
             st.markdown(f"""
             <div style='display: flex; justify-content: flex-end; align-items: center; gap: 0.8rem; height: 100%;'>
-                <div style='background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; color: #10b981;'>
-                    <span class='material-icons-outlined' style='vertical-align: middle; font-size:16px; margin-right:3px;'>analytics</span> <b>{comp_cnt}/8</b> Concluídas
+                <div style='background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; color: #3b82f6;'>
+                    <span class='material-icons-outlined' style='vertical-align: middle; font-size:16px; margin-right:3px;'>category</span> <b>Bloco {cur_topic_idx}:</b> {cur_topic_short}...
                 </div>
                 {diff_badge}
                 <div style='background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; color: #ef4444;'>
@@ -323,13 +328,13 @@ def persist_now():
 def start_new_case(forced_topic=None, forced_diff=None):
     if forced_topic:
         st.session_state.topic_filter = forced_topic
-        st.session_state.topic_attempts = 0
         if forced_topic in TOPIC_KEYS:
             st.session_state.current_topic_idx = TOPIC_KEYS.index(forced_topic)
             
     if forced_diff:
         st.session_state.current_difficulty = forced_diff
         
+    st.session_state.topic_attempts = 0
     diff = st.session_state.get("current_difficulty", "Fácil")
     topic = st.session_state.get("topic_filter", "T1")
     
@@ -351,12 +356,12 @@ def start_new_case(forced_topic=None, forced_diff=None):
     if st.session_state.get("chat"):
         st.session_state.chat.append({
             "role": "assistant",
-            "content": f"**Agora estamos na Questão {cur_topic_num} de 8:** *{new_case.get('topico_nome', '')}* ({new_case.get('codigo', '')}). Se tiver dúvidas conceituais, pode me perguntar!"
+            "content": f"**Agora estamos no Bloco {cur_topic_num}:** *{new_case.get('topico_nome', '')}* ({new_case.get('codigo', '')} - Nível {new_case.get('dificuldade', '')}). Se tiver dúvidas conceituais, pode me perguntar!"
         })
     else:
         st.session_state.chat = [{
             "role": "assistant",
-            "content": f"Olá! Sou seu tutor **Helix.AI**. Estou aqui para tirar dúvidas e ajudar você a entender os conceitos da **Questão {cur_topic_num} de 8** (*{new_case.get('topico_nome', '')}*). Pode me perguntar qualquer dúvida!"
+            "content": f"Olá! Sou seu tutor **Helix.AI**. Estou aqui para tirar dúvidas e ajudar você a entender os conceitos do bloco *{new_case.get('topico_nome', '')}*. Pode me perguntar qualquer dúvida!"
         }]
         
     st.session_state.active_chat_case_id = new_case["id"]
@@ -415,22 +420,19 @@ def main():
     # COLUNA ESQUERDA: QUESTÃO DE MÚLTIPLA ESCOLHA & FEEDBACK
     # =========================================================================
     with col_question:
-        # Barra de Progresso Sequencial da Atividade (Sem Seleção Manual)
-        comp_cnt = len(st.session_state.get("completed_topics", []))
-        
+        # Cabeçalho Minimalista da Questão & Informações de Desempenho
         st.markdown(f"""
         <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;'>
             <div style='font-size: 1.05rem; font-weight: 700; color: #10b981; display: flex; align-items: center; gap: 6px;'>
-                <span class='material-icons-outlined' style='font-size:20px;'>assignment</span> Questão {cur_topic_num} de 8
+                <span class='material-icons-outlined' style='font-size:20px;'>science</span> Bloco {cur_topic_num}: {case.get('topico_nome', '')}
             </div>
             <div style='font-size: 0.85rem; font-weight: 600; color: #64748b;'>
-                <b>Progresso da Atividade:</b> {comp_cnt}/8 Concluídas
+                <b>Pontuação:</b> {st.session_state.score:.1f} pts  |  <b>Streak:</b> {st.session_state.streak}
             </div>
         </div>
         """, unsafe_allow_html=True)
-        st.progress(min(comp_cnt / 8.0, 1.0))
         
-        st.markdown("<div style='margin-bottom: 1rem;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='margin-bottom: 0.6rem;'></div>", unsafe_allow_html=True)
         
         # Card da Questão Atual
         diff_name = case.get("dificuldade", "Fácil")
@@ -439,11 +441,11 @@ def main():
         with st.container(border=True):
             st.markdown(f"""
             <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;'>
-                <div style='font-size: 0.95rem; font-weight: 700; color: #10b981; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;'>
-                    <span class='material-icons-outlined' style='font-size:18px;'>science</span> Questão {cur_topic_num} de 8 • {case.get('topico_nome', '')}
+                <div style='font-size: 0.95rem; font-weight: 700; color: #10b981; letter-spacing: 0.5px;'>
+                    Questão {case.get('codigo', '')}
                 </div>
                 <div style='background: rgba(128,128,128,0.1); border: 1px solid rgba(128,128,128,0.2); padding: 3px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; color: {diff_color};'>
-                    <span style='display:inline-block; width:7px; height:7px; border-radius:50%; background:{diff_color}; margin-right:4px;'></span> {diff_name} ({case.get('codigo', '')})
+                    <span style='display:inline-block; width:7px; height:7px; border-radius:50%; background:{diff_color}; margin-right:4px;'></span> Nível {diff_name}
                 </div>
             </div>
             <div style='font-size: 1.15rem; font-weight: 600; line-height: 1.5; margin-bottom: 1.2rem; color: var(--text-color);'>
@@ -477,23 +479,36 @@ def main():
                         eval_res = evaluate_mcq_answer(case, chosen)
                         st.session_state.submitted_answer = True
                         
-                        # Progressão Adaptativa baseada em tentativas
+                        # Motor de Progressão Adaptativa: Fácil -> Média -> Difícil
+                        cur_diff = st.session_state.get("current_difficulty", "Fácil")
+                        advance_block = False
+                        
                         if eval_res["is_correct"]:
                             if attempts == 1:
                                 earned_pts = 1.0
-                                next_diff = "Média" if st.session_state.current_difficulty == "Fácil" else "Difícil"
-                                perf_msg = f"**Excelente! Acertou de primeira!** (+1.0 pt)\n\nDemonstrou domínio conceitual sólido. Próxima questão adaptada para o nível **{next_diff}**."
+                                if cur_diff == "Fácil":
+                                    next_diff = "Média"
+                                elif cur_diff == "Média":
+                                    next_diff = "Difícil"
+                                else:
+                                    next_diff = "Fácil"
+                                    advance_block = True
+                                perf_msg = f"⭐ **Excelente! Acertou de primeira!** (+1.0 pt)\n\nDemonstrou domínio do conceito. Próxima questão adaptada para o nível **{next_diff}**!"
                             elif attempts == 2:
                                 earned_pts = 0.7
-                                next_diff = "Média"
-                                perf_msg = f"**Muito bem! Acertou na 2ª tentativa!** (+0.7 pt)\n\nBoa correção de raciocínio. Próxima questão adaptada para o nível **{next_diff}**."
+                                if cur_diff == "Fácil":
+                                    next_diff = "Média"
+                                else:
+                                    next_diff = "Média"
+                                perf_msg = f"👍 **Muito bem! Acertou na 2ª tentativa!** (+0.7 pt)\n\nBoa correção de raciocínio. Próxima questão no nível **{next_diff}**."
                             else:
                                 earned_pts = 0.4
                                 next_diff = "Fácil"
-                                perf_msg = f"**Conseguiu resolver após {attempts} tentativas!** (+0.4 pt)\n\nReforço conceitual ativado: a próxima questão será mantida no nível **{next_diff}** para consolidação."
+                                perf_msg = f"💡 **Questão concluída após {attempts} tentativas!** (+0.4 pt)\n\nReforço conceitual ativado: a próxima questão será mantida no nível **Fácil** para consolidação."
                                 
                             eval_res["points_gained"] = earned_pts
                             eval_res["next_diff"] = next_diff
+                            eval_res["advance_block"] = advance_block
                             eval_res["perf_msg"] = perf_msg
                             
                             st.session_state.score += earned_pts
@@ -560,17 +575,17 @@ def main():
 """)
                     
                     st.markdown("<div style='margin-top: 1.2rem;'></div>", unsafe_allow_html=True)
-                    if cur_topic_num < 8:
-                        next_tk = TOPIC_KEYS[cur_topic_num]
-                        next_diff = eval_res.get("next_diff", "Média")
-                        if st.button(f"Avançar para Questão {cur_topic_num + 1} de 8 (Nível {next_diff})", type="primary", use_container_width=True, icon=":material/arrow_forward:"):
-                            start_new_case(forced_topic=next_tk, forced_diff=next_diff)
+                    next_diff = eval_res.get("next_diff", "Média")
+                    advance_block = eval_res.get("advance_block", False)
+                    
+                    if advance_block:
+                        next_idx = (TOPIC_KEYS.index(cur_topic_key) + 1) % len(TOPIC_KEYS)
+                        next_topic_key = TOPIC_KEYS[next_idx]
+                        if st.button(f"Avançar para o Próximo Bloco: {TOPICS[next_topic_key]} 🚀", type="primary", use_container_width=True, icon=":material/arrow_forward:"):
+                            start_new_case(forced_topic=next_topic_key, forced_diff="Fácil")
                     else:
-                        st.balloons()
-                        st.markdown("<div style='background: rgba(16, 185, 129, 0.2); padding: 1rem; border-radius: 10px; text-align: center; font-weight: 700; color: #10b981;'><span class='material-icons-outlined' style='vertical-align:middle; font-size:24px;'>emoji_events</span> Parabéns! Você concluiu todas as 8 questões de Transporte e Membranas!</div>", unsafe_allow_html=True)
-                        if st.button("Praticar Novamente em Nível Avançado", use_container_width=True, icon=":material/refresh:"):
-                            st.session_state.completed_topics = []
-                            start_new_case(forced_topic="T1", forced_diff="Média")
+                        if st.button(f"Próxima Questão (Nível {next_diff})", type="primary", use_container_width=True, icon=":material/arrow_forward:"):
+                            start_new_case(forced_topic=cur_topic_key, forced_diff=next_diff)
                 else:
                     st.error(f"""
 ### Alternativa {selected_opt} Incorreta (Tentativa {attempts})
@@ -593,7 +608,7 @@ def main():
                             st.session_state.current_evaluation = None
                             st.rerun()
                     with btn_col2:
-                        if st.button("Outra Questão deste Tópico", use_container_width=True, icon=":material/shuffle:"):
+                        if st.button("Praticar Outra Questão deste Bloco", use_container_width=True, icon=":material/shuffle:"):
                             start_new_case(forced_topic=cur_topic_key)
 
     # =========================================================================
@@ -619,7 +634,7 @@ def main():
         chat_container = st.container(height=500)
         with chat_container:
             if not st.session_state.get("chat"):
-                intro_text = f"""Olá! Sou seu tutor **Helix.AI**. Estou aqui para tirar dúvidas e ajudar você a entender os conceitos da **Questão {cur_topic_num} de 8** (*{case.get('topico_nome', '')}*).
+                intro_text = f"""Olá! Sou seu tutor **Helix.AI**. Estou aqui para tirar dúvidas e ajudar você a entender os conceitos do bloco *{case.get('topico_nome', '')}*.
 
 Tem dúvida sobre algum conceito, termo ou mecanismo? Pode me perguntar!"""
                 st.session_state.chat = [{"role": "assistant", "content": intro_text}]
