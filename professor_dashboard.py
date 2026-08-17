@@ -70,7 +70,7 @@ def generate_class_full_pdf(students: List[Dict], all_analytics: Dict, category_
     pdf.cell(0, 12, 'Relatorio Pedagogico Completo da Turma', ln=True, align='C')
     
     pdf.set_font('Helvetica', '', 12)
-    pdf.cell(0, 8, 'Fisiologia & Transporte em Membranas Biologicas (8 Topicos)', ln=True, align='C')
+    pdf.cell(0, 8, 'Biofisica - Transporte em Membranas Biologicas (8 Topicos)', ln=True, align='C')
     pdf.cell(0, 8, f'Gerado em: {datetime.now().strftime("%d/%m/%Y as %H:%M")}', ln=True, align='C')
     
     pdf.set_y(170)

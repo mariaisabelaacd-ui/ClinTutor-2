@@ -1511,7 +1511,7 @@ def tutor_reply_com_ia(
             dist_lines.append(f"- Opção {k}: {distratores[k]}")
     dist_str = "\n".join(dist_lines)
     
-    system_prompt = f"""Você é o Tutor Helix.AI, um mentor socrático e acolhedor especialista em Fisiologia e Transporte através de Membranas Biológicas.
+    system_prompt = f"""Você é o Tutor Helix.AI, um mentor socrático e acolhedor especialista em Biofísica e Transporte através de Membranas Biológicas.
 
 OBJETIVO DO CHAT:
 O aluno está resolvendo uma questão de múltipla escolha e está usando este chat para tirar dúvidas, esclarecer conceitos e pedir orientações para conseguir chegar à resposta correta por conta própria.
