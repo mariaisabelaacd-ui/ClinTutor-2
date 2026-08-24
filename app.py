@@ -337,26 +337,26 @@ def start_new_case(forced_topic=None, forced_diff=None):
         st.session_state.topic_filter = forced_topic
         if forced_topic in TOPIC_KEYS:
             st.session_state.current_topic_idx = TOPIC_KEYS.index(forced_topic)
+    else:
+        st.session_state.topic_filter = None
             
     if forced_diff:
         st.session_state.current_difficulty = forced_diff
         
     st.session_state.topic_attempts = 0
     diff = st.session_state.get("current_difficulty", "Fácil")
-    topic = st.session_state.get("topic_filter", "T1")
+    topic = st.session_state.get("topic_filter", None)
     
     new_case = pick_adaptive_case(current_difficulty=diff, used_cases=st.session_state.used_cases, topic_filter=topic)
     st.session_state.current_case_id = new_case["id"]
     if new_case["id"] not in st.session_state.used_cases:
         st.session_state.used_cases.append(new_case["id"])
-    
-    user = get_current_user()
-    try:
-        st.session_state.current_timer_id = start_case_timer(user["id"], new_case["id"])
-    except:
-        pass
-    
+        
     cur_topic_key = new_case.get("topico_id", "T1")
+    st.session_state.topic_filter = cur_topic_key
+    if cur_topic_key in TOPIC_KEYS:
+        st.session_state.current_topic_idx = TOPIC_KEYS.index(cur_topic_key)
+        
     cur_topic_num = TOPIC_KEYS.index(cur_topic_key) + 1 if cur_topic_key in TOPIC_KEYS else 1
     
     # Se já há mensagens no chat, adiciona marcador de transição sem apagar o histórico anterior
@@ -585,14 +585,8 @@ def main():
                     next_diff = eval_res.get("next_diff", "Média")
                     advance_block = eval_res.get("advance_block", False)
                     
-                    if advance_block:
-                        next_idx = (TOPIC_KEYS.index(cur_topic_key) + 1) % len(TOPIC_KEYS)
-                        next_topic_key = TOPIC_KEYS[next_idx]
-                        if st.button(f"Avançar para o Próximo Bloco: {TOPICS[next_topic_key]} 🚀", type="primary", use_container_width=True, icon=":material/arrow_forward:"):
-                            start_new_case(forced_topic=next_topic_key, forced_diff="Fácil")
-                    else:
-                        if st.button(f"Próxima Questão (Nível {next_diff})", type="primary", use_container_width=True, icon=":material/arrow_forward:"):
-                            start_new_case(forced_topic=cur_topic_key, forced_diff=next_diff)
+                    if st.button(f"Próxima Questão (Nível {next_diff})", type="primary", use_container_width=True, icon=":material/arrow_forward:"):
+                        start_new_case(forced_topic=None, forced_diff=next_diff)
                 else:
                     st.error(f"""
 ### Alternativa {selected_opt} Incorreta (Tentativa {attempts})

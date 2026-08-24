@@ -1342,33 +1342,38 @@ QUESTIONS: List[Dict[str, Any]] = [
 # =============================
 def pick_adaptive_case(current_difficulty: str = "Fácil", used_cases: List[str] = None, topic_filter: str = None) -> Dict[str, Any]:
     """
-    Seleciona a próxima questão adaptativamente com base na dificuldade atual do aluno
-    e no filtro de tópico (se houver).
+    Seleciona a próxima questão adaptativamente com base na dificuldade desejada do aluno.
+    Se topic_filter for None ou 'Qualquer', sorteia entre todos os 8 blocos de Biofísica.
     """
     used_cases = used_cases or []
     
-    # 1. Filtra por tópico se especificado
     pool = QUESTIONS
-    if topic_filter and topic_filter != "Todos":
+    if topic_filter and topic_filter not in ["Todos", "Qualquer", "Nenhum"]:
         pool = [q for q in pool if q.get("topico_id") == topic_filter]
         
     if not pool:
         pool = QUESTIONS
         
-    # 2. Tenta pegar questão não respondida na dificuldade atual
+    # 1. Tenta pegar questão não respondida do pool na dificuldade desejada
     matching = [q for q in pool if q.get("dificuldade") == current_difficulty and q["id"] not in used_cases]
     
-    # 3. Se esgotou na dificuldade atual, tenta qualquer não respondida do pool
+    # 2. Se esgotou no pool específico, tenta em todas as questões da dificuldade desejada (de qualquer bloco)
+    if not matching:
+        matching = [q for q in QUESTIONS if q.get("dificuldade") == current_difficulty and q["id"] not in used_cases]
+        
+    # 3. Se esgotou na dificuldade desejada, tenta qualquer questão não respondida
     if not matching:
         matching = [q for q in pool if q["id"] not in used_cases]
-        
-    # 4. Se todas foram respondidas, sorteia qualquer uma da dificuldade atual
     if not matching:
-        matching = [q for q in pool if q.get("dificuldade") == current_difficulty]
+        matching = [q for q in QUESTIONS if q["id"] not in used_cases]
         
-    # 5. Fallback final: qualquer questão do pool
+    # 4. Se todas as 46 questões foram respondidas, sorteia qualquer uma da dificuldade desejada
     if not matching:
-        matching = pool
+        matching = [q for q in QUESTIONS if q.get("dificuldade") == current_difficulty]
+        
+    # 5. Fallback final: qualquer questão
+    if not matching:
+        matching = QUESTIONS
         
     chosen = random.choice(matching)
     return chosen.copy()
