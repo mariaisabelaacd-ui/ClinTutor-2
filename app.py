@@ -205,6 +205,8 @@ def render_top_navbar():
             cur_topic_idx = TOPIC_KEYS.index(cur_topic_key) + 1 if cur_topic_key in TOPIC_KEYS else 1
             cur_topic_full = TOPICS.get(cur_topic_key, "Transporte em Membranas")
             
+            ans_cnt = len(st.session_state.get("completed_cases", []))
+            
             st.markdown(f"""
             <div class='nav-stats-bar'>
                 <span class='nav-pill nav-pill-block' title='Bloco {cur_topic_idx}: {cur_topic_full}'>
@@ -212,6 +214,9 @@ def render_top_navbar():
                 </span>
                 <span class='nav-pill nav-pill-diff-{diff_slug}'>
                     <span class='diff-dot diff-dot-{diff_slug}'></span> {diff}
+                </span>
+                <span class='nav-pill nav-pill-answered' title='Questões respondidas nesta sessão'>
+                    <span class='material-icons-outlined' style='font-size:15px;'>task_alt</span> Respondidas <b>{ans_cnt}</b>
                 </span>
                 <span class='nav-pill nav-pill-streak'>
                     <span class='material-icons-outlined' style='font-size:15px;'>local_fire_department</span> Streak <b>{st.session_state.streak}</b>
@@ -292,7 +297,7 @@ def init_state():
         "chat": [], "show_next_case_btn": False, "used_cases": [],
         "current_timer_id": None, "case_counter": 0, "current_evaluation": None,
         "submitted_answer": False, "selected_option": None, "insistence_count": 0,
-        "topic_attempts": 0
+        "topic_attempts": 0, "completed_cases": []
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -427,6 +432,8 @@ def main():
     # COLUNA ESQUERDA: QUESTÃO DE MÚLTIPLA ESCOLHA & FEEDBACK
     # =========================================================================
     with col_question:
+        ans_cnt = len(st.session_state.get("completed_cases", []))
+        
         # Cabeçalho Minimalista da Questão & Informações de Desempenho
         st.markdown(f"""
         <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;'>
@@ -434,7 +441,7 @@ def main():
                 <span class='material-icons-outlined' style='font-size:20px;'>science</span> Bloco {cur_topic_num}: {case.get('topico_nome', '')}
             </div>
             <div style='font-size: 0.85rem; font-weight: 600; color: #64748b;'>
-                <b>Pontuação:</b> {st.session_state.score:.1f} pts  |  <b>Streak:</b> {st.session_state.streak}
+                <b>Respondidas:</b> {ans_cnt}  |  <b>Pontuação:</b> {st.session_state.score:.1f} pts  |  <b>Streak:</b> {st.session_state.streak}
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -520,6 +527,11 @@ def main():
                             
                             st.session_state.score += earned_pts
                             st.session_state.streak += 1
+                            if "completed_cases" not in st.session_state:
+                                st.session_state.completed_cases = []
+                            if case["id"] not in st.session_state.completed_cases:
+                                st.session_state.completed_cases.append(case["id"])
+                                
                             if cur_topic_key not in st.session_state.completed_topics:
                                 st.session_state.completed_topics.append(cur_topic_key)
                             st.session_state.current_difficulty = next_diff
@@ -601,16 +613,11 @@ def main():
 """)
                     
                     st.markdown("<div style='margin-top: 1.2rem;'></div>", unsafe_allow_html=True)
-                    btn_col1, btn_col2 = st.columns(2)
-                    with btn_col1:
-                        if st.button("Tentar Novamente esta Questão", type="primary", use_container_width=True, icon=":material/refresh:"):
-                            st.session_state.submitted_answer = False
-                            st.session_state.selected_option = None
-                            st.session_state.current_evaluation = None
-                            st.rerun()
-                    with btn_col2:
-                        if st.button("Praticar Outra Questão deste Bloco", use_container_width=True, icon=":material/shuffle:"):
-                            start_new_case(forced_topic=cur_topic_key)
+                    if st.button("Tentar Novamente esta Questão", type="primary", use_container_width=True, icon=":material/refresh:"):
+                        st.session_state.submitted_answer = False
+                        st.session_state.selected_option = None
+                        st.session_state.current_evaluation = None
+                        st.rerun()
 
     # =========================================================================
     # COLUNA DIREITA: TUTOR SOCRÁTICO HELIX.AI (COM PROTEÇÃO 4 INSISTÊNCIAS)
