@@ -371,13 +371,15 @@ def get_user_by_id(user_id) -> Optional[Dict]:
     else:
         return get_user_by_id_local(int(user_id))
 
-@st.cache_data(ttl=300, show_spinner=False)
+@st.cache_data(ttl=60, show_spinner=False)
 def get_all_users_firebase() -> List[Dict]:
-    """Retorna todos os usuários do Firebase"""
+    """Retorna todos os usuários do Firebase (com fallback para local se falhar)"""
     try:
         db = get_firestore_db()
+        if not db:
+            return load_users_local()
         users_ref = db.collection('users')
-        docs = users_ref.get()
+        docs = list(users_ref.stream())
         
         users = []
         for doc in docs:
@@ -385,10 +387,12 @@ def get_all_users_firebase() -> List[Dict]:
             user_data['id'] = doc.id
             users.append(user_data)
         
-        return users
+        if users:
+            return users
+        return load_users_local()
     except Exception as e:
-        st.error(f"Erro ao buscar usuários no Firebase: {e}")
-        return []
+        print(f"Aviso: Erro ao buscar usuários no Firebase ({e}). Usando fallback local.")
+        return load_users_local()
 
 @st.cache_data(ttl=300, show_spinner=False)
 def get_all_users_local() -> List[Dict]:
