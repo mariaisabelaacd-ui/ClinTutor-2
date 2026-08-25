@@ -252,43 +252,55 @@ def register_user(name: str, email: str, password: str, user_type: str, ra: str 
         return register_user_local(name, email, password, user_type, ra)
 
 def authenticate_user_firebase(email: str, password: str) -> Tuple[bool, str, Optional[Dict]]:
-    """Autentica usuário no Firebase (sem verificação de email)"""
+    """Autentica usuário no Firebase buscando no Firestore por email ou Auth UID"""
     try:
-        from firebase_config import get_firebase_user_by_email
-        
+        clean_email = email.lower().strip()
+        hashed_password = hash_password(password)
         db = get_firestore_db()
         
-        # Busca usuário no Firebase Auth
-        auth_user = get_firebase_user_by_email(email.lower().strip())
+        user_doc = None
+        user_data = None
         
-        if not auth_user:
+        # 1. Busca no Firestore pelo campo email
+        users_ref = db.collection('users')
+        query = users_ref.where('email', '==', clean_email).limit(1)
+        docs = list(query.stream())
+        
+        if docs:
+            user_doc = docs[0]
+            user_data = user_doc.to_dict()
+            user_data['id'] = user_doc.id
+        else:
+            # 2. Fallback: busca via Firebase Auth
+            from firebase_config import get_firebase_user_by_email
+            auth_user = get_firebase_user_by_email(clean_email)
+            if auth_user:
+                doc = users_ref.document(auth_user.uid).get()
+                if doc.exists:
+                    user_doc = doc
+                    user_data = doc.to_dict()
+                    user_data['id'] = doc.id
+
+        if not user_data:
             return False, "Email ou senha incorretos", None
-        
-        # Busca dados do usuário no Firestore
-        user_doc = db.collection('users').document(auth_user.uid).get()
-        
-        if not user_doc.exists:
-            return False, "Usuário não encontrado no sistema", None
-        
-        user_data = user_doc.to_dict()
-        
-        # O Firebase Auth sem API Key no client side ou REST não permite verificar senha.
-        # Por isso verificamos o hash salvo no Firestore (foi salvo no registro)
+
+        # 3. Verifica a senha pelo hash SHA-256 salvo no documento
         stored_hash = user_data.get('password')
-        if not stored_hash or stored_hash != hash_password(password):
+        if not stored_hash or stored_hash != hashed_password:
             return False, "Email ou senha incorretos", None
-        
-        # Atualiza último login
-        user_doc.reference.update({
-            'last_login': datetime.now()
-        })
-        
-        # Adiciona ID do documento
-        user_data['id'] = auth_user.uid
-        
+
+        # 4. Atualiza último login
+        try:
+            user_doc.reference.update({
+                'last_login': datetime.now().isoformat()
+            })
+        except Exception:
+            pass
+
         return True, "Login realizado com sucesso!", user_data
-        
+
     except Exception as e:
+        print(f"Erro ao autenticar Firebase: {e}")
         return False, f"Erro ao autenticar: {e}", None
 
 def authenticate_user_local(email: str, password: str) -> Tuple[bool, str, Optional[Dict]]:
@@ -306,28 +318,43 @@ def authenticate_user_local(email: str, password: str) -> Tuple[bool, str, Optio
     return False, "Email ou senha incorretos", None
 
 def authenticate_user(email: str, password: str) -> Tuple[bool, str, Optional[Dict]]:
-    """Autentica um usuário (Firebase ou local)"""
+    """Autentica um usuário (Firebase com fallback para local se falhar)"""
     if not email.strip() or not password.strip():
         return False, "Email e senha são obrigatórios", None
     
     if is_firebase_connected():
-        return authenticate_user_firebase(email, password)
+        success, msg, user_data = authenticate_user_firebase(email, password)
+        if success:
+            return True, msg, user_data
+        local_success, local_msg, local_data = authenticate_user_local(email, password)
+        if local_success:
+            return True, local_msg, local_data
+        return False, msg, None
     else:
         return authenticate_user_local(email, password)
 
 def get_user_by_id_firebase(user_id: str) -> Optional[Dict]:
-    """Busca usuário por ID no Firebase"""
+    """Busca usuário por ID no Firebase (com fallback para busca por auth_uid)"""
     try:
         db = get_firestore_db()
-        user_doc = db.collection('users').document(user_id).get()
-        
+        if not db:
+            return get_user_by_id_local(user_id)
+            
+        user_doc = db.collection('users').document(str(user_id)).get()
         if user_doc.exists:
             user_data = user_doc.to_dict()
             user_data['id'] = user_doc.id
             return user_data
+            
+        docs = list(db.collection('users').where('auth_uid', '==', str(user_id)).limit(1).stream())
+        if docs:
+            user_data = docs[0].to_dict()
+            user_data['id'] = docs[0].id
+            return user_data
+            
         return None
     except Exception:
-        return None
+        return get_user_by_id_local(user_id)
 
 def get_user_by_id_local(user_id: int) -> Optional[Dict]:
     """Busca usuário por ID no banco local"""

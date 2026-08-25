@@ -39,12 +39,15 @@ class DualFirebaseManager:
 
     def _load_cred_dict(self, secrets_key: str) -> Optional[dict]:
         """Carrega credenciais de st.secrets pela chave informada."""
-        if secrets_key not in st.secrets:
+        try:
+            if not hasattr(st, "secrets") or secrets_key not in st.secrets:
+                return None
+            cred_dict = dict(st.secrets[secrets_key])
+            if 'private_key' in cred_dict and isinstance(cred_dict['private_key'], str):
+                cred_dict['private_key'] = cred_dict['private_key'].replace('\\n', '\n')
+            return cred_dict
+        except Exception:
             return None
-        cred_dict = dict(st.secrets[secrets_key])
-        if 'private_key' in cred_dict and isinstance(cred_dict['private_key'], str):
-            cred_dict['private_key'] = cred_dict['private_key'].replace('\\n', '\n')
-        return cred_dict
 
     def _init_primary(self):
         """Inicializa Firebase primário (índice 0) — também contém Auth."""
@@ -60,13 +63,32 @@ class DualFirebaseManager:
 
             cred_dict = self._load_cred_dict('firebase_credentials')
             if not cred_dict:
-                # Fallback para arquivo local
+                # Fallback 1: arquivo json local
                 cred_path = os.path.join(os.path.dirname(__file__), 'firebase-credentials.json')
                 if os.path.exists(cred_path):
                     cred = credentials.Certificate(cred_path)
                 else:
-                    st.error("❌ Credenciais do Firebase primário não encontradas.")
-                    return
+                    # Fallback 2: secrets.toml local
+                    sec_path = os.path.join(os.path.dirname(__file__), '.streamlit', 'secrets.toml')
+                    if os.path.exists(sec_path):
+                        try:
+                            import toml
+                            with open(sec_path, 'r', encoding='utf-8') as f:
+                                sec_data = toml.load(f)
+                            if 'firebase_credentials' in sec_data:
+                                cdict = dict(sec_data['firebase_credentials'])
+                                if 'private_key' in cdict and isinstance(cdict['private_key'], str):
+                                    cdict['private_key'] = cdict['private_key'].replace('\\n', '\n')
+                                cred = credentials.Certificate(cdict)
+                            else:
+                                st.error("❌ Credenciais do Firebase primário não encontradas.")
+                                return
+                        except Exception as ex:
+                            st.error(f"❌ Erro ao carregar secrets.toml local: {ex}")
+                            return
+                    else:
+                        st.error("❌ Credenciais do Firebase primário não encontradas.")
+                        return
             else:
                 cred = credentials.Certificate(cred_dict)
 
