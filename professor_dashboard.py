@@ -423,16 +423,18 @@ def show_advanced_professor_dashboard():
     # =========================================================================
     with tab1:
         # KPIs Principais
-        kpi1, kpi2, kpi3, kpi4 = st.columns(4)
+        kpi1, kpi2, kpi3, kpi4, kpi5 = st.columns(5)
         with kpi1:
             st.metric("Alunos Cadastrados", f"{len(student_users)}")
         with kpi2:
+            st.metric("Respostas Submetidas", f"{total_answered_cases}")
+        with kpi3:
             acc_class = (total_correct_cases / total_answered_cases * 100) if total_answered_cases > 0 else 0.0
             st.metric("Taxa Geral de Acertos", f"{acc_class:.1f}%")
-        with kpi3:
+        with kpi4:
             avg_time = (total_time_seconds / total_answered_cases) if total_answered_cases > 0 else 0.0
             st.metric("Tempo Médio / Questão", format_duration(avg_time))
-        with kpi4:
+        with kpi5:
             st.metric("Mensagens com Tutor", f"{total_chat_messages}")
 
         st.markdown("<div style='margin-top: 1.5rem;'></div>", unsafe_allow_html=True)
