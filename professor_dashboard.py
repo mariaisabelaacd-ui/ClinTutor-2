@@ -579,7 +579,24 @@ def show_advanced_professor_dashboard():
                             """, unsafe_allow_html=True)
                             
                             if not is_c:
-                                why_d = res.get("why_distractor") or f"Induz ao erro comum de {res.get('distractor_feedback', '')}"
+                                user_ans_str = str(res.get('user_answer', ''))
+                                sel_opt = res.get("selected_option")
+                                if not sel_opt and user_ans_str and user_ans_str[0] in ["A", "B", "C", "D"]:
+                                    sel_opt = user_ans_str[0]
+                                    
+                                why_d = res.get("why_distractor")
+                                # Se why_d for nulo ou incompleto (ex: "Induz ao erro comum de "), reconstrói com base na questão
+                                if not why_d or why_d.strip().endswith("erro comum de") or why_d.strip().endswith("frequente de") or len(why_d.strip()) < 15:
+                                    if sel_opt and q.get("distratores") and sel_opt in q["distratores"]:
+                                        d_raw = q["distratores"][sel_opt]
+                                        if d_raw:
+                                            if d_raw.startswith("confundir") or d_raw.startswith("considerar") or d_raw.startswith("generalizar") or d_raw.startswith("assumir"):
+                                                why_d = f"Induz ao erro comum de {d_raw}"
+                                            else:
+                                                why_d = d_raw
+                                    if not why_d or len(why_d.strip()) < 10:
+                                        why_d = res.get("why_wrong") or res.get("distractor_feedback") or "Esta alternativa aborda um conceito incorreto referente ao enunciado."
+                                        
                                 st.markdown(f"""
                                 <div style='background: rgba(239, 68, 68, 0.08); border-left: 3px solid #ef4444; padding: 8px 12px; border-radius: 4px; margin-top: 6px; font-size: 0.85rem;'>
                                     <b>Análise do Distrator (Por que induz ao erro):</b><br>{why_d}

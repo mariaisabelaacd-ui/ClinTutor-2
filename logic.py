@@ -1418,12 +1418,19 @@ def evaluate_mcq_answer(question: Dict[str, Any], selected_option: str) -> Dict[
     gab_text = question.get("alternativas", {}).get(gabarito, "")
     
     # Extrai o erro conceitual limpo
-    clean_error = raw_distractor
-    if ":" in raw_distractor:
-        clean_error = raw_distractor.split(":", 1)[1].strip()
+    clean_error = raw_distractor.strip()
+    if ":" in clean_error:
+        clean_error = clean_error.split(":", 1)[1].strip()
         
     why_wrong = f"A opção **{opt} ({alt_text})** não atende corretamente às condições e princípios biológicos descritos no enunciado."
-    why_distractor = f"Esta alternativa é um **distrator elaborado** porque induz ao equívoco frequente de {clean_error}"
+    
+    if clean_error:
+        if clean_error.startswith("confundir") or clean_error.startswith("considerar") or clean_error.startswith("generalizar") or clean_error.startswith("assumir"):
+            why_distractor = f"Induz ao erro comum de {clean_error}"
+        else:
+            why_distractor = f"Esta alternativa induz ao erro de {clean_error}"
+    else:
+        why_distractor = "Esta alternativa aborda um conceito incorreto referente ao enunciado biológico."
     
     classification = "CORRETO" if is_correct else "INCORRETO"
     level = "Avançado" if is_correct else "Incorreto"
