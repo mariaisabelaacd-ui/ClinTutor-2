@@ -511,7 +511,7 @@ def show_advanced_professor_dashboard():
         if not student_users:
             st.info("Nenhum aluno cadastrado no sistema ainda.")
         else:
-            student_names = [f"{s.get('name', 'Aluno')} | RA: {s.get('ra', 'N/A')} | {s.get('email', '')}" for s in student_users]
+            student_names = [f"{s.get('name', 'Aluno')} | RA: {s.get('ra', 'N/A')} | Turma: {s.get('turma', 'N/A')} | {s.get('email', '')}" for s in student_users]
             sel_student_idx = st.selectbox("Selecione o Aluno:", range(len(student_users)), format_func=lambda i: student_names[i])
             selected_student = student_users[sel_student_idx]
             uid = selected_student["id"]

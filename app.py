@@ -98,7 +98,7 @@ def show_login_page():
                         else: 
                             user_type = 'aluno'
                             ra = st.text_input("RA")
-                            turma = st.selectbox("Turma", ["Biomedicina A", "Biomedicina B"])
+                            turma = st.selectbox("Turma", ["Biomedicina A", "Biomedicina B", "Biomedicina C"])
                             
                             st.markdown("---")
                             st.markdown("**Termo de Consentimento de Uso e Privacidade**")
