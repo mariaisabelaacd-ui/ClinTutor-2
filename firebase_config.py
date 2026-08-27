@@ -230,18 +230,37 @@ def _auth():
     return auth
 
 def create_firebase_user(email: str, password: str, display_name: str):
-    """Cria usuário no Firebase Authentication e envia email de verificação."""
+    """Cria usuário no Firebase Authentication (com auto-recuperação de contas órfãs)."""
+    clean_email = email.lower().strip()
     try:
         user = auth.create_user(
-            email=email,
+            email=clean_email,
             password=password,
             display_name=display_name,
             email_verified=False,
             app=_manager.apps[0]
         )
-        link = auth.generate_email_verification_link(email, app=_manager.apps[0])
+        link = auth.generate_email_verification_link(clean_email, app=_manager.apps[0])
         return True, user.uid, link
     except auth.EmailAlreadyExistsError:
+        try:
+            existing_user = auth.get_user_by_email(clean_email, app=_manager.apps[0])
+            db = _manager.get_primary_db()
+            doc = db.collection('users').document(existing_user.uid).get()
+            docs_by_email = list(db.collection('users').where('email', '==', clean_email).limit(1).stream())
+            
+            if not doc.exists and not docs_by_email:
+                auth.update_user(
+                    existing_user.uid,
+                    password=password,
+                    display_name=display_name,
+                    app=_manager.apps[0]
+                )
+                link = auth.generate_email_verification_link(clean_email, app=_manager.apps[0])
+                return True, existing_user.uid, link
+        except Exception as ex:
+            print(f"Aviso ao tentar auto-heal de conta órfã: {ex}")
+            
         return False, None, "Email já cadastrado"
     except Exception as e:
         return False, None, f"Erro ao criar usuário: {e}"
