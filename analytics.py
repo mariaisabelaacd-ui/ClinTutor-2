@@ -491,7 +491,7 @@ def get_user_chat_interactions_local(user_id: str, case_id: str = None) -> List[
         
     return interactions
 
-@st.cache_data(ttl=300, show_spinner=False)
+@st.cache_data(ttl=15, show_spinner=False)
 def get_all_users_analytics() -> Dict[str, Dict]:
     """Recupera analytics de todos os usuários (apenas alunos)"""
     if is_firebase_connected():
@@ -501,7 +501,7 @@ def get_all_users_analytics() -> Dict[str, Dict]:
         st.warning("⚠️ Firebase não está conectado. Dados podem não estar sincronizados.")
         return get_all_users_analytics_local()
 
-@st.cache_data(ttl=300, show_spinner=False)
+@st.cache_data(ttl=15, show_spinner=False)
 def get_all_users_analytics_firebase() -> Dict[str, Dict]:
     """
     Recupera analytics de todos os todos os alunos consultando TODOS os Firebases.
