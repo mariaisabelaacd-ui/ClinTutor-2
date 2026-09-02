@@ -121,33 +121,46 @@ def format_duration(seconds: float) -> str:
 
 def log_chat_interaction(user_id: str, case_id: str, user_message: str, bot_response: str, response_time: float = None):
     """
-    Registra uma interação com o chatbot.
-    OTIMIZADO: Agora armazena em buffer no session_state em vez de gravar
-    imediatamente. As mensagens são salvas em lote quando a questão é finalizada,
-    reduzindo writes de N*2 para 1 por sessão de chat.
+    Registra uma interação com o chatbot imediatamente no Firestore e no buffer.
     """
     import streamlit as st
     
-    # Inicializa o buffer no session_state se ainda não existe
+    # 1. Inicializa o buffer no session_state
     if 'chat_write_buffer' not in st.session_state:
         st.session_state.chat_write_buffer = {}
     
     buffer_key = f"{user_id}_{case_id}"
     if buffer_key not in st.session_state.chat_write_buffer:
         st.session_state.chat_write_buffer[buffer_key] = {
-            "user_id": user_id,
-            "case_id": case_id,
+            "user_id": str(user_id),
+            "case_id": str(case_id),
             "messages": [],
             "timestamp": datetime.now().isoformat()
         }
     
-    # Adiciona a mensagem ao buffer (sem gravar no Firebase agora)
-    st.session_state.chat_write_buffer[buffer_key]["messages"].append({
+    msg_entry = {
         "user_message": user_message,
         "bot_response": bot_response,
         "response_time_seconds": response_time,
         "timestamp": datetime.now().isoformat()
-    })
+    }
+    st.session_state.chat_write_buffer[buffer_key]["messages"].append(msg_entry)
+
+    # 2. Persiste imediatamente no Firestore para visibilidade em tempo real pelo professor
+    if is_firebase_connected():
+        try:
+            db = get_db_for_user(str(user_id))
+            chat_ref = db.collection('chat_interactions')
+            chat_ref.add({
+                "user_id": str(user_id),
+                "case_id": str(case_id),
+                "user_message": user_message,
+                "bot_response": bot_response,
+                "messages": [msg_entry],
+                "timestamp": datetime.now().isoformat()
+            })
+        except Exception as e:
+            print(f"Erro ao salvar chat no Firebase: {e}")
 
 def flush_chat_buffer(user_id: str, case_id: str):
     """
