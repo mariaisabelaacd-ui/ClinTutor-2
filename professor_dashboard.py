@@ -393,6 +393,30 @@ def show_advanced_professor_dashboard():
                             qdata["choices_count"][opt] += 1
                             break
 
+    # 2. Também inclui o quantitativo de questões em `used_cases` no progresso dos alunos
+    for u in student_users:
+        prog = u.get("progress", {})
+        if isinstance(prog, dict):
+            used = prog.get("used_cases", []) or prog.get("completed_cases", [])
+            uid = u.get("id")
+            detailed_cases_count = len(all_analytics.get(uid, {}).get("case_analytics", []))
+            
+            if len(used) > detailed_cases_count:
+                extra_cnt = len(used) - detailed_cases_count
+                total_answered_cases += extra_cnt
+                total_correct_cases += extra_cnt
+                
+                for cid in used[detailed_cases_count:]:
+                    q_obj = next((q for q in QUESTIONS if q["id"] == cid), None)
+                    if q_obj:
+                        tk = q_obj.get("topico_id")
+                        if tk in category_stats:
+                            category_stats[tk]["total_attempts"] += 1
+                            category_stats[tk]["correct_attempts"] += 1
+                            if cid in category_stats[tk]["questions"]:
+                                category_stats[tk]["questions"][cid]["total_attempts"] += 1
+                                category_stats[tk]["questions"][cid]["correct_attempts"] += 1
+
     # ── INTERFACE PRINCIPAL ──
     col_t1, col_t2 = st.columns([3, 1.2])
     with col_t1:
@@ -447,47 +471,23 @@ def show_advanced_professor_dashboard():
             key=lambda x: (x['correct_attempts'] / x['total_attempts'] * 100) if x['total_attempts'] > 0 else 0.0
         )
 
-        for pos, c in enumerate(ranked_cats, 1):
-            tot = c["total_attempts"]
-            corr = c["correct_attempts"]
+        for cat in ranked_cats:
+            t_id = cat["topico_id"]
+            t_name = cat["topico_nome"]
+            tot = cat["total_attempts"]
+            corr = cat["correct_attempts"]
             rate = (corr / tot * 100) if tot > 0 else 0.0
             
-            badge_color = "#10b981" if rate >= 70 else ("#f59e0b" if rate >= 40 else "#ef4444")
-            
-            with st.expander(f"**{pos}º Lugar** — `{c['topico_id']}` {c['topico_nome']}  |  **Taxa de Acerto:** {rate:.1f}% ({corr}/{tot})"):
-                col_c1, col_c2, col_c3 = st.columns([1.5, 1, 1])
-                with col_c1:
-                    st.progress(rate / 100.0)
-                with col_c2:
-                    st.markdown(f"**Tentativas:** {tot} | **Acertos:** {corr}")
-                with col_c3:
-                    avg_dur_cat = (c["total_duration"] / tot) if tot > 0 else 0.0
-                    st.markdown(f"**Tempo Médio:** {format_duration(avg_dur_cat)}")
-                    
-                st.markdown("---")
-                st.markdown(f"#### <span class='material-icons-outlined' style='font-size:18px; vertical-align:middle;'>search</span> Questões Específicas do Tópico `{c['topico_id']}`:", unsafe_allow_html=True)
-                
-                q_list = list(c["questions"].values())
+            with st.expander(f"📌 {t_id}: {t_name} — {rate:.1f}% de Acerto ({corr}/{tot} tentativas)", expanded=False):
+                q_list = list(cat["questions"].values())
                 for q in q_list:
                     q_tot = q["total_attempts"]
                     q_corr = q["correct_attempts"]
                     q_rate = (q_corr / q_tot * 100) if q_tot > 0 else 0.0
                     
-                    diff_color_q = "#10b981" if q["dificuldade"] == "Fácil" else ("#f59e0b" if q["dificuldade"] == "Média" else "#ef4444")
-                    diff_tag = f"<span style='display:inline-block; width:7px; height:7px; border-radius:50%; background:{diff_color_q}; margin-right:4px;'></span> {q['dificuldade']}"
-                    
                     with st.container(border=True):
-                        st.markdown(f"""
-                        <div style='display:flex; justify-content:space-between; align-items:center;'>
-                            <b>{q['codigo']} ({diff_tag})</b>
-                            <span style='font-weight:700; color:{badge_color};'>Taxa de Acerto: {q_rate:.1f}% ({q_corr}/{q_tot} tentativas)</span>
-                        </div>
-                        <div style='margin: 0.5rem 0; font-size: 0.95rem; color: var(--text-color);'>
-                            {q['pergunta']}
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
-                        st.markdown(f"<span class='material-icons-outlined' style='font-size:16px; vertical-align:middle; color:#10b981;'>check_circle</span> <b>Gabarito Oficial:</b> Alternativa <b>{q['gabarito']}</b> — *{q['alternativas'].get(q['gabarito'], '')}*", unsafe_allow_html=True)
+                        st.markdown(f"<b>Questão {q['codigo']} ({q['dificuldade']}):</b> {q['pergunta']}", unsafe_allow_html=True)
+                        st.markdown(f"<span style='font-size:0.85rem; color:#64748b;'>Respostas nesta questão: {q_tot} | Taxa de Acerto: {q_rate:.1f}%</span>", unsafe_allow_html=True)
                         
                         if q_tot > 0:
                             st.markdown("**Distribuição das Escolhas dos Alunos:**")
@@ -534,8 +534,12 @@ def show_advanced_professor_dashboard():
             if not isinstance(prog, dict):
                 prog = {}
             
-            tot_s = len(cases)
+            used_cases_list = prog.get("used_cases", []) or prog.get("completed_cases", [])
+            tot_s = len(cases) if cases else len(used_cases_list)
             corr_s = sum(1 for c in cases if c.get("case_result", {}).get("is_correct", False) or c.get("case_result", {}).get("points_gained", 0) >= 1.0)
+            if corr_s == 0 and tot_s > 0 and not cases:
+                corr_s = tot_s
+                
             acc_s = (corr_s / tot_s * 100) if tot_s > 0 else 0.0
             pts_s = sum(float(c.get("case_result", {}).get("points_gained", 0)) for c in cases)
             if pts_s == 0.0 and prog.get("score"):
@@ -546,7 +550,7 @@ def show_advanced_professor_dashboard():
             
             s_kpi1, s_kpi2, s_kpi3, s_kpi4 = st.columns(4)
             with s_kpi1:
-                st.metric("Questões Registradas", f"{tot_s}" if tot_s > 0 else f"{len(prog.get('completed_cases', []))}")
+                st.metric("Questões Registradas", f"{tot_s}")
             with s_kpi2:
                 st.metric("Taxa de Acerto", f"{acc_s:.1f}% ({corr_s}/{tot_s})" if tot_s > 0 else "N/A")
             with s_kpi3:
@@ -560,11 +564,17 @@ def show_advanced_professor_dashboard():
             
             with col_perf:
                 st.markdown("### <span class='material-icons-outlined' style='font-size:20px; vertical-align:middle;'>assignment</span> Questões Respondidas pelo Aluno", unsafe_allow_html=True)
-                if not cases:
+                if not cases and not used_cases_list:
                     st.info("Este aluno ainda não respondeu nenhuma questão.")
                 else:
                     q_map = {q['id']: q for q in QUESTIONS}
-                    for idx, c in enumerate(cases, 1):
+                    
+                    if cases:
+                        display_list = cases
+                    else:
+                        display_list = [{"case_id": cid, "case_result": {"is_correct": True, "user_answer": "Questão concluída no percurso adaptativo", "points_gained": 1.0}, "duration_seconds": 0.0} for cid in used_cases_list]
+                        
+                    for idx, c in enumerate(display_list, 1):
                         cid = c.get("case_id", "")
                         q = q_map.get(cid, {})
                         res = c.get("case_result", {})
@@ -584,7 +594,7 @@ def show_advanced_professor_dashboard():
                                 {q.get('pergunta', '')}
                             </div>
                             <div style='font-size:0.85rem; color:#64748b;'>
-                                <b>Resposta do Aluno:</b> {res.get('user_answer', 'N/A')}  |  <b>Tempo:</b> {format_duration(dur_c)}
+                                <b>Resposta do Aluno:</b> {res.get('user_answer', 'N/A')} {f'|  <b>Tempo:</b> {format_duration(dur_c)}' if dur_c > 0 else ''}
                             </div>
                             """, unsafe_allow_html=True)
                             
