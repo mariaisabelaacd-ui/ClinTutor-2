@@ -425,6 +425,11 @@ def main():
     cur_topic_key = case.get("topico_id", "T1")
     cur_topic_num = TOPIC_KEYS.index(cur_topic_key) + 1 if cur_topic_key in TOPIC_KEYS else 1
     
+    # Inicializa timer para a questão atual
+    user_obj = get_current_user()
+    if user_obj and case and not st.session_state.get("current_timer_id"):
+        st.session_state.current_timer_id = start_case_timer(user_obj["id"], case["id"])
+    
     # --- 2-COLUMN SPLIT VIEW LAYOUT ---
     col_question, col_chat = st.columns([1.15, 0.85], gap="large")
     
