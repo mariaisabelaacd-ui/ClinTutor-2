@@ -530,21 +530,29 @@ def show_advanced_professor_dashboard():
             
             st.markdown("<div style='margin-top: 1rem;'></div>", unsafe_allow_html=True)
             
+            prog = selected_student.get("progress", {})
+            if not isinstance(prog, dict):
+                prog = {}
+            
             tot_s = len(cases)
             corr_s = sum(1 for c in cases if c.get("case_result", {}).get("is_correct", False) or c.get("case_result", {}).get("points_gained", 0) >= 1.0)
             acc_s = (corr_s / tot_s * 100) if tot_s > 0 else 0.0
             pts_s = sum(float(c.get("case_result", {}).get("points_gained", 0)) for c in cases)
+            if pts_s == 0.0 and prog.get("score"):
+                pts_s = float(prog.get("score", 0.0))
+            
             dur_s = sum(c.get("duration_seconds", 0) for c in cases)
+            cur_q_id = prog.get("current_question_id", "N/A")
             
             s_kpi1, s_kpi2, s_kpi3, s_kpi4 = st.columns(4)
             with s_kpi1:
-                st.metric("Questões Respondidas", f"{tot_s}")
+                st.metric("Questões Registradas", f"{tot_s}" if tot_s > 0 else f"{len(prog.get('completed_cases', []))}")
             with s_kpi2:
-                st.metric("Taxa de Acerto", f"{acc_s:.1f}% ({corr_s}/{tot_s})")
+                st.metric("Taxa de Acerto", f"{acc_s:.1f}% ({corr_s}/{tot_s})" if tot_s > 0 else "N/A")
             with s_kpi3:
-                st.metric("Pontos Ganhos", f"{pts_s:.1f} pts")
+                st.metric("Pontuação Acumulada", f"{pts_s:.1f} pts")
             with s_kpi4:
-                st.metric("Tempo Total", format_duration(dur_s))
+                st.metric("Questão Alcançada", str(cur_q_id).upper() if cur_q_id else "N/A")
                 
             st.markdown("---")
             
