@@ -11,7 +11,7 @@ from analytics import (
     get_all_users_analytics, format_duration
 )
 from auth_firebase import get_all_users, get_user_by_id
-from logic import QUESTIONS, TOPICS
+from logic import QUESTIONS, TOPICS, BLOCKS
 from admin_utils import (
     reset_student_analytics, clear_student_chat_interactions,
     reset_all_students_analytics, clear_all_chat_interactions,
@@ -48,7 +48,7 @@ def generate_class_full_pdf(students: List[Dict], all_analytics: Dict, category_
     """
     Gera PDF completo e detalhado da turma com:
     - KPIs Gerais
-    - Ranking de Desempenho por Categoria (T1 a T8)
+    - Ranking de Desempenho por Categoria e Bloco (T1 a T10)
     - Desempenho por Aluno
     - Histórico Completo de Interações com o Tutor
     """
@@ -86,7 +86,7 @@ def generate_class_full_pdf(students: List[Dict], all_analytics: Dict, category_
     pdf.add_page()
     pdf.set_text_color(16, 185, 129)
     pdf.set_font('Helvetica', 'B', 16)
-    pdf.cell(0, 10, '1. Ranking de Desempenho por Categoria (T1 a T8)', ln=True)
+    pdf.cell(0, 10, '1. Ranking de Desempenho por Categoria e Bloco (T1 a T10)', ln=True)
     pdf.set_text_color(0, 0, 0)
     pdf.ln(2)
     
@@ -421,7 +421,7 @@ def show_advanced_professor_dashboard():
     col_t1, col_t2 = st.columns([3, 1.2])
     with col_t1:
         st.markdown("<h2 style='margin-bottom:0;'><span class='material-icons-outlined' style='font-size:26px; vertical-align:middle; color:#10b981;'>dashboard</span> Painel do Professor</h2>", unsafe_allow_html=True)
-        st.markdown("<p style='color:#64748b; font-size:0.95rem; margin-top:-0.3rem;'>Acompanhe o desempenho da turma nos 8 tópicos de Transporte & Membranas.</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color:#64748b; font-size:0.95rem; margin-top:-0.3rem;'>Acompanhe o desempenho da turma nos 10 tópicos (divididos em Bloco 1: Transporte & Membranas e Bloco 2: Bioeletrogênese).</p>", unsafe_allow_html=True)
     with col_t2:
         pdf_bytes = generate_class_full_pdf(student_users, all_analytics, category_stats)
         st.download_button(
@@ -441,9 +441,8 @@ def show_advanced_professor_dashboard():
         "Análise Individual do Aluno",
         "Admin & Limpeza de Dados"
     ])
-
     # =========================================================================
-    # TAB 1: VISÃO GERAL & RANKING DE CATEGORIAS (COM DRILLDOWN)
+    # TAB 1: VISÃO GERAL & RANKING DE CATEGORIAS (COM DRILLDOWN DE BLOCOS)
     # =========================================================================
     with tab1:
         # KPIs Principais
@@ -461,13 +460,52 @@ def show_advanced_professor_dashboard():
         with kpi5:
             st.metric("Mensagens com Tutor", f"{total_chat_messages}")
 
-        st.markdown("<div style='margin-top: 1.5rem;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='margin-top: 1.2rem;'></div>", unsafe_allow_html=True)
 
-        st.markdown("### <span class='material-icons-outlined' style='font-size:22px; vertical-align:middle; color:#10b981;'>leaderboard</span> Ranking de Desempenho por Categoria (T1 a T8)", unsafe_allow_html=True)
+        # ── COMPARATIVO ENTRE BLOCO 1 E BLOCO 2 ──
+        b1_topics = BLOCKS["Bloco 1"]["topicos"]
+        b2_topics = BLOCKS["Bloco 2"]["topicos"]
+
+        b1_tot = sum(category_stats[tk]["total_attempts"] for tk in b1_topics if tk in category_stats)
+        b1_corr = sum(category_stats[tk]["correct_attempts"] for tk in b1_topics if tk in category_stats)
+        b1_acc = (b1_corr / b1_tot * 100) if b1_tot > 0 else 0.0
+
+        b2_tot = sum(category_stats[tk]["total_attempts"] for tk in b2_topics if tk in category_stats)
+        b2_corr = sum(category_stats[tk]["correct_attempts"] for tk in b2_topics if tk in category_stats)
+        b2_acc = (b2_corr / b2_tot * 100) if b2_tot > 0 else 0.0
+
+        col_b1, col_b2 = st.columns(2)
+        with col_b1:
+            with st.container(border=True):
+                st.markdown("#### 📦 **Bloco 1:** Transporte em Membranas (T1 a T8)")
+                st.markdown(f"**Respostas Registradas:** `{b1_tot}` | **Taxa de Acerto:** `{b1_acc:.1f}%` ({b1_corr}/{b1_tot})")
+                st.progress(b1_acc / 100.0 if b1_tot > 0 else 0.0)
+        with col_b2:
+            with st.container(border=True):
+                st.markdown("#### ⚡ **Bloco 2:** Bioeletrogênese & Potenciais (T9 e T10)")
+                st.markdown(f"**Respostas Registradas:** `{b2_tot}` | **Taxa de Acerto:** `{b2_acc:.1f}%` ({b2_corr}/{b2_tot})")
+                st.progress(b2_acc / 100.0 if b2_tot > 0 else 0.0)
+
+        st.markdown("<div style='margin-top: 1rem;'></div>", unsafe_allow_html=True)
+        
+        selected_block_view = st.radio(
+            "Filtrar Tópicos por Bloco:",
+            ["Todos os Tópicos (T1 a T10)", "Apenas Bloco 1 (T1 a T8 - Transporte)", "Apenas Bloco 2 (T9 e T10 - Bioeletrogênese)"],
+            horizontal=True
+        )
+
+        st.markdown("### <span class='material-icons-outlined' style='font-size:22px; vertical-align:middle; color:#10b981;'>leaderboard</span> Ranking de Desempenho por Categoria", unsafe_allow_html=True)
         st.markdown("<p style='font-size:0.88rem; color:#64748b;'>Clique em qualquer tópico para ver o detalhamento específico de cada questão e os distratores mais assinalados.</p>", unsafe_allow_html=True)
 
+        if "Bloco 1" in selected_block_view:
+            filtered_topics = b1_topics
+        elif "Bloco 2" in selected_block_view:
+            filtered_topics = b2_topics
+        else:
+            filtered_topics = list(TOPICS.keys())
+
         ranked_cats = sorted(
-            category_stats.values(),
+            [c for c in category_stats.values() if c["topico_id"] in filtered_topics],
             key=lambda x: (x['correct_attempts'] / x['total_attempts'] * 100) if x['total_attempts'] > 0 else 0.0
         )
 
@@ -477,8 +515,9 @@ def show_advanced_professor_dashboard():
             tot = cat["total_attempts"]
             corr = cat["correct_attempts"]
             rate = (corr / tot * 100) if tot > 0 else 0.0
+            block_tag = " [Bloco 1]" if t_id in b1_topics else " [Bloco 2]"
             
-            with st.expander(f"📌 {t_id}: {t_name} — {rate:.1f}% de Acerto ({corr}/{tot} tentativas)", expanded=False):
+            with st.expander(f"📌 {t_id}{block_tag}: {t_name} — {rate:.1f}% de Acerto ({corr}/{tot} tentativas)", expanded=False):
                 q_list = list(cat["questions"].values())
                 for q in q_list:
                     q_tot = q["total_attempts"]
@@ -559,11 +598,35 @@ def show_advanced_professor_dashboard():
                 st.metric("Questão Alcançada", str(cur_q_id).upper() if cur_q_id else "N/A")
                 
             st.markdown("---")
+
+            # ── DESEMPENHO DO ALUNO POR BLOCO ──
+            q_map_all = {q['id']: q for q in QUESTIONS}
+            s_b1_cases = [cid for cid in used_cases_list if q_map_all.get(cid, {}).get("topico_id") in b1_topics]
+            s_b2_cases = [cid for cid in used_cases_list if q_map_all.get(cid, {}).get("topico_id") in b2_topics]
+
+            sc1, sc2 = st.columns(2)
+            with sc1:
+                with st.container(border=True):
+                    st.markdown("#### 📦 **Bloco 1 (T1-T8):** Transporte em Membranas")
+                    st.markdown(f"**Questões Respondidas:** `{len(s_b1_cases)}` questões")
+            with sc2:
+                with st.container(border=True):
+                    st.markdown("#### ⚡ **Bloco 2 (T9-T10):** Bioeletrogênese & Potenciais")
+                    st.markdown(f"**Questões Respondidas:** `{len(s_b2_cases)}` questões")
+
+            st.markdown("<div style='margin-top: 1rem;'></div>", unsafe_allow_html=True)
             
             col_perf, col_chat = st.columns([1.1, 0.9], gap="large")
             
             with col_perf:
                 st.markdown("### <span class='material-icons-outlined' style='font-size:20px; vertical-align:middle;'>assignment</span> Questões Respondidas pelo Aluno", unsafe_allow_html=True)
+                
+                block_filter_st = st.selectbox(
+                    "Filtrar Lista de Questões:",
+                    ["Todos os Blocos (T1 a T10)", "Apenas Bloco 1 (T1 a T8)", "Apenas Bloco 2 (T9 e T10)"],
+                    key=f"flt_st_{uid}"
+                )
+                
                 if not cases and not used_cases_list:
                     st.info("Este aluno ainda não respondeu nenhuma questão.")
                 else:
@@ -574,52 +637,36 @@ def show_advanced_professor_dashboard():
                     else:
                         display_list = [{"case_id": cid, "case_result": {"is_correct": True, "user_answer": "Questão concluída no percurso adaptativo", "points_gained": 1.0}, "duration_seconds": 0.0} for cid in used_cases_list]
                         
-                    for idx, c in enumerate(display_list, 1):
-                        cid = c.get("case_id", "")
-                        q = q_map.get(cid, {})
-                        res = c.get("case_result", {})
-                        is_c = bool(res.get("is_correct", False) or res.get("points_gained", 0) >= 1.0)
-                        dur_c = c.get("duration_seconds", 0)
-                        
-                        card_border = "#10b981" if is_c else "#ef4444"
-                        status_tag = f"<span class='material-icons-outlined' style='font-size:16px; vertical-align:middle; color:{card_border};'>{'check_circle' if is_c else 'cancel'}</span> {'Correto (+1.0 pt)' if is_c else 'Incorreto (0.0 pt)'}"
-                        
-                        with st.container(border=True):
-                            st.markdown(f"""
-                            <div style='display:flex; justify-content:space-between; align-items:center;'>
-                                <b>Questão {idx}: {q.get('codigo', cid)} ({q.get('topico_id', '')} - {q.get('dificuldade', '')})</b>
-                                <span style='font-weight:700; color:{card_border};'>{status_tag}</span>
-                            </div>
-                            <div style='font-size:0.9rem; margin: 0.4rem 0;'>
-                                {q.get('pergunta', '')}
-                            </div>
-                            <div style='font-size:0.85rem; color:#64748b;'>
-                                <b>Resposta do Aluno:</b> {res.get('user_answer', 'N/A')} {f'|  <b>Tempo:</b> {format_duration(dur_c)}' if dur_c > 0 else ''}
-                            </div>
-                            """, unsafe_allow_html=True)
+                    # Filtra lista conforme bloco selecionado
+                    if "Bloco 1" in block_filter_st:
+                        display_list = [c for c in display_list if q_map.get(c.get("case_id", ""), {}).get("topico_id") in b1_topics]
+                    elif "Bloco 2" in block_filter_st:
+                        display_list = [c for c in display_list if q_map.get(c.get("case_id", ""), {}).get("topico_id") in b2_topics]
+
+                    if not display_list:
+                        st.info("Nenhuma questão registrada neste bloco para este aluno.")
+                    else:
+                        for idx, c in enumerate(display_list, 1):
+                            cid = c.get("case_id", "")
+                            q = q_map.get(cid, {})
+                            res = c.get("case_result", {})
+                            is_c = bool(res.get("is_correct", False) or res.get("points_gained", 0) >= 1.0)
+                            dur_c = c.get("duration_seconds", 0)
                             
-                            if not is_c:
-                                user_ans_str = str(res.get('user_answer', ''))
-                                sel_opt = res.get("selected_option")
-                                if not sel_opt and user_ans_str and user_ans_str[0] in ["A", "B", "C", "D"]:
-                                    sel_opt = user_ans_str[0]
-                                    
-                                why_d = res.get("why_distractor")
-                                # Se why_d for nulo ou incompleto (ex: "Induz ao erro comum de "), reconstrói com base na questão
-                                if not why_d or why_d.strip().endswith("erro comum de") or why_d.strip().endswith("frequente de") or len(why_d.strip()) < 15:
-                                    if sel_opt and q.get("distratores") and sel_opt in q["distratores"]:
-                                        d_raw = q["distratores"][sel_opt]
-                                        if d_raw:
-                                            if d_raw.startswith("confundir") or d_raw.startswith("considerar") or d_raw.startswith("generalizar") or d_raw.startswith("assumir"):
-                                                why_d = f"Induz ao erro comum de {d_raw}"
-                                            else:
-                                                why_d = d_raw
-                                    if not why_d or len(why_d.strip()) < 10:
-                                        why_d = res.get("why_wrong") or res.get("distractor_feedback") or "Esta alternativa aborda um conceito incorreto referente ao enunciado."
-                                        
+                            card_border = "#10b981" if is_c else "#ef4444"
+                            status_tag = f"<span class='material-icons-outlined' style='font-size:16px; vertical-align:middle; color:{card_border};'>{'check_circle' if is_c else 'cancel'}</span> {'Correto (+1.0 pt)' if is_c else 'Incorreto (0.0 pt)'}"
+                            
+                            with st.container(border=True):
                                 st.markdown(f"""
-                                <div style='background: rgba(239, 68, 68, 0.08); border-left: 3px solid #ef4444; padding: 8px 12px; border-radius: 4px; margin-top: 6px; font-size: 0.85rem;'>
-                                    <b>Análise do Distrator (Por que induz ao erro):</b><br>{why_d}
+                                <div style='display:flex; justify-content:space-between; align-items:center;'>
+                                    <b>Questão {idx}: {q.get('codigo', cid)} ({q.get('topico_id', '')} - {q.get('dificuldade', '')})</b>
+                                    <span style='font-weight:700; color:{card_border};'>{status_tag}</span>
+                                </div>
+                                <div style='font-size:0.9rem; margin: 0.4rem 0;'>
+                                    {q.get('pergunta', '')}
+                                </div>
+                                <div style='font-size:0.85rem; color:#64748b;'>
+                                    <b>Resposta do Aluno:</b> {res.get('user_answer', 'N/A')} {f'|  <b>Tempo:</b> {format_duration(dur_c)}' if dur_c > 0 else ''}
                                 </div>
                                 """, unsafe_allow_html=True)
 

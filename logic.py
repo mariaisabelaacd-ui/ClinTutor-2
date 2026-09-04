@@ -86,7 +86,20 @@ TOPICS = {
     "T5": "Osmose, osmolaridade e tonicidade",
     "T6": "Transporte ativo primário",
     "T7": "Transporte ativo secundário: simporte e antiporte",
-    "T8": "Função da Na⁺/K⁺-ATPase"
+    "T8": "Função da Na⁺/K⁺-ATPase",
+    "T9": "Gradientes eletroquímicos e Equação de Nernst",
+    "T10": "Potencial de membrana em repouso (Goldman e bomba Na⁺/K⁺ATPase)"
+}
+
+BLOCKS = {
+    "Bloco 1": {
+        "nome": "Transporte em Membranas Biológicas",
+        "topicos": ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8"]
+    },
+    "Bloco 2": {
+        "nome": "Bioeletrogênese e Potenciais de Membrana",
+        "topicos": ["T9", "T10"]
+    }
 }
 
 # =============================
@@ -1333,6 +1346,823 @@ QUESTIONS: List[Dict[str, Any]] = [
         "componentes_conhecimento": [
             "Função da Na⁺/K⁺-ATPase",
             "Função da Na⁺/K⁺-ATPase (Difícil)"
+        ]
+    },
+    # =========================================================================
+    # TÓPICO T9: GRADIENTES ELETROQUÍMICOS E EQUAÇÃO DE NERNST (15 QUESTÕES)
+    # =========================================================================
+    {
+        "id": "t9_1",
+        "codigo": "T9.1",
+        "topico_id": "T9",
+        "topico_nome": "Gradientes eletroquímicos e Equação de Nernst",
+        "dificuldade": "Fácil",
+        "pergunta": "Em uma célula teórica permeável apenas ao K⁺, com [K⁺] maior dentro do que fora, o fluxo inicial resultante de K⁺ para fora da célula é determinado, essencialmente, pelo gradiente:",
+        "alternativas": {
+            "A": "Elétrico",
+            "B": "Químico (de concentração)",
+            "C": "Eletroquímico, pois desde o início ambos os gradientes têm igual magnitude",
+            "D": "Nenhum, pois no início não há qualquer força atuando"
+        },
+        "gabarito": "B",
+        "distratores": {
+            "A": "No instante inicial, não há ainda diferença de cargas, logo não há gradiente elétrico atuando.",
+            "B": "Gabarito correto.",
+            "C": "Erro de assumir que os dois gradientes já estão presentes e equilibrados desde o início — o gradiente elétrico só se desenvolve à medida que o K⁺ se difunde.",
+            "D": "Ignora que o gradiente químico, por si só, já é uma força suficiente para gerar fluxo."
+        },
+        "pontuacao_maxima": 1.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+            "Gradientes eletroquímicos e Equação de Nernst",
+            "Gradientes eletroquímicos e Equação de Nernst (Fácil)"
+        ]
+    },
+    {
+        "id": "t9_2",
+        "codigo": "T9.2",
+        "topico_id": "T9",
+        "topico_nome": "Gradientes eletroquímicos e Equação de Nernst",
+        "dificuldade": "Fácil",
+        "pergunta": "A partir de um gradiente de concentração inicial com concentração maior de K⁺ no meio intracelular, à medida que o K⁺ se difunde para fora da célula, a carga elétrica líquida no interior da célula torna-se:",
+        "alternativas": {
+            "A": "Nula",
+            "B": "Positiva",
+            "C": "Negativa",
+            "D": "Impossível de determinar sem mais dados"
+        },
+        "gabarito": "C",
+        "distratores": {
+            "A": "Ignora que a saída de cátions deixa para trás os ânions (contra-íons) intracelulares.",
+            "B": "Inverte o sinal — confunde o efeito da saída de K⁺ (cátion) com uma suposta entrada de carga positiva.",
+            "C": "Gabarito correto.",
+            "D": "O sentido da carga é determinável pela lógica de eletroneutralidade, mesmo sem valores numéricos."
+        },
+        "pontuacao_maxima": 1.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+            "Gradientes eletroquímicos e Equação de Nernst",
+            "Gradientes eletroquímicos e Equação de Nernst (Fácil)"
+        ]
+    },
+    {
+        "id": "t9_3",
+        "codigo": "T9.3",
+        "topico_id": "T9",
+        "topico_nome": "Gradientes eletroquímicos e Equação de Nernst",
+        "dificuldade": "Fácil",
+        "pergunta": "O equilíbrio eletroquímico de um íon é definido como o estado em que:",
+        "alternativas": {
+            "A": "As concentrações do íon se igualam nos dois lados da membrana",
+            "B": "O íon para de atravessar a membrana em ambos os sentidos",
+            "C": "A célula atinge seu potencial de repouso definitivo",
+            "D": "A força do gradiente químico é contrabalançada pela força do gradiente elétrico"
+        },
+        "gabarito": "D",
+        "distratores": {
+            "A": "Erro conceitual muito comum: confundir equilíbrio eletroquímico com igualdade de concentrações — as concentrações permanecem diferentes; o que se equilibra são as forças, não as concentrações.",
+            "B": "No equilíbrio, o íon continua se difundindo nos dois sentidos, mas o fluxo líquido é zero — não há cessação do movimento.",
+            "C": "Confunde equilíbrio de um único íon com o potencial de repouso da célula, que envolve múltiplos íons.",
+            "D": "Gabarito correto."
+        },
+        "pontuacao_maxima": 1.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+            "Gradientes eletroquímicos e Equação de Nernst",
+            "Gradientes eletroquímicos e Equação de Nernst (Fácil)"
+        ]
+    },
+    {
+        "id": "t9_4",
+        "codigo": "T9.4",
+        "topico_id": "T9",
+        "topico_nome": "Gradientes eletroquímicos e Equação de Nernst",
+        "dificuldade": "Fácil",
+        "pergunta": "A equação de Nernst é utilizada para calcular:",
+        "alternativas": {
+            "A": "O potencial de membrana resultante de múltiplos íons simultaneamente",
+            "B": "A quantidade de ATP consumida pela bomba Na⁺/K⁺-ATPase",
+            "C": "O potencial de equilíbrio eletroquímico de um único íon",
+            "D": "A velocidade de difusão de um soluto através da membrana"
+        },
+        "gabarito": "C",
+        "distratores": {
+            "A": "Essa é a função da equação de Goldman, não da de Nernst.",
+            "B": "A equação de Nernst não trata de gasto energético algum — é um cálculo de equilíbrio termodinâmico passivo.",
+            "C": "Gabarito correto.",
+            "D": "Confunde potencial elétrico com velocidade de transporte."
+        },
+        "pontuacao_maxima": 1.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+            "Gradientes eletroquímicos e Equação de Nernst",
+            "Gradientes eletroquímicos e Equação de Nernst (Fácil)"
+        ]
+    },
+    {
+        "id": "t9_5",
+        "codigo": "T9.5",
+        "topico_id": "T9",
+        "topico_nome": "Gradientes eletroquímicos e Equação de Nernst",
+        "dificuldade": "Fácil",
+        "pergunta": "Em uma célula permeável apenas a um ânion, a fórmula correta a ser usada para calcular seu potencial de equilíbrio é:",
+        "alternativas": {
+            "A": "A fórmula com o sinal invertido em relação à dos cátions, e com a razão [íon]e/[íon]i em vez de [íon]i/[íon]e",
+            "B": "A mesma fórmula usada para cátions, sem qualquer ajuste",
+            "C": "Não é possível calcular o potencial de equilíbrio para ânions",
+            "D": "A fórmula de Goldman, pois ânions não seguem a equação de Nernst"
+        },
+        "gabarito": "A",
+        "distratores": {
+            "A": "Gabarito correto.",
+            "B": "Erro muito comum: usar a fórmula de cátion para um ânion, gerando sinal invertido no resultado.",
+            "C": "Ânions também atingem equilíbrio eletroquímico e têm potencial de Nernst calculável normalmente.",
+            "D": "Confunde novamente Nernst (um íon) com Goldman (múltiplos íons) — a equação de Goldman não é exigida aqui, pois a célula é permeável a um único íon."
+        },
+        "pontuacao_maxima": 1.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+            "Gradientes eletroquímicos e Equação de Nernst",
+            "Gradientes eletroquímicos e Equação de Nernst (Fácil)"
+        ]
+    },
+    {
+        "id": "t9_6",
+        "codigo": "T9.6",
+        "topico_id": "T9",
+        "topico_nome": "Gradientes eletroquímicos e Equação de Nernst",
+        "dificuldade": "Média",
+        "pergunta": "Se a concentração extracelular de K⁺ de uma célula dobra (mantendo a intracelular constante), o valor absoluto do potencial de equilíbrio do K⁺ (EK+):",
+        "alternativas": {
+            "A": "Aumenta",
+            "B": "Diminui",
+            "C": "Permanece exatamente igual",
+            "D": "Torna-se positivo"
+        },
+        "gabarito": "B",
+        "distratores": {
+            "A": "Inverte o efeito — aumentar [K⁺]e reduz a razão [K⁺]i/[K⁺]e, reduzindo o módulo do potencial calculated, não aumentando.",
+            "B": "Gabarito correto.",
+            "C": "Ignora que a equação de Nernst depende diretamente da razão entre as concentrações.",
+            "D": "Superestima o efeito — dobrar [K⁺]e reduz o módulo do potencial, mas não o suficiente para inverter seu sinal."
+        },
+        "pontuacao_maxima": 2.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+            "Gradientes eletroquímicos e Equação de Nernst",
+            "Gradientes eletroquímicos e Equação de Nernst (Média)"
+        ]
+    },
+    {
+        "id": "t9_7",
+        "codigo": "T9.7",
+        "topico_id": "T9",
+        "topico_nome": "Gradientes eletroquímicos e Equação de Nernst",
+        "dificuldade": "Média",
+        "pergunta": "Se a concentração intracelular de um cátion diminui (mantendo a extracelular constante), o potencial de equilíbrio desse cátion:",
+        "alternativas": {
+            "A": "Fica mais positivo",
+            "B": "Fica mais negativo",
+            "C": "Não se altera, pois só a concentração extracelular importa",
+            "D": "Depende exclusivamente da temperatura, não da concentração"
+        },
+        "gabarito": "A",
+        "distratores": {
+            "A": "Gabarito correto.",
+            "B": "Inverte o efeito esperado pela fórmula de Nernst para cátions.",
+            "C": "Ignora que a razão [íon]i/[íon]e depende de ambas as concentrações.",
+            "D": "A temperatura afeta a magnitude, mas não anula o efeito das concentrações — erro de superestimar o papel da temperatura."
+        },
+        "pontuacao_maxima": 2.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+            "Gradientes eletroquímicos e Equação de Nernst",
+            "Gradientes eletroquímicos e Equação de Nernst (Média)"
+        ]
+    },
+    {
+        "id": "t9_8",
+        "codigo": "T9.8",
+        "topico_id": "T9",
+        "topico_nome": "Gradientes eletroquímicos e Equação de Nernst",
+        "dificuldade": "Média",
+        "pergunta": "Um paciente com insuficiência renal crônica desenvolve hipercalemia (aumento do K⁺ extracelular). O que ocorre com o potencial de equilíbrio do K⁺ (EK+) nas suas células?",
+        "alternativas": {
+            "A": "Torna-se mais negativo que o valor fisiológico normal",
+            "B": "Não se altera, pois EK+ depende só da concentração intracelular",
+            "C": "Inverte de sinal, tornando-se positivo",
+            "D": "Torna-se menos negativo que o valor fisiológico normal"
+        },
+        "gabarito": "D",
+        "distratores": {
+            "A": "Inverte a direção do efeito da hipercalemia sobre o EK+.",
+            "B": "Ignora que a equação de Nernst depende da razão entre as duas concentrações, não apenas da intracelular.",
+            "C": "Superestima a magnitude do efeito — mesmo com hipercalemia relevante, o EK+ permanece negativo, apenas menos negativo.",
+            "D": "Gabarito correto."
+        },
+        "pontuacao_maxima": 2.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+            "Gradientes eletroquímicos e Equação de Nernst",
+            "Gradientes eletroquímicos e Equação de Nernst (Média)"
+        ]
+    },
+    {
+        "id": "t9_9",
+        "codigo": "T9.9",
+        "topico_id": "T9",
+        "topico_nome": "Gradientes eletroquímicos e Equação de Nernst",
+        "dificuldade": "Média",
+        "pergunta": "Utilizando as concentrações fisiológicas padrão (Na⁺ intracelular = 15 mM; Na⁺ extracelular = 140 mM), o potencial de equilíbrio eletroquímico do Na⁺ (ENa+), a 37 °C, é aproximadamente:",
+        "alternativas": {
+            "A": "+59,7 mV",
+            "B": "−59,7 mV",
+            "C": "+15,0 mV",
+            "D": "−140 mV"
+        },
+        "gabarito": "A",
+        "distratores": {
+            "A": "Gabarito correto.",
+            "B": "Erro de sinal — esquecer que, para o Na⁺ (concentrado fora da célula), a razão intracelular/extracelular é menor que 1, mas a fórmula de cátion ainda resulta em valor positivo quando a concentração extracelular é maior.",
+            "C": "Erro de usar diretamente um valor de concentração como se fosse o resultado do cálculo logarítmico, sem aplicar a equação de Nernst corretamente.",
+            "D": "Erro de usar diretamente um valor de concentração como se fosse o resultado do cálculo logarítmico, sem aplicar a equação de Nernst corretamente."
+        },
+        "pontuacao_maxima": 2.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+            "Gradientes eletroquímicos e Equação de Nernst",
+            "Gradientes eletroquímicos e Equação de Nernst (Média)"
+        ]
+    },
+    {
+        "id": "t9_10",
+        "codigo": "T9.10",
+        "topico_id": "T9",
+        "topico_nome": "Gradientes eletroquímicos e Equação de Nernst",
+        "dificuldade": "Média",
+        "pergunta": "Utilizando as concentrações fisiológicas padrão (Cl⁻ intracelular = 10 mM; Cl⁻ extracelular = 130 mM), o potencial de equilíbrio eletroquímico do Cl⁻, a 37 °C, é aproximadamente:",
+        "alternativas": {
+            "A": "+68,5 mV",
+            "B": "−68,5 mV",
+            "C": "−10,0 mV",
+            "D": "+130 mV"
+        },
+        "gabarito": "B",
+        "distratores": {
+            "A": "Erro clássico de usar a fórmula de cátion para um ânion, invertendo o sinal do resultado correto.",
+            "B": "Gabarito correto.",
+            "C": "Uso incorreto de um valor de concentração bruto como resposta, sem aplicar a fórmula logarítmica.",
+            "D": "Uso incorreto de um valor de concentração bruto como resposta, sem aplicar a fórmula logarítmica."
+        },
+        "pontuacao_maxima": 2.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+            "Gradientes eletroquímicos e Equação de Nernst",
+            "Gradientes eletroquímicos e Equação de Nernst (Média)"
+        ]
+    },
+    {
+        "id": "t9_11",
+        "codigo": "T9.11",
+        "topico_id": "T9",
+        "topico_nome": "Gradientes eletroquímicos e Equação de Nernst",
+        "dificuldade": "Difícil",
+        "pergunta": "Duas células teóricas são permeáveis apenas ao K⁺.\nCélula I: [K⁺]i = 140 mM, [K⁺]e = 4 mM.\nCélula II: [K⁺]i = 140 mM, [K⁺]e = 8 mM.\nOs valores de EK+ a 37 °C para as células I e II, respectivamente, são aproximadamente:",
+        "alternativas": {
+            "A": "−41,2 mV e −33,2 mV",
+            "B": "−89,6 mV e −72,1 mV",
+            "C": "−94,9 mV e −76,4 mV",
+            "D": "−60,0 mV e −60,0 mV"
+        },
+        "gabarito": "C",
+        "distratores": {
+            "A": "Valores subestimados — erro provável de aplicar incorretamente a constante 61,5 ou trocar a base do logaritmo.",
+            "B": "Valores próximos, mas não coincidem com o cálculo correto — erro de arredondamento sistemático ou uso de uma constante ligeiramente incorreta.",
+            "C": "Gabarito correto.",
+            "D": "Ignora completamente que EK+ depende da razão entre concentrações, não apenas da concentração intracelular — erro conceitual grave."
+        },
+        "pontuacao_maxima": 3.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+            "Gradientes eletroquímicos e Equação de Nernst",
+            "Gradientes eletroquímicos e Equação de Nernst (Difícil)"
+        ]
+    },
+    {
+        "id": "t9_12",
+        "codigo": "T9.12",
+        "topico_id": "T9",
+        "topico_nome": "Gradientes eletroquímicos e Equação de Nernst",
+        "dificuldade": "Difícil",
+        "pergunta": "Comparando as duas células a seguir:\nCélula I: [K⁺]i = 140 mM, [K⁺]e = 4 mM.\nCélula II: [K⁺]i = 140 mM, [K⁺]e = 8 mM.\nÉ correto afirmar que:",
+        "alternativas": {
+            "A": "A célula II é mais polarizada, pois tem maior [K⁺]e",
+            "B": "As duas células têm exatamente a mesma polaridade, pois [K⁺]i é igual",
+            "C": "Não é possível comparar a polaridade sem saber a permeabilidade a outros íons",
+            "D": "A célula I é mais polarizada, pois apresenta maior gradiente de potencial químico"
+        },
+        "gabarito": "D",
+        "distratores": {
+            "A": "Inverte a relação — maior [K⁺]e reduz o gradiente químico e, portanto, reduz (em módulo) o potencial de equilíbrio.",
+            "B": "Ignora que a razão entre concentrações (não apenas uma delas) determina o potencial.",
+            "C": "Confunde o conceito de potencial de equilíbrio de um íon isolado (que não depende de outros íons) com o potencial de membrana real da célula (que depende de todas as permeabilidades).",
+            "D": "Gabarito correto."
+        },
+        "pontuacao_maxima": 3.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+            "Gradientes eletroquímicos e Equação de Nernst",
+            "Gradientes eletroquímicos e Equação de Nernst (Difícil)"
+        ]
+    },
+    {
+        "id": "t9_13",
+        "codigo": "T9.13",
+        "topico_id": "T9",
+        "topico_nome": "Gradientes eletroquímicos e Equação de Nernst",
+        "dificuldade": "Difícil",
+        "pergunta": "Um estudante calcula EK+ a 37 °C usando [K⁺]i = 140 mM e [K⁺]e = 4 mM, mas erra ao inverter a razão da fórmula, calculando -61,5 X log(4/140) em vez de -61,5 X log(140/4). Qual é a consequência desse erro?",
+        "alternativas": {
+            "A": "O módulo do resultado muda, mas o sinal permanece correto",
+            "B": "O resultado se torna zero",
+            "C": "O sinal do resultado se inverte, mas o módulo permanece o mesmo",
+            "D": "O erro não tem nenhum efeito sobre o resultado final"
+        },
+        "gabarito": "C",
+        "distratores": {
+            "A": "Erro de subestimar o efeito da inversão — inverter a razão dentro de um logaritmo inverte o sinal do resultado (log(x) = −log(1/x)), sem alterar o módulo.",
+            "B": "Confunde inversão de razão com igualdade de concentrações (que geraria log(1) = 0) — não é o caso aqui.",
+            "C": "Gabarito correto.",
+            "D": "Ignora completamente a propriedade logarítmica envolvida."
+        },
+        "pontuacao_maxima": 3.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+            "Gradientes eletroquímicos e Equação de Nernst",
+            "Gradientes eletroquímicos e Equação de Nernst (Difícil)"
+        ]
+    },
+    {
+        "id": "t9_14",
+        "codigo": "T9.14",
+        "topico_id": "T9",
+        "topico_nome": "Gradientes eletroquímicos e Equação de Nernst",
+        "dificuldade": "Difícil",
+        "pergunta": "À temperatura de 20 °C, considerando as concentrações iônicas intra e extracelular inalteradas, o resultado do potencial de equilíbrio eletroquímico de um íon será:",
+        "alternativas": {
+            "A": "Idêntico ao de 37 °C, pois a temperatura não influencia o potencial de equilíbrio",
+            "B": "Ligeiramente menor em módulo do que o valor calculado a 37 °C",
+            "C": "Ligeiramente maior em módulo do que o valor calculado a 37 °C",
+            "D": "Invertido em sinal, pois a temperatura afeta a direção do gradiente elétrico"
+        },
+        "gabarito": "B",
+        "distratores": {
+            "A": "Ignora que a constante RT/F da equação depende diretamente da temperatura absoluta.",
+            "B": "Gabarito correto.",
+            "C": "Inverte a relação — uma constante menor (58 < 61,5) produz um módulo menor, não maior.",
+            "D": "A temperatura afeta apenas a magnitude da constante multiplicativa, não o sinal do gradiente químico, que depende só das concentrações."
+        },
+        "pontuacao_maxima": 3.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+            "Gradientes eletroquímicos e Equação de Nernst",
+            "Gradientes eletroquímicos e Equação de Nernst (Difícil)"
+        ]
+    },
+    {
+        "id": "t9_15",
+        "codigo": "T9.15",
+        "topico_id": "T9",
+        "topico_nome": "Gradientes eletroquímicos e Equação de Nernst",
+        "dificuldade": "Difícil",
+        "pergunta": "Por que uma célula real nunca atinge simultaneamente o equilíbrio eletroquímico de todos os seus íons permeantes (K⁺, Na⁺ e Cl⁻) ao mesmo tempo?",
+        "alternativas": {
+            "A": "Porque a bomba Na⁺/K⁺-ATPase impede fisicamente que qualquer íon atinja seu equilíbrio",
+            "B": "Porque cada íon tem um potencial de equilíbrio diferente, e a membrana só pode estar em um único valor de potencial elétrico por vez",
+            "C": "Porque, na prática, apenas o K⁺ segue a equação de Nernst; os demais íons não",
+            "D": "Porque as concentrações de todos os íons são sempre idênticas dentro e fora da célula"
+        },
+        "gabarito": "B",
+        "distratores": {
+            "A": "Superestima o papel da bomba — mesmo sem qualquer bomba, íons diferentes com concentrações diferentes já teriam potenciais de equilíbrio distintos entre si, por pura difusão.",
+            "B": "Gabarito correto.",
+            "C": "Erro conceitual — a equação de Nernst se aplica a qualquer íon permeante, não é exclusiva do K⁺.",
+            "D": "Contradiz a própria premissa da bioeletrogênese: é justamente a diferença de concentração entre os meios que gera os potenciais."
+        },
+        "pontuacao_maxima": 3.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+            "Gradientes eletroquímicos e Equação de Nernst",
+            "Gradientes eletroquímicos e Equação de Nernst (Difícil)"
+        ]
+    },
+
+    # =========================================================================
+    # TÓPICO T10: POTENCIAL DE MEMBRANA EM REPOUSO (15 QUESTÕES)
+    # =========================================================================
+    {
+        "id": "t10_1",
+        "codigo": "T10.1",
+        "topico_id": "T10",
+        "topico_nome": "Potencial de membrana em repouso (Goldman e bomba Na⁺/K⁺ATPase)",
+        "dificuldade": "Fácil",
+        "pergunta": "O potencial de repouso é a diferença de potencial elétrico através da membrana quando a célula:",
+        "alternativas": {
+            "A": "Está gerando um potencial de ação",
+            "B": "Está em condição basal, sem estímulos externos alterando seu estado",
+            "C": "Está com a bomba Na⁺/K⁺-ATPase inibida",
+            "D": "Atingiu o equilíbrio eletroquímico simultâneo de todos os íons"
+        },
+        "gabarito": "B",
+        "distratores": {
+            "A": "Confunde estado de repouso com estado ativado.",
+            "B": "Gabarito correto.",
+            "C": "Assume incorretamente que inibir a bomba é condição necessária para definir 'repouso'.",
+            "D": "O potencial de repouso é, na verdade, um estado estável, porém fora do equilíbrio (dissipativo)."
+        },
+        "pontuacao_maxima": 1.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+            "Potencial de membrana em repouso (Goldman e bomba Na⁺/K⁺ATPase)",
+            "Potencial de membrana em repouso (Fácil)"
+        ]
+    },
+    {
+        "id": "t10_2",
+        "codigo": "T10.2",
+        "topico_id": "T10",
+        "topico_nome": "Potencial de membrana em repouso (Goldman e bomba Na⁺/K⁺ATPase)",
+        "dificuldade": "Fácil",
+        "pergunta": "Para calcular o potencial de membrana de uma célula permeável simultaneamente a K⁺, Na⁺ e Cl⁻, com permeabilidades relativas diferentes para cada íon, deve-se utilizar:",
+        "alternativas": {
+            "A": "A equação de Nernst, aplicada separadamente a cada íon e depois somada",
+            "B": "A lei de Fick, sem qualquer ajuste",
+            "C": "Não é possível calcular esse valor com as ferramentas da eletrofisiologia básica",
+            "D": "A equação de Goldman-Hodgkin-Katz, que pondera cada íon por sua permeabilidade relativa"
+        },
+        "gabarito": "D",
+        "distratores": {
+            "A": "Erro comum: simplesmente somar potenciais de Nernst individuais não é matematicamente equivalente à equação de Goldman, que pondera cada íon por sua permeabilidade.",
+            "B": "A lei de Fick descreve difusão em geral, mas não incorpora o efeito do campo elétrico nem as permeabilidades relativas específicas necessárias aqui.",
+            "C": "A equação de Goldman existe exatamente para resolver esse problema.",
+            "D": "Gabarito correto."
+        },
+        "pontuacao_maxima": 1.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+            "Potencial de membrana em repouso (Goldman e bomba Na⁺/K⁺ATPase)",
+            "Potencial de membrana em repouso (Fácil)"
+        ]
+    },
+    {
+        "id": "t10_3",
+        "codigo": "T10.3",
+        "topico_id": "T10",
+        "topico_nome": "Potencial de membrana em repouso (Goldman e bomba Na⁺/K⁺ATPase)",
+        "dificuldade": "Fácil",
+        "pergunta": "Na maioria das células em repouso, o íon com maior influência sobre o valor do potencial de membrana é o:",
+        "alternativas": {
+            "A": "Na⁺, pois está mais concentrado no meio extracelular",
+            "B": "Cl⁻, pois é o único ânion relevante",
+            "C": "K⁺, pois a membrana costuma ter maior permeabilidade relativa a ele",
+            "D": "Ca²⁺, pois participa da maioria dos processos de sinalização celular"
+        },
+        "gabarito": "C",
+        "distratores": {
+            "A": "Apesar do grande gradiente de concentração do Na⁺, sua baixa permeabilidade relativa em repouso faz com que sua influência sobre o Vm seja pequena.",
+            "B": "Erro de generalização — a influência do Cl⁻ existe, mas costuma ser menor que a do K⁺ na maioria das células.",
+            "C": "Gabarito correto.",
+            "D": "O Ca²⁺ não é considerado na equação de Goldman básica trabalhada aqui, nem é o determinante do potencial de repouso na maioria das células."
+        },
+        "pontuacao_maxima": 1.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+            "Potencial de membrana em repouso (Goldman e bomba Na⁺/K⁺ATPase)",
+            "Potencial de membrana em repouso (Fácil)"
+        ]
+    },
+    {
+        "id": "t10_4",
+        "codigo": "T10.4",
+        "topico_id": "T10",
+        "topico_nome": "Potencial de membrana em repouso (Goldman e bomba Na⁺/K⁺ATPase)",
+        "dificuldade": "Fácil",
+        "pergunta": "A bomba Na⁺/K⁺-ATPase tem a função de:",
+        "alternativas": {
+            "A": "Permitir a entrada passiva de Na⁺ e a saída passiva de K⁺",
+            "B": "Transportar Na⁺ para fora e K⁺ para dentro da célula, usando ATP, contra os respectivos gradientes de concentração",
+            "C": "Calcular o potencial de equilíbrio eletroquímico dos dois íons",
+            "D": "Substituir a necessidade da equação de Goldman no cálculo do potencial de membrana"
+        },
+        "gabarito": "B",
+        "distratores": {
+            "A": "Inverte completamente a função da bomba, além de erroneamente descrevê-la como transporte passivo.",
+            "B": "Gabarito correto.",
+            "C": "Confunde uma proteína de transporte com uma ferramenta matemática de cálculo.",
+            "D": "A bomba é um mecanismo biológico; a equação de Goldman continua sendo a ferramenta usada para calcular o Vm resultante."
+        },
+        "pontuacao_maxima": 1.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+            "Potencial de membrana em repouso (Goldman e bomba Na⁺/K⁺ATPase)",
+            "Potencial de membrana em repouso (Fácil)"
+        ]
+    },
+    {
+        "id": "t10_5",
+        "codigo": "T10.5",
+        "topico_id": "T10",
+        "topico_nome": "Potencial de membrana em repouso (Goldman e bomba Na⁺/K⁺ATPase)",
+        "dificuldade": "Fácil",
+        "pergunta": "O potencial de repouso da membrana é considerado um potencial 'dissipativo' porque:",
+        "alternativas": {
+            "A": "Nele, persistem fluxos líquidos de Na⁺ e K⁺ através da membrana",
+            "B": "Ele se dissipa completamente após alguns segundos, sem a bomba Na⁺/K⁺-ATPase",
+            "C": "Ele representa o equilíbrio eletroquímico simultâneo de todos os íons envolvidos",
+            "D": "Ele não depende de nenhum gradiente iônico"
+        },
+        "gabarito": "A",
+        "distratores": {
+            "A": "Gabarito correto.",
+            "B": "Confunde 'dissipativo' com 'temporário/instável' — na verdade, ele é mantido de forma estável justamente pela ação contínua da bomba.",
+            "C": "Contradiz a própria definição de potencial dissipativo, que se opõe ao conceito de equilíbrio eletroquímico simultâneo.",
+            "D": "Ignora que o potencial de repouso depende diretamente dos gradientes iônicos e das permeabilidades relativas."
+        },
+        "pontuacao_maxima": 1.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+            "Potencial de membrana em repouso (Goldman e bomba Na⁺/K⁺ATPase)",
+            "Potencial de membrana em repouso (Fácil)"
+        ]
+    },
+    {
+        "id": "t10_6",
+        "codigo": "T10.6",
+        "topico_id": "T10",
+        "topico_nome": "Potencial de membrana em repouso (Goldman e bomba Na⁺/K⁺ATPase)",
+        "dificuldade": "Média",
+        "pergunta": "Se a permeabilidade relativa da membrana ao Na⁺ aumenta (mantendo as demais permeabilidades constantes), o potencial de membrana (Vm) tende a:",
+        "alternativas": {
+            "A": "Ficar mais negativo, aproximando-se de EK+",
+            "B": "Ficar menos negativo, aproximando-se de ENa+",
+            "C": "Permanecer inalterado, pois Vm depende só das concentrações, não das permeabilidades",
+            "D": "Inverter completamente de sinal instantaneamente, independentemente da magnitude do aumento"
+        },
+        "gabarito": "B",
+        "distratores": {
+            "A": "Inverte a relação esperada — quanto maior a permeabilidade a um íon, mais o Vm se aproxima do potencial de equilíbrio desse íon, que no caso do Na⁺ é positivo.",
+            "B": "Gabarito correto.",
+            "C": "Erro conceitual central da equação de Goldman: ela depende tanto das concentrações quanto das permeabilidades relativas.",
+            "D": "Superestima o efeito — a mudança de Vm é proporcional à magnitude do aumento de permeabilidade, não é um salto binário instantâneo."
+        },
+        "pontuacao_maxima": 2.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+            "Potencial de membrana em repouso (Goldman e bomba Na⁺/K⁺ATPase)",
+            "Potencial de membrana em repouso (Média)"
+        ]
+    },
+    {
+        "id": "t10_7",
+        "codigo": "T10.7",
+        "topico_id": "T10",
+        "topico_nome": "Potencial de membrana em repouso (Goldman e bomba Na⁺/K⁺ATPase)",
+        "dificuldade": "Média",
+        "pergunta": "Em células cuja bomba Na⁺/K⁺-ATPase é eletrogênica, o efeito líquido sobre o Vm, comparado a uma célula com bomba não eletrogênica, é:",
+        "alternativas": {
+            "A": "Tornar o Vm menos negativo do que o esperado pela simples difusão de íons",
+            "B": "Não ter nenhum efeito sobre o Vm, pois a bomba só repõe gradientes",
+            "C": "Inverter o sinal do Vm, tornando-o positivo",
+            "D": "Tornar o Vm ligeiramente mais negativo do que o esperado pela simples difusão de íons"
+        },
+        "gabarito": "D",
+        "distratores": {
+            "A": "Inverte o efeito — como a bomba retira mais cargas positivas do que introduz, ela contribui para um interior ainda mais negativo.",
+            "B": "Ignora justamente a natureza 'eletrogênica' da bomba, que por definição gera uma contribuição direta ao potencial elétrico.",
+            "C": "Superestima grosseiramente a magnitude do efeito — a contribuição eletrogênica é pequena, não suficiente para inverter o sinal do Vm.",
+            "D": "Gabarito correto."
+        },
+        "pontuacao_maxima": 2.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+            "Potencial de membrana em repouso (Goldman e bomba Na⁺/K⁺ATPase)",
+            "Potencial de membrana em repouso (Média)"
+        ]
+    },
+    {
+        "id": "t10_8",
+        "codigo": "T10.8",
+        "topico_id": "T10",
+        "topico_nome": "Potencial de membrana em repouso (Goldman e bomba Na⁺/K⁺ATPase)",
+        "dificuldade": "Média",
+        "pergunta": "Se, hipoteticamente, a permeabilidade relativa da membrana a um único íon for igual a 1 e às demais forem iguais a zero, o valor de Vm calculado pela equação de Goldman será:",
+        "alternativas": {
+            "A": "Igual a zero, independentemente do íon",
+            "B": "Será positivo, independentemente do íon escolhido",
+            "C": "Numericamente igual ao potencial de equilíbrio eletroquímico desse único íon",
+            "D": "Impossível de calcular, pois a equação de Goldman exige ao menos dois íons permeantes"
+        },
+        "gabarito": "C",
+        "distratores": {
+            "A": "Ignora que, com permeabilidade exclusiva a um íon, a equação de Goldman se reduz matematicamente à própria equação de Nernst para esse íon.",
+            "B": "Generaliza incorretamente — o sinal depende do íon escolhido (positivo para Na⁺, negativo para K⁺ e Cl⁻).",
+            "C": "Gabarito correto.",
+            "D": "A equação de Goldman é matematicamente válida mesmo com um único termo de permeabilidade diferente de zero."
+        },
+        "pontuacao_maxima": 2.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+            "Potencial de membrana em repouso (Goldman e bomba Na⁺/K⁺ATPase)",
+            "Potencial de membrana em repouso (Média)"
+        ]
+    },
+    {
+        "id": "t10_9",
+        "codigo": "T10.9",
+        "topico_id": "T10",
+        "topico_nome": "Potencial de membrana em repouso (Goldman e bomba Na⁺/K⁺ATPase)",
+        "dificuldade": "Média",
+        "pergunta": "A inibição farmacológica da bomba Na⁺/K⁺-ATPase provoca, na maioria das células:",
+        "alternativas": {
+            "A": "Despolarização, pois os gradientes de Na⁺ e K⁺ deixam de ser repostos e tendem a se dissipar",
+            "B": "Hiperpolarização, pois a célula retém mais K⁺",
+            "C": "Nenhum efeito imediato sobre o Vm, apenas efeitos a longo prazo",
+            "D": "Aumento imediato da permeabilidade da membrana a todos os íons"
+        },
+        "gabarito": "A",
+        "distratores": {
+            "A": "Gabarito correto.",
+            "B": "Inverte o efeito esperado — sem a bomba repondo os gradientes, eles se dissipam progressivamente, aproximando o Vm de zero (despolarização).",
+            "C": "Subestima o efeito — a perda da manutenção ativa dos gradientes tem impacto progressivo, mas já mensurável.",
+            "D": "Confunde inibição da bomba (transporte ativo) com alteração de permeabilidade (canais/carreadores)."
+        },
+        "pontuacao_maxima": 2.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+            "Potencial de membrana em repouso (Goldman e bomba Na⁺/K⁺ATPase)",
+            "Potencial de membrana em repouso (Média)"
+        ]
+    },
+    {
+        "id": "t10_10",
+        "codigo": "T10.10",
+        "topico_id": "T10",
+        "topico_nome": "Potencial de membrana em repouso (Goldman e bomba Na⁺/K⁺ATPase)",
+        "dificuldade": "Média",
+        "pergunta": "Bolsas de sangue armazenadas em baixa temperatura (1–6 °C) apresentam, nas hemácias, redução da atividade da bomba Na⁺/K⁺-ATPase. O efeito esperado sobre o potencial de membrana dessas células é:",
+        "alternativas": {
+            "A": "Hiperpolarização, pois o frio aumenta a permeabilidade seletiva ao K⁺",
+            "B": "Despolarização, pois a manutenção ativa dos gradientes iônicos fica comprometida",
+            "C": "Nenhuma alteração, pois a temperatura não afeta proteínas de transporte",
+            "D": "Aumento da concentração extracelular de Na⁺, com manutenção do Vm original"
+        },
+        "gabarito": "B",
+        "distratores": {
+            "A": "Inventa uma relação (frio aumentando permeabilidade ao K⁺) que não decorre logicamente do enunciado.",
+            "B": "Gabarito correto.",
+            "C": "Contradiz o próprio enunciado, que já afirma que a atividade da bomba é reduzida pelo frio.",
+            "D": "Embora a concentração extracelular de K⁺ realmente tenda a subir nesse cenário, a afirmação erra o íon e assume incorretamente que o Vm permaneceria inalterado."
+        },
+        "pontuacao_maxima": 2.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+            "Potencial de membrana em repouso (Goldman e bomba Na⁺/K⁺ATPase)",
+            "Potencial de membrana em repouso (Média)"
+        ]
+    },
+    {
+        "id": "t10_11",
+        "codigo": "T10.11",
+        "topico_id": "T10",
+        "topico_nome": "Potencial de membrana em repouso (Goldman e bomba Na⁺/K⁺ATPase)",
+        "dificuldade": "Difícil",
+        "pergunta": "Uma célula muscular tem permeabilidades relativas de K⁺:Na⁺:Cl⁻ = 1 : 0,04 : 0,45, com as concentrações fisiológicas padrão (K⁺: 140/4 mM; Na⁺: 15/140 mM; Cl⁻: 10/130 mM, intra/extracelular). Usando a equação de Goldman a 37 °C, o Vm dessa célula é aproximadamente:",
+        "alternativas": {
+            "A": "−70,7 mV",
+            "B": "−95,0 mV",
+            "C": "+59,7 mV",
+            "D": "−45,0 mV"
+        },
+        "gabarito": "A",
+        "distratores": {
+            "A": "Gabarito correto.",
+            "B": "Esse valor corresponde ao EK+ isolado (Nernst), não ao Vm real da célula — erro de ignorar a contribuição das permeabilidades ao Na⁺ e ao Cl⁻.",
+            "C": "Esse valor corresponde ao ENa+ isolado — erro de usar o potencial de equilíbrio do íon errado como se fosse o Vm da célula.",
+            "D": "Valor plausível 'de memória', mas sem base em nenhum cálculo correto da equação de Goldman para os dados fornecidos."
+        },
+        "pontuacao_maxima": 3.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+            "Potencial de membrana em repouso (Goldman e bomba Na⁺/K⁺ATPase)",
+            "Potencial de membrana em repouso (Difícil)"
+        ]
+    },
+    {
+        "id": "t10_12",
+        "codigo": "T10.12",
+        "topico_id": "T10",
+        "topico_nome": "Potencial de membrana em repouso (Goldman e bomba Na⁺/K⁺ATPase)",
+        "dificuldade": "Difícil",
+        "pergunta": "Em astrócitos, cuja membrana é permeável quase exclusivamente ao K⁺, o potencial de repouso é praticamente igual a EK+. Já em neurônios, que também têm alta permeabilidade ao K⁺ mas não são exclusivamente permeáveis a ele, o potencial de repouso fica próximo, mas não igual, a EK+. A explicação conceitual para essa diferença é que:",
+        "alternativas": {
+            "A": "Astrócitos não seguem a equação de Nernst, apenas neurônios seguem",
+            "B": "Astrócitos têm uma Na⁺/K⁺-ATPase mais potente, o que os aproxima artificialmente de EK+",
+            "C": "A diferença se deve ao tamanho maior dos neurônios em relação aos astrócitos",
+            "D": "Quando a permeabilidade é praticamente exclusiva a um único íon, o cálculo do potencial de membrana se reduz, na prática, ao cálculo do potencial de equilíbrio desse íon"
+        },
+        "gabarito": "D",
+        "distratores": {
+            "A": "Erro factual — ambos os tipos celulares seguem a mesma física; a diferença está nas permeabilidades relativas.",
+            "B": "Não há relação direta entre a 'potência' da bomba e o fato de o Vm coincidir com EK+ — depende da seletividade de permeabilidade.",
+            "C": "O tamanho celular não é a variável relevante nesse raciocínio — importa a composição relativa das permeabilidades iônicas.",
+            "D": "Gabarito correto."
+        },
+        "pontuacao_maxima": 3.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+            "Potencial de membrana em repouso (Goldman e bomba Na⁺/K⁺ATPase)",
+            "Potencial de membrana em repouso (Difícil)"
+        ]
+    },
+    {
+        "id": "t10_13",
+        "codigo": "T10.13",
+        "topico_id": "T10",
+        "topico_nome": "Potencial de membrana em repouso (Goldman e bomba Na⁺/K⁺ATPase)",
+        "dificuldade": "Difícil",
+        "pergunta": "Considere uma célula em que o Cl⁻, por não ser ativamente bombeado, se distribui passivamente até que ECl- praticamente coincida com o Vm de repouso já estabelecido pelos demais íons. Se, nessa célula, a permeabilidade ao Cl⁻ aumentar bastante (mantendo Na⁺ e K⁺ inalterados), o efeito esperado sobre o Vm é:",
+        "alternativas": {
+            "A": "Um efeito pequeno sobre o valor do Vm, já que, nesse caso, o Cl⁻ tende a estar próximo do seu próprio equilíbrio no potencial atual",
+            "B": "Um grande deslocamento do Vm em direção a um novo valor fixo de ECl-, do mesmo modo que ocorreria com um aumento de permeabilidade ao Na⁺ ou ao K⁺",
+            "C": "Nenhum efeito, pois o Cl⁻ nunca influencia o potencial de membrana, independentemente da permeabilidade",
+            "D": "Um efeito idêntico ao que ocorreria se a permeabilidade aumentada fosse a do K⁺, pois apesar de ambos terem cargas distintas, suas concentrações também são diferencialmente distribuídas."
+        },
+        "gabarito": "A",
+        "distratores": {
+            "A": "Gabarito correto.",
+            "B": "Ignora a diferença essencial do cenário: ao contrário do Na⁺ e do K⁺, o Cl⁻ aqui já está próximo do seu equilíbrio no Vm atual, então aumentar sua permeabilidade não o 'puxa' para um novo valor fixo.",
+            "C": "Contradiz a premissa de que o Cl⁻ é um íon permeante que contribui para o cálculo do Vm quando sua permeabilidade é relevante.",
+            "D": "A afirmação está correta sobre as cargas e distribuições, mas o que importa para esse raciocínio é a proximidade entre o potencial de equilíbrio do íon e o Vm atual."
+        },
+        "pontuacao_maxima": 3.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+            "Potencial de membrana em repouso (Goldman e bomba Na⁺/K⁺ATPase)",
+            "Potencial de membrana em repouso (Difícil)"
+        ]
+    },
+    {
+        "id": "t10_14",
+        "codigo": "T10.14",
+        "topico_id": "T10",
+        "topico_nome": "Potencial de membrana em repouso (Goldman e bomba Na⁺/K⁺ATPase)",
+        "dificuldade": "Difícil",
+        "pergunta": "Por que aumentar a permeabilidade da membrana a um íon não altera o potencial de equilíbrio eletroquímico desse íon, mas altera o potencial de membrana real da célula?",
+        "alternativas": {
+            "A": "Porque as duas equações, na prática, descrevem o mesmo fenômeno físico e deveriam dar sempre o mesmo resultado",
+            "B": "Porque o potencial de Nernst depende apenas das concentrações do íon, enquanto o Vm real é um valor de compromisso entre as contribuições de todos os íons permeantes, ponderadas pela permeabilidade de cada um",
+            "C": "Porque a permeabilidade só é relevante quando a bomba Na⁺/K⁺-ATPase está inativa",
+            "D": "Porque a equação de Nernst já incorpora a permeabilidade de forma implícita, tornando as duas equações equivalentes"
+        },
+        "gabarito": "B",
+        "distratores": {
+            "A": "Erro conceitual central: Nernst e Goldman respondem perguntas diferentes (equilíbrio de um íon vs. estado estacionário de vários íons).",
+            "B": "Gabarito correto.",
+            "C": "Introduz uma condição (bomba inativa) que não é mencionada nem necessária para o raciocínio pedido.",
+            "D": "Inverte a lógica: é justamente a ausência do termo de permeabilidade na equação de Nernst (e sua presença na de Goldman) que explica a diferença de comportamento."
+        },
+        "pontuacao_maxima": 3.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+            "Potencial de membrana em repouso (Goldman e bomba Na⁺/K⁺ATPase)",
+            "Potencial de membrana em repouso (Difícil)"
+        ]
+    },
+    {
+        "id": "t10_15",
+        "codigo": "T10.15",
+        "topico_id": "T10",
+        "topico_nome": "Potencial de membrana em repouso (Goldman e bomba Na⁺/K⁺ATPase)",
+        "dificuldade": "Difícil",
+        "pergunta": "Um estudante conclui: 'quanto mais canais iônicos abertos uma membrana tiver, em geral, mais próximo de zero (despolarizado) será o seu potencial de repouso.' Essa generalização está:",
+        "alternativas": {
+            "A": "Correta, pois mais canais abertos sempre aumentam a permeabilidade total da membrana",
+            "B": "Correta apenas para canais de K⁺, incorreta para os demais",
+            "C": "Incorreta como regra geral, uma vez que o efeito depende de quais canais estão abertos e da permeabilidade relativa resultante entre eles, não apenas do número total de canais",
+            "D": "Incorreta, pois o número de canais abertos nunca influencia o potencial de membrana"
+        },
+        "gabarito": "C",
+        "distratores": {
+            "A": "Ignora que abrir mais canais de K⁺ (por exemplo) tende a manter ou até hiperpolarizar o Vm (aproximando-o de EK+).",
+            "B": "Restringe incorretamente uma regra que precisa ser avaliada para qualquer íon envolvido.",
+            "C": "Gabarito correto.",
+            "D": "Contradiz diretamente o próprio conceito central de que a permeabilidade relativa de cada íon influencia o Vm."
+        },
+        "pontuacao_maxima": 3.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+            "Potencial de membrana em repouso (Goldman e bomba Na⁺/K⁺ATPase)",
+            "Potencial de membrana em repouso (Difícil)"
         ]
     }
 ]
