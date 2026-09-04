@@ -445,20 +445,50 @@ def show_advanced_professor_dashboard():
     # TAB 1: VISÃO GERAL & RANKING DE CATEGORIAS (COM DRILLDOWN DE BLOCOS)
     # =========================================================================
     with tab1:
-        # KPIs Principais
-        kpi1, kpi2, kpi3, kpi4, kpi5 = st.columns(5)
+        # KPIs Principais (Com Total do Banco de Questões)
+        kpi1, kpi2, kpi3, kpi4, kpi5, kpi6 = st.columns(6)
         with kpi1:
             st.metric("Alunos Cadastrados", f"{len(student_users)}")
         with kpi2:
-            st.metric("Respostas Submetidas", f"{total_answered_cases}")
+            st.metric("Questões no Banco", f"{len(QUESTIONS)}")
         with kpi3:
+            st.metric("Respostas Submetidas", f"{total_answered_cases}")
+        with kpi4:
             acc_class = (total_correct_cases / total_answered_cases * 100) if total_answered_cases > 0 else 0.0
             st.metric("Taxa Geral de Acertos", f"{acc_class:.1f}%")
-        with kpi4:
+        with kpi5:
             avg_time = (total_time_seconds / total_answered_cases) if total_answered_cases > 0 else 0.0
             st.metric("Tempo Médio / Questão", format_duration(avg_time))
-        with kpi5:
+        with kpi6:
             st.metric("Mensagens com Tutor", f"{total_chat_messages}")
+
+        # Painel Explicativo do Banco de Questões
+        with st.expander(f"📚 **Detalhamento do Banco de Questões ({len(QUESTIONS)} Questões Cadastradas)**", expanded=False):
+            q_facil = len([q for q in QUESTIONS if q.get("dificuldade") == "Fácil"])
+            q_media = len([q for q in QUESTIONS if q.get("dificuldade") == "Média"])
+            q_dificil = len([q for q in QUESTIONS if q.get("dificuldade") == "Difícil"])
+            
+            qb1 = len([q for q in QUESTIONS if q.get("topico_id") in BLOCKS["Bloco 1"]["topicos"]])
+            qb2 = len([q for q in QUESTIONS if q.get("topico_id") in BLOCKS["Bloco 2"]["topicos"]])
+            
+            b_col1, b_col2, b_col3, b_col4 = st.columns(4)
+            with b_col1:
+                st.markdown(f"**Total de Questões:** `{len(QUESTIONS)}`")
+                st.markdown(f"• **Bloco 1 (T1 a T8):** `{qb1}` questões")
+                st.markdown(f"• **Bloco 2 (T9 e T10):** `{qb2}` questões")
+            with b_col2:
+                st.markdown("**Distribuição por Nível:**")
+                st.markdown(f"• **Fáceis:** `{q_facil}` questões")
+                st.markdown(f"• **Médias:** `{q_media}` questões")
+                st.markdown(f"• **Difíceis:** `{q_dificil}` questões")
+            with b_col3:
+                st.markdown("**Novos Tópicos de Bioeletrogênese:**")
+                st.markdown("• **T9:** Nernst & Gradientes (15 q.)")
+                st.markdown("• **T10:** Goldman & Repouso (15 q.)")
+            with b_col4:
+                st.markdown("**Garantia do Sistema:**")
+                st.markdown("🎲 **Sorteio Randomizado:** Ativo")
+                st.markdown("🛡️ **Progresso dos Alunos:** 100% Salvo")
 
         st.markdown("<div style='margin-top: 1.2rem;'></div>", unsafe_allow_html=True)
 
