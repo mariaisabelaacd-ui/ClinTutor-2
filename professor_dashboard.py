@@ -217,6 +217,129 @@ def generate_class_full_pdf(students: List[Dict], all_analytics: Dict, category_
 
 
 # =========================================================================
+# GERAÇÃO DE RELATÓRIO DE RANKING DE ENGAJAMENTO EM PDF
+# =========================================================================
+def generate_ranking_pdf_bytes(students: List[Dict], all_analytics: Dict) -> bytes:
+    """
+    Gera PDF formato Landscape (A4 horizontal) rankeando TODOS os alunos por:
+    - Questões Respondidas
+    - Interações no Chat com Tutor Socrático
+    - Pontuação Total acumulada
+    """
+    ranking_data = []
+
+    for u in students:
+        uid = u.get("id") or u.get("auth_uid")
+        name = u.get("name", "Aluno sem nome")
+        ra = u.get("ra", "N/A")
+        email = u.get("email", "N/A")
+        turma = u.get("turma", "N/A")
+        
+        udata = all_analytics.get(uid, {})
+        
+        prog = u.get("progress", {})
+        if not isinstance(prog, dict):
+            prog = {}
+            
+        used_cases = prog.get("used_cases", []) or prog.get("completed_cases", [])
+        cases_analytics = udata.get("case_analytics", [])
+        
+        total_questions = len(cases_analytics) if cases_analytics else len(used_cases)
+        
+        chat_docs = udata.get("chat_interactions", [])
+        total_chat_msgs = 0
+        for cdoc in chat_docs:
+            msgs = cdoc.get("messages", [])
+            if isinstance(msgs, list) and len(msgs) > 0:
+                total_chat_msgs += len(msgs)
+            else:
+                total_chat_msgs += 1
+                
+        score = float(prog.get("score", 0.0))
+        if score == 0.0 and cases_analytics:
+            score = sum(float(c.get("case_result", {}).get("points_gained", 0)) for c in cases_analytics)
+            
+        ranking_data.append({
+            "name": name,
+            "ra": ra,
+            "email": email,
+            "turma": turma,
+            "questoes_respondidas": total_questions,
+            "interacoes_chat": total_chat_msgs,
+            "score": score
+        })
+
+    ranking_data.sort(key=lambda x: (x["questoes_respondidas"], x["interacoes_chat"], x["score"]), reverse=True)
+
+    pdf = FPDF(orientation='L', unit='mm', format='A4')
+    pdf.set_margins(12, 12, 12)
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.add_page()
+    
+    # Header
+    pdf.set_fill_color(16, 185, 129)
+    pdf.rect(0, 0, 297, 22, 'F')
+    pdf.set_font('Helvetica', 'B', 15)
+    pdf.set_text_color(255, 255, 255)
+    pdf.cell(0, 8, safe_pdf_str('Helix.AI - Relatorio de Engajamento e Uso dos Alunos (Ranking Completo)'), new_x="LMARGIN", new_y="NEXT", align='C')
+    pdf.set_font('Helvetica', '', 9.5)
+    pdf.cell(0, 5, safe_pdf_str(f'Gerado em: {datetime.now().strftime("%d/%m/%Y as %H:%M")} | Total de Alunos: {len(ranking_data)}'), new_x="LMARGIN", new_y="NEXT", align='C')
+    pdf.ln(6)
+
+    tot_q_turma = sum(x["questoes_respondidas"] for x in ranking_data)
+    tot_chat_turma = sum(x["interacoes_chat"] for x in ranking_data)
+    tot_alunos_ativos = sum(1 for x in ranking_data if x["questoes_respondidas"] > 0 or x["interacoes_chat"] > 0)
+
+    pdf.set_font('Helvetica', 'B', 10.5)
+    pdf.set_text_color(30, 41, 59)
+    pdf.cell(0, 7, safe_pdf_str(f'Resumo Geral: {tot_alunos_ativos} Alunos Ativos | {tot_q_turma} Questoes Respondidas | {tot_chat_turma} Mensagens com Tutor Socratico'), new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(2)
+
+    # Tabela
+    pdf.set_font('Helvetica', 'B', 9)
+    pdf.set_fill_color(241, 245, 249)
+    pdf.set_draw_color(203, 213, 225)
+    pdf.set_text_color(15, 23, 42)
+
+    pdf.cell(12, 7.5, safe_pdf_str('Pos'), 1, 0, 'C', True)
+    pdf.cell(65, 7.5, safe_pdf_str('Nome do Aluno'), 1, 0, 'L', True)
+    pdf.cell(22, 7.5, safe_pdf_str('RA'), 1, 0, 'C', True)
+    pdf.cell(32, 7.5, safe_pdf_str('Turma'), 1, 0, 'C', True)
+    pdf.cell(72, 7.5, safe_pdf_str('E-mail'), 1, 0, 'L', True)
+    pdf.cell(24, 7.5, safe_pdf_str('Questoes'), 1, 0, 'C', True)
+    pdf.cell(22, 7.5, safe_pdf_str('Msgs Chat'), 1, 0, 'C', True)
+    pdf.cell(24, 7.5, safe_pdf_str('Pontos'), 1, 1, 'C', True)
+
+    pdf.set_font('Helvetica', '', 8.5)
+
+    fill = False
+    for pos, row in enumerate(ranking_data, 1):
+        if fill:
+            pdf.set_fill_color(248, 250, 252)
+        else:
+            pdf.set_fill_color(255, 255, 255)
+            
+        pdf.cell(12, 6.5, safe_pdf_str(f'{pos}o'), 1, 0, 'C', fill)
+        pdf.cell(65, 6.5, safe_pdf_str(row['name'][:36]), 1, 0, 'L', fill)
+        pdf.cell(22, 6.5, safe_pdf_str(row['ra']), 1, 0, 'C', fill)
+        pdf.cell(32, 6.5, safe_pdf_str(row['turma']), 1, 0, 'C', fill)
+        pdf.cell(72, 6.5, safe_pdf_str(row['email'][:42]), 1, 0, 'L', fill)
+        
+        pdf.set_font('Helvetica', 'B' if row['questoes_respondidas'] > 0 else '', 8.5)
+        pdf.cell(24, 6.5, safe_pdf_str(f"{row['questoes_respondidas']}"), 1, 0, 'C', fill)
+        
+        pdf.set_font('Helvetica', 'B' if row['interacoes_chat'] > 0 else '', 8.5)
+        pdf.cell(22, 6.5, safe_pdf_str(f"{row['interacoes_chat']}"), 1, 0, 'C', fill)
+        
+        pdf.set_font('Helvetica', '', 8.5)
+        pdf.cell(24, 6.5, safe_pdf_str(f"{row['score']:.1f} pts"), 1, 1, 'C', fill)
+        
+        fill = not fill
+
+    return bytes(pdf.output())
+
+
+# =========================================================================
 # GERAÇÃO DE RELATÓRIO INDIVIDUAL DO ALUNO EM PDF
 # =========================================================================
 def generate_student_pdf(student: Dict, udata: Dict) -> bytes:
@@ -432,6 +555,16 @@ def show_advanced_professor_dashboard():
             type="primary",
             use_container_width=True,
             icon=":material/download:"
+        )
+        ranking_pdf_bytes = generate_ranking_pdf_bytes(student_users, all_analytics)
+        st.download_button(
+            label="Baixar Ranking de Engajamento (PDF)",
+            data=ranking_pdf_bytes,
+            file_name=f"Ranking_Engajamento_Alunos_HelixAI_{datetime.now().strftime('%Y%m%d')}.pdf",
+            mime="application/pdf",
+            type="secondary",
+            use_container_width=True,
+            icon=":material/emoji_events:"
         )
 
     st.markdown("<hr style='margin: 0.5rem 0 1.2rem 0; opacity: 0.2;'>", unsafe_allow_html=True)
