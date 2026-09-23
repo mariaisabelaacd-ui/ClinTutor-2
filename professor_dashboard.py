@@ -8,7 +8,7 @@ from io import BytesIO
 from fpdf import FPDF
 
 from analytics import (
-    get_all_users_analytics, format_duration
+    get_all_users_analytics, format_duration, consolidate_student_chats
 )
 from auth_firebase import get_all_users, get_user_by_id
 from logic import QUESTIONS, TOPICS, BLOCKS
@@ -169,7 +169,8 @@ def generate_class_full_pdf(students: List[Dict], all_analytics: Dict, category_
         uid = s['id']
         udata = all_analytics.get(uid, {})
         chat_docs = udata.get('chat_interactions', [])
-        if not chat_docs:
+        threads = consolidate_student_chats(chat_docs)
+        if not threads:
             continue
             
         has_any_chat = True
@@ -178,21 +179,18 @@ def generate_class_full_pdf(students: List[Dict], all_analytics: Dict, category_
         pdf.cell(0, 8, safe_pdf_str(f"Aluno: {s.get('name', 'N/A')} (RA: {s.get('ra', 'N/A')})"), 0, 1, 'L', True)
         pdf.ln(2)
         
-        for doc in chat_docs:
-            cid = doc.get('case_id', '')
+        for thread in threads:
+            cid = thread.get('case_id', '')
             q_info = q_title_map.get(cid, f"Questao ID: {cid}")
+            num_msgs = thread.get('total_messages', 0)
             
             pdf.set_font('Helvetica', 'B', 9)
             pdf.set_text_color(71, 85, 105)
-            pdf.multi_cell(pdf.epw, 5, safe_pdf_str(f"Questao: {q_info[:120]}"))
+            pdf.multi_cell(pdf.epw, 5, safe_pdf_str(f"Conversa na Questao: {q_info[:120]} ({num_msgs} msgs)"))
             pdf.set_text_color(0, 0, 0)
             pdf.ln(1)
             
-            msgs = doc.get('messages', [])
-            if not msgs and 'user_message' in doc:
-                msgs = [{'user_message': doc.get('user_message', ''), 'bot_response': doc.get('bot_response', '')}]
-                
-            for m in msgs:
+            for m in thread.get('messages', []):
                 u_txt = m.get('user_message', '')
                 b_txt = m.get('bot_response', '')
                 
@@ -247,13 +245,8 @@ def generate_ranking_pdf_bytes(students: List[Dict], all_analytics: Dict) -> byt
         total_questions = len(cases_analytics) if cases_analytics else len(used_cases)
         
         chat_docs = udata.get("chat_interactions", [])
-        total_chat_msgs = 0
-        for cdoc in chat_docs:
-            msgs = cdoc.get("messages", [])
-            if isinstance(msgs, list) and len(msgs) > 0:
-                total_chat_msgs += len(msgs)
-            else:
-                total_chat_msgs += 1
+        threads = consolidate_student_chats(chat_docs)
+        total_chat_msgs = sum(t.get("total_messages", 0) for t in threads)
                 
         score = float(prog.get("score", 0.0))
         if score == 0.0 and cases_analytics:
@@ -407,22 +400,21 @@ def generate_student_pdf(student: Dict, udata: Dict) -> bytes:
     pdf.set_text_color(0, 0, 0)
     
     chat_docs = udata.get('chat_interactions', [])
-    if not chat_docs:
+    threads = consolidate_student_chats(chat_docs)
+    if not threads:
         pdf.set_font('Helvetica', 'I', 8)
         pdf.cell(0, 6, 'Nenhuma interacao de chat registrada para este aluno.', ln=True)
     else:
-        for doc in chat_docs:
-            cid = doc.get('case_id', '')
+        for thread in threads:
+            cid = thread.get('case_id', '')
             q = q_map.get(cid, {})
+            num_msgs = thread.get('total_messages', 0)
             pdf.set_font('Helvetica', 'B', 9)
             pdf.set_text_color(71, 85, 105)
-            pdf.cell(0, 6, safe_pdf_str(f"Topico: {q.get('topico_id', '')} - {q.get('topico_nome', '')} ({q.get('codigo', '')})"), ln=True)
+            pdf.cell(0, 6, safe_pdf_str(f"Conversa no Topico: {q.get('topico_id', '')} - {q.get('topico_nome', '')} ({q.get('codigo', '')}) [{num_msgs} msgs]"), ln=True)
             pdf.set_text_color(0, 0, 0)
             
-            msgs = doc.get('messages', [])
-            if not msgs and 'user_message' in doc:
-                msgs = [{'user_message': doc.get('user_message', ''), 'bot_response': doc.get('bot_response', '')}]
-            for m in msgs:
+            for m in thread.get('messages', []):
                 u_txt = m.get('user_message', '')
                 b_txt = m.get('bot_response', '')
                 if u_txt:
@@ -482,11 +474,8 @@ def show_advanced_professor_dashboard():
     total_time_seconds = 0.0
 
     for uid, udata in all_analytics.items():
-        for cdoc in udata.get("chat_interactions", []):
-            if "messages" in cdoc and isinstance(cdoc["messages"], list):
-                total_chat_messages += len(cdoc["messages"])
-            else:
-                total_chat_messages += 1
+        threads = consolidate_student_chats(udata.get("chat_interactions", []))
+        total_chat_messages += sum(t.get("total_messages", 0) for t in threads)
                 
         for case in udata.get("case_analytics", []):
             cid = case.get("case_id")
@@ -836,20 +825,19 @@ def show_advanced_professor_dashboard():
             with col_chat:
                 st.markdown("### <span class='material-icons-outlined' style='font-size:20px; vertical-align:middle; color:#3b82f6;'>chat</span> Histórico com o Tutor Helix.AI", unsafe_allow_html=True)
                 chat_docs = udata.get("chat_interactions", [])
-                if not chat_docs:
+                threads = consolidate_student_chats(chat_docs)
+                if not threads:
                     st.info("Nenhuma conversa com o tutor registrada para este aluno.")
                 else:
                     q_map = {q['id']: q for q in QUESTIONS}
-                    for doc in chat_docs:
-                        cid = doc.get("case_id", "")
+                    for thread in threads:
+                        cid = thread.get("case_id", "")
                         q = q_map.get(cid, {})
+                        num_msgs = thread.get("total_messages", 0)
                         
-                        with st.expander(f"Conversa na Questão: {q.get('codigo', cid)} ({q.get('topico_id', '')})", expanded=True):
-                            msgs = doc.get("messages", [])
-                            if not msgs and "user_message" in doc:
-                                msgs = [{"user_message": doc.get("user_message", ""), "bot_response": doc.get("bot_response", "")}]
-                                
-                            for m in msgs:
+                        expander_title = f"Conversa na Questão: {q.get('codigo', cid)} ({q.get('topico_id', '')}) — {num_msgs} {'mensagem' if num_msgs == 1 else 'mensagens'}"
+                        with st.expander(expander_title, expanded=True):
+                            for m in thread.get("messages", []):
                                 u_msg = m.get("user_message", "")
                                 b_msg = m.get("bot_response", "")
                                 

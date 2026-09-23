@@ -426,7 +426,66 @@ def get_user_case_analytics_firebase(user_id: str) -> List[Dict]:
     except Exception as e:
         print(f"ERRO ao buscar analytics: {e}")
         st.error(f"Erro ao buscar analytics no Firebase: {e}")
+def consolidate_student_chats(chat_docs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """
+    Consolida os documentos/registros de chat de um aluno agrupando por `case_id`.
+    Remove duplicatas e ordena mensagens cronologicamente, transformando interações soltas
+    em conversas contínuas por questão.
+    """
+    if not chat_docs:
         return []
+
+    grouped = {}
+
+    for doc in chat_docs:
+        cid = doc.get("case_id") or "geral"
+        doc_ts = doc.get("timestamp") or doc.get("created_at") or ""
+
+        if cid not in grouped:
+            grouped[cid] = []
+
+        msgs = doc.get("messages", [])
+        if not msgs and doc.get("user_message"):
+            msgs = [{
+                "user_message": doc.get("user_message", ""),
+                "bot_response": doc.get("bot_response", ""),
+                "timestamp": doc_ts
+            }]
+
+        for m in msgs:
+            u_txt = (m.get("user_message") or "").strip()
+            b_txt = (m.get("bot_response") or "").strip()
+            m_ts = m.get("timestamp") or doc_ts
+
+            if not u_txt and not b_txt:
+                continue
+
+            already_exists = False
+            for existing_m in grouped[cid]:
+                if existing_m["user_message"].strip() == u_txt and existing_m["bot_response"].strip() == b_txt:
+                    already_exists = True
+                    break
+
+            if not already_exists:
+                grouped[cid].append({
+                    "user_message": u_txt,
+                    "bot_response": b_txt,
+                    "timestamp": m_ts
+                })
+
+    consolidated = []
+    for cid, msg_list in grouped.items():
+        if not msg_list:
+            continue
+        msg_list.sort(key=lambda x: str(x.get("timestamp") or ""))
+        consolidated.append({
+            "case_id": cid,
+            "messages": msg_list,
+            "total_messages": len(msg_list)
+        })
+
+    return consolidated
+
 
 @st.cache_data(ttl=300, show_spinner=False)
 def get_user_case_analytics_local(user_id: str) -> List[Dict]:
