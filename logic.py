@@ -88,7 +88,17 @@ TOPICS = {
     "T7": "Transporte ativo secundário: simporte e antiporte",
     "T8": "Função da Na⁺/K⁺-ATPase",
     "T9": "Gradientes eletroquímicos e Equação de Nernst",
-    "T10": "Potencial de membrana em repouso (Goldman e bomba Na⁺/K⁺ATPase)"
+    "T10": "Potencial de membrana em repouso (Goldman e bomba Na⁺/K⁺ATPase)",
+    "T11": "Acoplamento entre excitação e liberação de Ca²⁺ no músculo esquelético",
+    "T12": "Regulação dos filamentos pelo Ca²⁺",
+    "T13": "Deslizamento dos filamentos e encurtamento do sarcômero",
+    "T14": "Ciclo das pontes cruzadas e funções do ATP",
+    "T15": "Remoção do Ca²⁺ e relaxamento esquelético",
+    "T16": "Automaticidade das células nodais",
+    "T17": "Bases iônicas do potencial de ação ventricular",
+    "T18": "Liberação de Ca²⁺ induzida por Ca²⁺ no coração",
+    "T19": "Remoção do Ca²⁺ e relaxamento cardíaco",
+    "T20": "Duração do potencial de ação e período refratário cardíaco"
 }
 
 BLOCKS = {
@@ -99,6 +109,10 @@ BLOCKS = {
     "Bloco 2": {
         "nome": "Bioeletrogênese e Potenciais de Membrana",
         "topicos": ["T9", "T10"]
+    },
+    "Bloco 3": {
+        "nome": "Biofísica Muscular: Músculo Esquelético e Cardíaco",
+        "topicos": ["T11", "T12", "T13", "T14", "T15", "T16", "T17", "T18", "T19", "T20"]
     }
 }
 
@@ -2164,7 +2178,1141 @@ QUESTIONS: List[Dict[str, Any]] = [
             "Potencial de membrana em repouso (Goldman e bomba Na⁺/K⁺ATPase)",
             "Potencial de membrana em repouso (Difícil)"
         ]
-    }
+    },
+    {
+        "id": "t11_1",
+        "codigo": "T11.1",
+        "topico_id": "T11",
+        "topico_nome": "Acoplamento entre excitação e liberação de Ca²⁺ no músculo esquelético",
+        "dificuldade": "Fácil",
+        "pergunta": "Uma fibra esquelética de grande diâmetro é estimulada na superfície. Qual estrutura permite que a despolarização alcance rapidamente as regiões profundas da fibra?",
+        "alternativas": {
+                "A": "Discos Z.",
+                "B": "Túbulos T.",
+                "C": "Cisternas terminais do retículo sarcoplasmático.",
+                "D": "Filamentos finos."
+        },
+        "gabarito": "B",
+        "distratores": {
+                "A": "Discos Z: Confunde delimitação do sarcômero com condução elétrica.",
+                "B": "Gabarito correto: Os túbulos T conduzem a despolarização para o interior da fibra.",
+                "C": "Cisternas terminais do retículo sarcoplasmático: Confunde armazenamento e liberação de Ca²⁺ com propagação da despolarização.",
+                "D": "Filamentos finos: Atribui aos filamentos contráteis a condução do potencial de ação."
+        },
+        "pontuacao_maxima": 1.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Acoplamento entre excitação e liberação de Ca²⁺ no músculo esquelético",
+                "Acoplamento esquelético (Fácil)"
+        ]
+},
+    {
+        "id": "t11_2",
+        "codigo": "T11.2",
+        "topico_id": "T11",
+        "topico_nome": "Acoplamento entre excitação e liberação de Ca²⁺ no músculo esquelético",
+        "dificuldade": "Fácil",
+        "pergunta": "Em uma fibra esquelética adulta, qual sequência descreve o início da liberação de Ca²⁺ após a despolarização dos túbulos T?",
+        "alternativas": {
+                "A": "Ativação da SERCA e abertura de RyR1.",
+                "B": "Ativação da troponina e abertura de DHPR.",
+                "C": "Mudança conformacional de DHPR e ativação de RyR1.",
+                "D": "Ligação de ATP à actina e ativação da troponina."
+        },
+        "gabarito": "C",
+        "distratores": {
+                "A": "Ativação da SERCA e abertura de RyR1: A SERCA recolhe Ca²⁺; não inicia sua liberação na excitação.",
+                "B": "Ativação da troponina e abertura de DHPR: Inverte a ordem causal: a troponina responde ao Ca²⁺ liberado.",
+                "C": "Gabarito correto: DHPR atua como sensor de voltagem e se acopla à ativação de RyR1 no retículo.",
+                "D": "Ligação de ATP à actina e ativação da troponina: Atribui à actina uma etapa que não aciona o sistema DHPR–RyR1."
+        },
+        "pontuacao_maxima": 1.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Acoplamento entre excitação e liberação de Ca²⁺ no músculo esquelético",
+                "Acoplamento esquelético (Fácil)"
+        ]
+},
+    {
+        "id": "t11_3",
+        "codigo": "T11.3",
+        "topico_id": "T11",
+        "topico_nome": "Acoplamento entre excitação e liberação de Ca²⁺ no músculo esquelético",
+        "dificuldade": "Média",
+        "pergunta": "Duas preparações esqueléticas recebem estímulos no nervo ou diretamente no músculo. Com rocurônio, o estímulo nervoso não promove aumento de Ca²⁺ no citoplasma da célula muscular, mas com estímulo muscular o aumento do Ca²⁺ citoplasmático está preservado. Com dantroleno, tanto com estímulo neuronal como o estímulo direto apresentam baixa liberação de Ca²⁺ para o citoplasma, embora o potencial de ação muscular direto permaneça normal. Qual interpretação explica a diferença?",
+        "alternativas": {
+                "A": "A estimulação direta contorna o bloqueio da junção neuromuscular, mas mantém a dependência da liberação de Ca²⁺ pelo retículo.",
+                "B": "A estimulação direta contorna tanto a junção neuromuscular quanto a liberação de Ca²⁺ pelo retículo.",
+                "C": "Os dois fármacos bloqueiam a mesma etapa, e a diferença decorre exclusivamente da intensidade do estímulo.",
+                "D": "O rocurônio reduz a sensibilidade dos filamentos ao Ca²⁺, enquanto o dantroleno reduz a liberação de acetilcolina."
+        },
+        "gabarito": "A",
+        "distratores": {
+                "A": "Gabarito correto: O rocurônio bloqueia receptores nicotínicos; a estimulação muscular direta ainda exige acoplamento e liberação pelo retículo.",
+                "B": "Confunde despolarização direta com ativação direta dos miofilamentos.",
+                "C": "Os padrões de contorno do bloqueio indicam etapas distintas, com potencial muscular direto controlado.",
+                "D": "Troca os alvos farmacológicos e não explica os registros de Ca²⁺."
+        },
+        "pontuacao_maxima": 2.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Acoplamento entre excitação e liberação de Ca²⁺ no músculo esquelético",
+                "Acoplamento esquelético (Média)"
+        ]
+},
+    {
+        "id": "t11_4",
+        "codigo": "T11.4",
+        "topico_id": "T11",
+        "topico_nome": "Acoplamento entre excitação e liberação de Ca²⁺ no músculo esquelético",
+        "dificuldade": "Média",
+        "pergunta": "Uma fibra esquelética adulta, com retículo carregado, recebe um estímulo elétrico diretamente no músculo logo após a retirada breve do Ca²⁺ extracelular. A liberação de Ca²⁺ citosólico é preservada. Qual conclusão é sustentada por essa resposta inicial?",
+        "alternativas": {
+                "A": "A despolarização consegue mobilizar Ca²⁺ previamente armazenado no retículo.",
+                "B": "O resultado mostra que o estoque do retículo se mantém indefinidamente sem reposição.",
+                "C": "O Ca²⁺ que ativa a contração deve ter entrado pelos canais do sarcolema durante o estímulo.",
+                "D": "A contração esquelética consegue ocorrer sem elevação do Ca²⁺ citosólico."
+        },
+        "gabarito": "A",
+        "distratores": {
+                "A": "Gabarito correto: O experimento agudo é compatível com acoplamento por voltagem que mobiliza o estoque intracelular.",
+                "B": "Uma observação inicial não demonstra manutenção prolongada dos estoques.",
+                "C": "A fonte externa foi retirada; a resposta preservada é explicada pelo estoque intracelular.",
+                "D": "Confunde independência da entrada extracelular imediata com independência do Ca²⁺ citosólico."
+        },
+        "pontuacao_maxima": 2.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Acoplamento entre excitação e liberação de Ca²⁺ no músculo esquelético",
+                "Acoplamento esquelético (Média)"
+        ]
+},
+    {
+        "id": "t12_1",
+        "codigo": "T12.1",
+        "topico_id": "T12",
+        "topico_nome": "Regulação dos filamentos pelo Ca²⁺",
+        "dificuldade": "Fácil",
+        "pergunta": "O Ca²⁺ citosólico aumenta em uma fibra esquelética. A qual componente ele se liga para iniciar a mudança regulatória do filamento fino?",
+        "alternativas": {
+                "A": "Titina.",
+                "B": "Troponina C.",
+                "C": "Tropomiosina.",
+                "D": "Cabeça da miosina."
+        },
+        "gabarito": "B",
+        "distratores": {
+                "A": "A titina participa da organização e elasticidade sarcomérica, não dessa ligação regulatória.",
+                "B": "Gabarito correto: A troponina C é o sensor de Ca²⁺ do complexo regulatório do filamento fino.",
+                "C": "A tropomiosina muda de posição em resposta ao complexo troponina; não é o sensor principal.",
+                "D": "Confunde o motor molecular com o sensor regulatório de Ca²⁺."
+        },
+        "pontuacao_maxima": 1.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Regulação dos filamentos pelo Ca²⁺",
+                "Regulação dos filamentos (Fácil)"
+        ]
+},
+    {
+        "id": "t12_2",
+        "codigo": "T12.2",
+        "topico_id": "T12",
+        "topico_nome": "Regulação dos filamentos pelo Ca²⁺",
+        "dificuldade": "Média",
+        "pergunta": "Uma variante de troponina C tem menor afinidade por Ca²⁺, mas permite força máxima normal quando há Ca²⁺ suficiente. Durante uma liberação de Ca²⁺ submáxima idêntica ao controle, qual alteração é mais provável?",
+        "alternativas": {
+                "A": "Maior ativação dos filamentos e maior força.",
+                "B": "Ausência de liberação de Ca²⁺ pelo retículo.",
+                "C": "Força máxima obrigatória em qualquer concentração de Ca²⁺.",
+                "D": "Menor ativação dos filamentos e menor força."
+        },
+        "gabarito": "D",
+        "distratores": {
+                "A": "Inverte a relação entre afinidade e ativação em concentração controlada.",
+                "B": "A alteração da troponina não implica bloqueio do mecanismo de liberação pelo retículo.",
+                "C": "Ignora a dependência da ocupação da troponina em relação ao Ca²⁺.",
+                "D": "Gabarito correto: Menor afinidade reduz a ocupação regulatória no mesmo Ca²⁺ submáximo."
+        },
+        "pontuacao_maxima": 2.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Regulação dos filamentos pelo Ca²⁺",
+                "Regulação dos filamentos (Média)"
+        ]
+},
+    {
+        "id": "t12_3",
+        "codigo": "T12.3",
+        "topico_id": "T12",
+        "topico_nome": "Regulação dos filamentos pelo Ca²⁺",
+        "dificuldade": "Média",
+        "pergunta": "Uma fibra permeabilizada recebe um composto que mantém a tropomiosina em posição permissiva à interação com a miosina, mesmo com pouco Ca²⁺ ligado à troponina. O ATP está disponível. Qual alteração deve ser observada?",
+        "alternativas": {
+                "A": "Ciclos de pontes cruzadas independentes da disponibilidade de ATP.",
+                "B": "Necessidade de mais Ca²⁺ para produzir a mesma força submáxima do controle.",
+                "C": "Persistência de força em concentrações de Ca²⁺ que antes produziam pouca ativação.",
+                "D": "Perda de força em qualquer concentração de Ca²⁺, pela ausência de ativação do retículo."
+        },
+        "gabarito": "C",
+        "distratores": {
+                "A": "Alterar a regulação do filamento não elimina a função energética e de desligamento do ATP.",
+                "B": "O estado permissivo favorece ativação em Ca²⁺ menor, não uma exigência maior.",
+                "C": "Gabarito correto: Manter o filamento fino permissivo reduz a exigência do sinal regulatório de Ca²⁺ para a interação actina–miosina.",
+                "D": "O Ca²⁺ é controlado na preparação permeabilizada; o efeito descrito é sobre os filamentos."
+        },
+        "pontuacao_maxima": 2.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Regulação dos filamentos pelo Ca²⁺",
+                "Regulação dos filamentos (Média)"
+        ]
+},
+    {
+        "id": "t13_1",
+        "codigo": "T13.1",
+        "topico_id": "T13",
+        "topico_nome": "Deslizamento dos filamentos e encurtamento do sarcômero",
+        "dificuldade": "Fácil",
+        "pergunta": "Durante a contração, a distância entre dois discos Z diminui, enquanto os filamentos de actina e miosina mantêm seus comprimentos. Qual mudança explica o encurtamento?",
+        "alternativas": {
+                "A": "Afastamento dos filamentos finos em relação ao centro do sarcômero.",
+                "B": "Redução do comprimento das moléculas de actina.",
+                "C": "Aumento da sobreposição entre os filamentos finos e grossos.",
+                "D": "Redução do comprimento das moléculas de miosina."
+        },
+        "gabarito": "C",
+        "distratores": {
+                "A": "Esse movimento tenderia a afastar os discos Z, em sentido contrário ao observado.",
+                "B": "Confunde encurtamento do sarcômero com encurtamento do filamento fino.",
+                "C": "Gabarito correto: O deslizamento aproxima os discos Z e aumenta a sobreposição, sem encurtar os filamentos.",
+                "D": "Confunde encurtamento do sarcômero com encurtamento do filamento grosso."
+        },
+        "pontuacao_maxima": 1.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Deslizamento dos filamentos e encurtamento do sarcômero",
+                "Deslizamento de filamentos (Fácil)"
+        ]
+},
+    {
+        "id": "t13_2",
+        "codigo": "T13.2",
+        "topico_id": "T13",
+        "topico_nome": "Deslizamento dos filamentos e encurtamento do sarcômero",
+        "dificuldade": "Fácil",
+        "pergunta": "Um sarcômero isolado e ativado desenvolve força, mas sua distância entre discos Z é mantida fixa por um aparelho. Como classificar essa resposta?",
+        "alternativas": {
+                "A": "Alongamento passivo sem ativação.",
+                "B": "Relaxamento completo.",
+                "C": "Contração com encurtamento obrigatório.",
+                "D": "Contração isométrica."
+        },
+        "gabarito": "D",
+        "distratores": {
+                "A": "O enunciado informa ativação, não apenas deformação passiva.",
+                "B": "A presença de força ativa contradiz relaxamento completo.",
+                "C": "Confunde ativação contrátil com a ocorrência obrigatória de encurtamento.",
+                "D": "Gabarito correto: Há geração de força sem alteração do comprimento controlado."
+        },
+        "pontuacao_maxima": 1.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Deslizamento dos filamentos e encurtamento do sarcômero",
+                "Deslizamento de filamentos (Fácil)"
+        ]
+},
+    {
+        "id": "t13_3",
+        "codigo": "T13.3",
+        "topico_id": "T13",
+        "topico_nome": "Deslizamento dos filamentos e encurtamento do sarcômero",
+        "dificuldade": "Média",
+        "pergunta": "Após um estímulo, o transiente de Ca²⁺ é igual no controle e na fibra tratada com blebbistatina, um inibidor experimental da miosina II. As medidas estruturais revelam que a distância entre discos Z antes do estímulo é 2,6 µm em ambos, mas após o estímulo é 2,1 µm no controle e 2,5 µm com blebbistatina (comprimento da banda A constante em 1,6 µm em ambos). Qual processo foi reduzido na fibra tratada?",
+        "alternativas": {
+                "A": "Deslizamento relativo entre filamentos, com comprimento dos filamentos grossos preservado.",
+                "B": "Encurtamento dos próprios filamentos grossos, com deslizamento relativo preservado.",
+                "C": "Elevação citosólica de Ca²⁺, com funcionamento dos motores preservado.",
+                "D": "Desmontagem dos filamentos finos, necessária para aproximar os discos Z."
+        },
+        "gabarito": "A",
+        "distratores": {
+                "A": "Gabarito correto: A menor aproximação dos discos Z, com banda A constante, indica menos deslizamento e não filamentos grossos mais curtos.",
+                "B": "A banda A permaneceu igual, enquanto a redução da distância entre discos Z foi menor com o composto.",
+                "C": "O transiente de Ca²⁺ foi medido e permaneceu igual; o alvo experimental é o motor de miosina.",
+                "D": "No modelo de deslizamento, a aproximação dos discos Z não exige desmontar os filamentos de actina."
+        },
+        "pontuacao_maxima": 2.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Deslizamento dos filamentos e encurtamento do sarcômero",
+                "Deslizamento de filamentos (Média)"
+        ]
+},
+    {
+        "id": "t13_4",
+        "codigo": "T13.4",
+        "topico_id": "T13",
+        "topico_nome": "Deslizamento dos filamentos e encurtamento do sarcômero",
+        "dificuldade": "Média",
+        "pergunta": "Uma fibra ativada encurta contra uma carga leve. Ao receber carga maior, ela continua produzindo força, mas deixa de encurtar. Ca²⁺ citosólico e ATP permanecem adequados. Qual interpretação é mais consistente?",
+        "alternativas": {
+                "A": "A carga maior impede a liberação de Ca²⁺, apesar do Ca²⁺ citosólico preservado.",
+                "B": "A ativação dos motores pode continuar mesmo quando a carga impede o encurtamento.",
+                "C": "A força só pode persistir se os filamentos de miosina passarem a diminuir de comprimento.",
+                "D": "A ausência de encurtamento demonstra que a troponina deixou de ligar Ca²⁺."
+        },
+        "gabarito": "B",
+        "distratores": {
+                "A": "O dado de Ca²⁺ preservado não sustenta a perda de liberação como explicação.",
+                "B": "Gabarito correto: Geração de força e encurtamento dependem também das condições mecânicas; uma contração pode ser isométrica.",
+                "C": "O desenvolvimento de força não exige encurtamento dos filamentos grossos.",
+                "D": "Ignora o Ca²⁺ adequado e trata todo bloqueio mecânico do encurtamento como falha de ativação."
+        },
+        "pontuacao_maxima": 2.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Deslizamento dos filamentos e encurtamento do sarcômero",
+                "Deslizamento de filamentos (Média)"
+        ]
+},
+    {
+        "id": "t13_5",
+        "codigo": "T13.5",
+        "topico_id": "T13",
+        "topico_nome": "Deslizamento dos filamentos e encurtamento do sarcômero",
+        "dificuldade": "Difícil",
+        "pergunta": "Uma fibra é fixada perto de seu comprimento de maior força; outra, tão alongada que quase não há sobreposição actina–miosina. Ambas têm ATP e Ca²⁺ saturante. Um sensibilizador hipotético aumenta apenas a afinidade da troponina por Ca²⁺. Considerando somente força ativa, qual resultado é mais provável?",
+        "alternativas": {
+                "A": "A fibra muito alongada gera mais força, porque há maior espaço para os filamentos deslizarem.",
+                "B": "A fibra muito alongada continua com pouca força, porque maior afinidade não restaura o contato entre os filamentos.",
+                "C": "O sensibilizador reduz o comprimento dos filamentos, aproximando suas extremidades e restaurando a força.",
+                "D": "As forças se igualam, porque a ocupação da troponina substitui a necessidade de sobreposição."
+        },
+        "gabarito": "B",
+        "distratores": {
+                "A": "Espaço para movimento não substitui a necessidade de formar pontes cruzadas.",
+                "B": "Gabarito correto: Com ativação regulatória já saturante, a limitação é geométrica: faltam interações possíveis entre actina e miosina.",
+                "C": "O alvo informado é a afinidade por Ca²⁺, não o comprimento estrutural dos filamentos.",
+                "D": "Saturar o sistema regulatório não cria contato físico onde a sobreposição é insuficiente."
+        },
+        "pontuacao_maxima": 3.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Deslizamento dos filamentos e encurtamento do sarcômero",
+                "Deslizamento de filamentos (Difícil)"
+        ]
+},
+    {
+        "id": "t13_6",
+        "codigo": "T13.6",
+        "topico_id": "T13",
+        "topico_nome": "Deslizamento dos filamentos e encurtamento do sarcômero",
+        "dificuldade": "Difícil",
+        "pergunta": "Após um inibidor parcial da miosina, uma fibra ainda encurta contra uma carga leve, mas não consegue erguer uma carga que erguia antes. Nessa segunda condição, os discos Z ficam à mesma distância. O transiente de Ca²⁺ é normal, e a força máxima medida diminuiu. Qual análise integra os resultados?",
+        "alternativas": {
+                "A": "O sistema ainda permite deslizamento, mas a força disponível pode ser insuficiente para superar a carga maior.",
+                "B": "A manutenção da distância entre discos Z demonstra ausência de toda interação actina–miosina nas duas condições.",
+                "C": "A resposta à carga leve demonstra que o composto não interferiu na função das pontes cruzadas.",
+                "D": "O Ca²⁺ normal garante a mesma força máxima; por isso a perda de encurtamento exige filamentos mais curtos."
+        },
+        "gabarito": "A",
+        "distratores": {
+                "A": "Gabarito correto: O bloqueio parcial preserva alguma atividade motora, mas reduz a força disponível para vencer cargas maiores.",
+                "B": "A fibra encurta na condição de carga leve, e pode desenvolver força sem encurtar sob carga maior.",
+                "C": "Atividade residual não exclui inibição parcial, confirmada pela menor força máxima.",
+                "D": "Ca²⁺ adequado não garante a mesma capacidade do motor quando a miosina é inibida."
+        },
+        "pontuacao_maxima": 3.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Deslizamento dos filamentos e encurtamento do sarcômero",
+                "Deslizamento de filamentos (Difícil)"
+        ]
+},
+    {
+        "id": "t14_1",
+        "codigo": "T14.1",
+        "topico_id": "T14",
+        "topico_nome": "Ciclo das pontes cruzadas e funções do ATP",
+        "dificuldade": "Fácil",
+        "pergunta": "Uma cabeça de miosina está fortemente ligada à actina. Qual evento promove seu desligamento no ciclo normal?",
+        "alternativas": {
+                "A": "Liberação de ADP pela cabeça da miosina.",
+                "B": "Ligação de Ca²⁺ à troponina C.",
+                "C": "Liberação de fosfato pela cabeça da miosina.",
+                "D": "Ligação de ATP à cabeça da miosina."
+        },
+        "gabarito": "D",
+        "distratores": {
+                "A": "Após liberar ADP, a miosina pode permanecer fortemente ligada até receber ATP.",
+                "B": "A ligação regulatória facilita ativação do filamento fino; não substitui ATP no desligamento da ponte.",
+                "C": "A liberação de fosfato se associa à progressão produtiva do ciclo, não à etapa de desligamento por ATP.",
+                "D": "Gabarito correto: A ligação de ATP reduz a afinidade da cabeça pela actina e favorece seu desligamento."
+        },
+        "pontuacao_maxima": 1.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Ciclo das pontes cruzadas e funções do ATP",
+                "Ciclo das pontes cruzadas (Fácil)"
+        ]
+},
+    {
+        "id": "t14_2",
+        "codigo": "T14.2",
+        "topico_id": "T14",
+        "topico_nome": "Ciclo das pontes cruzadas e funções do ATP",
+        "dificuldade": "Fácil",
+        "pergunta": "Após ligar e hidrolisar ATP, uma cabeça de miosina prepara-se para outra interação produtiva. Quais produtos permanecem inicialmente associados à cabeça?",
+        "alternativas": {
+                "A": "ADP, após saída do fosfato.",
+                "B": "Nenhum nucleotídeo ou fosfato.",
+                "C": "ADP e fosfato inorgânico.",
+                "D": "ATP ainda não hidrolisado."
+        },
+        "gabarito": "C",
+        "distratores": {
+                "A": "Descreve um estado posterior à liberação do fosfato, não o estado inicialmente formado pela hidrólise.",
+                "B": "Confunde o estado pós-hidrólise com a cabeça sem nucleotídeo, associada à ligação forte em rigor.",
+                "C": "Gabarito correto: São os produtos da hidrólise que permanecem inicialmente associados à cabeça preparada.",
+                "D": "A pergunta situa a cabeça depois da hidrólise, não apenas depois da ligação de ATP."
+        },
+        "pontuacao_maxima": 1.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Ciclo das pontes cruzadas e funções do ATP",
+                "Ciclo das pontes cruzadas (Fácil)"
+        ]
+},
+    {
+        "id": "t14_3",
+        "codigo": "T14.3",
+        "topico_id": "T14",
+        "topico_nome": "Ciclo das pontes cruzadas e funções do ATP",
+        "dificuldade": "Média",
+        "pergunta": "Uma fibra em rigor recebe um análogo que se liga ao sítio de ATP da miosina e promove desligamento, mas não pode ser hidrolisado. Há Ca²⁺ suficiente. Qual resposta é esperada?",
+        "alternativas": {
+                "A": "Alívio inicial do rigor, sem sustentação de ciclos normais repetidos.",
+                "B": "Aumento do rigor, porque qualquer ocupação do sítio de ATP fortalece a ponte.",
+                "C": "Ausência de desligamento, porque apenas a saída de Ca²⁺ da troponina pode soltá-la.",
+                "D": "Ciclos repetidos normais, porque a ligação substitui todas as funções da hidrólise."
+        },
+        "gabarito": "A",
+        "distratores": {
+                "A": "Gabarito correto: A ligação permite desligar, mas a falta de hidrólise impede a progressão normal para novos ciclos.",
+                "B": "A condição experimental especifica que o análogo promove desligamento.",
+                "C": "Pontes de rigor exigem nucleotídeo para o desligamento; remover Ca²⁺ não cumpre essa função.",
+                "D": "Confunde os papéis distintos da ligação e da hidrólise do ATP."
+        },
+        "pontuacao_maxima": 2.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Ciclo das pontes cruzadas e funções do ATP",
+                "Ciclo das pontes cruzadas (Média)"
+        ]
+},
+    {
+        "id": "t15_1",
+        "codigo": "T15.1",
+        "topico_id": "T15",
+        "topico_nome": "Remoção do Ca²⁺ e relaxamento esquelético",
+        "dificuldade": "Fácil",
+        "pergunta": "Após a contração de uma fibra esquelética, qual transporte contribui principalmente para retirar Ca²⁺ do citosol e recompor o estoque intracelular?",
+        "alternativas": {
+                "A": "Transporte de Ca²⁺ do citosol para a actina pela miosina.",
+                "B": "Transporte de Ca²⁺ do citosol para o retículo pela SERCA.",
+                "C": "Transporte de Ca²⁺ do retículo para o citosol pelo RyR1.",
+                "D": "Transporte de Ca²⁺ do meio extracelular para o citosol por DHPR."
+        },
+        "gabarito": "B",
+        "distratores": {
+                "A": "Miosina não funciona como transportador de Ca²⁺ para a actina.",
+                "B": "Gabarito correto: A SERCA recaptura Ca²⁺ para o retículo, favorecendo o relaxamento e o reabastecimento do estoque.",
+                "C": "O RyR1 promove liberação, no sentido oposto à recaptação.",
+                "D": "A entrada pelo sarcolema não explica a remoção do Ca²⁺ citosólico."
+        },
+        "pontuacao_maxima": 1.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Remoção do Ca²⁺ e relaxamento esquelético",
+                "Remoção do Ca²⁺ esquelético (Fácil)"
+        ]
+},
+    {
+        "id": "t15_2",
+        "codigo": "T15.2",
+        "topico_id": "T15",
+        "topico_nome": "Remoção do Ca²⁺ e relaxamento esquelético",
+        "dificuldade": "Fácil",
+        "pergunta": "Vesículas de retículo esquelético acumulam Ca²⁺ em seu interior contra o gradiente de concentração. Qual condição permite que a SERCA sustente esse processo?",
+        "alternativas": {
+                "A": "Ligação de Ca²⁺ à tropomiosina.",
+                "B": "Disponibilidade de ATP para hidrólise.",
+                "C": "Abertura permanente de RyR1.",
+                "D": "Ausência de diferença de concentração entre os compartimentos."
+        },
+        "gabarito": "B",
+        "distratores": {
+                "A": "A proteína regulatória não fornece energia nem realiza esse transporte.",
+                "B": "Gabarito correto: A hidrólise de ATP fornece energia para o transporte ativo pela SERCA.",
+                "C": "Abrir canais de liberação favorece a saída do Ca²⁺ acumulado.",
+                "D": "A condição proposta elimina o gradiente, mas não explica o transporte contra ele."
+        },
+        "pontuacao_maxima": 1.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Remoção do Ca²⁺ e relaxamento esquelético",
+                "Remoção do Ca²⁺ esquelético (Fácil)"
+        ]
+},
+    {
+        "id": "t15_3",
+        "codigo": "T15.3",
+        "topico_id": "T15",
+        "topico_nome": "Remoção do Ca²⁺ e relaxamento esquelético",
+        "dificuldade": "Média",
+        "pergunta": "Após tapsigargina, utilizada experimentalmente para inibir a SERCA, uma fibra apresenta liberação inicial de Ca²⁺ semelhante à do controle. Entre estímulos, porém, o Ca²⁺ permanece mais alto e o conteúdo do retículo se recupera menos. Qual combinação é esperada?",
+        "alternativas": {
+                "A": "Relaxamento menos completo e menor reposição do estoque para estímulos posteriores.",
+                "B": "Relaxamento mais rápido e menor reposição do estoque para estímulos posteriores.",
+                "C": "Relaxamento mais rápido e maior reposição do estoque para estímulos posteriores.",
+                "D": "Relaxamento menos completo e maior reposição do estoque para estímulos posteriores."
+        },
+        "gabarito": "A",
+        "distratores": {
+                "A": "Gabarito correto: A recaptação reduzida retém Ca²⁺ no citosol e deixa menos Ca²⁺ disponível no retículo antes dos próximos estímulos.",
+                "B": "Reconhece menor reposição, mas inverte o efeito do Ca²⁺ residual sobre a desativação contrátil.",
+                "C": "Inverte os efeitos esperados de reduzir a recaptação pela SERCA.",
+                "D": "Reconhece o relaxamento incompleto, mas não o déficit de reabastecimento do retículo."
+        },
+        "pontuacao_maxima": 2.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Remoção do Ca²⁺ e relaxamento esquelético",
+                "Remoção do Ca²⁺ esquelético (Média)"
+        ]
+},
+    {
+        "id": "t15_4",
+        "codigo": "T15.4",
+        "topico_id": "T15",
+        "topico_nome": "Remoção do Ca²⁺ e relaxamento esquelético",
+        "dificuldade": "Média",
+        "pergunta": "Ao cessar a estimulação, uma fibra mantém ATP e atividade da SERCA normais, mas apresenta um vazamento persistente de Ca²⁺ pelo retículo. A força demora a cair. Qual intervenção atua diretamente sobre o desequilíbrio descrito?",
+        "alternativas": {
+                "A": "Reduzir o vazamento pelos canais de liberação, preservando a recaptação.",
+                "B": "Bloquear a ligação de ATP à miosina, preservando o vazamento.",
+                "C": "Inibir a SERCA, preservando o vazamento.",
+                "D": "Aumentar a afinidade da troponina por Ca²⁺, preservando o vazamento."
+        },
+        "gabarito": "A",
+        "distratores": {
+                "A": "Gabarito correto: Diminuir a fonte persistente de Ca²⁺ permite que a remoção já funcional reduza sua concentração citosólica.",
+                "B": "Impedir o desligamento de pontes não corrige o Ca²⁺ elevado e pode aumentar a rigidez.",
+                "C": "Reduzir a remoção agrava o desequilíbrio entre saída do retículo e recaptação.",
+                "D": "Sensibilizar os filamentos favorece manutenção de força em Ca²⁺ mais baixo."
+        },
+        "pontuacao_maxima": 2.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Remoção do Ca²⁺ e relaxamento esquelético",
+                "Remoção do Ca²⁺ esquelético (Média)"
+        ]
+},
+    {
+        "id": "t16_1",
+        "codigo": "T16.1",
+        "topico_id": "T16",
+        "topico_nome": "Automaticidade das células nodais",
+        "dificuldade": "Fácil",
+        "pergunta": "Uma célula do nó sinoatrial isolada continua produzindo potenciais de ação sem estímulos nervosos periódicos. Qual característica permite esse comportamento?",
+        "alternativas": {
+                "A": "Despolarização espontânea entre potenciais de ação.",
+                "B": "Ausência de correntes iônicas durante a fase entre disparos.",
+                "C": "Liberação obrigatória de acetilcolina a cada disparo.",
+                "D": "Potencial de repouso perfeitamente estável entre os disparos."
+        },
+        "gabarito": "A",
+        "distratores": {
+                "A": "Gabarito correto: A despolarização diastólica leva a membrana espontaneamente ao limiar.",
+                "B": "A mudança de potencial exige um balanço de correntes transmembrana.",
+                "C": "A inervação modula a automaticidade, mas não precisa fornecer cada disparo.",
+                "D": "Um potencial estável abaixo do limiar não explica a geração rítmica espontânea."
+        },
+        "pontuacao_maxima": 1.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Automaticidade das células nodais",
+                "Automaticidade nodal (Fácil)"
+        ]
+},
+    {
+        "id": "t16_2",
+        "codigo": "T16.2",
+        "topico_id": "T16",
+        "topico_nome": "Automaticidade das células nodais",
+        "dificuldade": "Fácil",
+        "pergunta": "A subida do potencial de ação de uma célula central do nó sinoatrial torna-se muito menor após bloqueio de canais de Ca²⁺ tipo L. Qual fluxo participa diretamente dessa fase do potencial de ação?",
+        "alternativas": {
+                "A": "Saída de K⁺ através do sarcolema.",
+                "B": "Entrada rápida de Na⁺ como nas células ventriculares contráteis.",
+                "C": "Entrada de Ca²⁺ através do sarcolema.",
+                "D": "Saída de Ca²⁺ do citosol pelo NCX."
+        },
+        "gabarito": "C",
+        "distratores": {
+                "A": "Saída de carga positiva favorece repolarização, não a fase de subida.",
+                "B": "Transfere para a célula nodal central o mecanismo predominante da fase 0 ventricular.",
+                "C": "Gabarito correto: Nas células nodais centrais, a corrente de Ca²⁺ tipo L é importante para a despolarização da fase 0.",
+                "D": "Extrusão por NCX participa de outros processos, mas não é o fluxo de Ca²⁺ tipo L que produz a subida nodal."
+        },
+        "pontuacao_maxima": 1.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Automaticidade das células nodais",
+                "Automaticidade nodal (Fácil)"
+        ]
+},
+    {
+        "id": "t16_3",
+        "codigo": "T16.3",
+        "topico_id": "T16",
+        "topico_nome": "Automaticidade das células nodais",
+        "dificuldade": "Média",
+        "pergunta": "Duas condições apresentam a mesma velocidade média de despolarização diastólica e o mesmo limiar. Na condição B, a repolarização termina em potencial mais negativo que em A. A duração das demais fases não muda. Qual consequência é esperada?",
+        "alternativas": {
+                "A": "A frequência é necessariamente igual, porque a inclinação diastólica não mudou.",
+                "B": "B atinge o limiar antes e apresenta maior frequência.",
+                "C": "B perde necessariamente a capacidade de produzir qualquer potencial de ação.",
+                "D": "B demora mais para atingir o limiar e apresenta menor frequência."
+        },
+        "gabarito": "D",
+        "distratores": {
+                "A": "A frequência depende também do potencial inicial, do limiar e da duração das outras fases.",
+                "B": "Um ponto inicial mais negativo aumenta, e não reduz, o percurso até o mesmo limiar.",
+                "C": "Um percurso maior não implica, por si só, impossibilidade de alcançar o limiar.",
+                "D": "Gabarito correto: Com a mesma inclinação, um percurso maior de voltagem até o limiar exige mais tempo."
+        },
+        "pontuacao_maxima": 2.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Automaticidade das células nodais",
+                "Automaticidade nodal (Média)"
+        ]
+},
+    {
+        "id": "t16_4",
+        "codigo": "T16.4",
+        "topico_id": "T16",
+        "topico_nome": "Automaticidade das células nodais",
+        "dificuldade": "Difícil",
+        "pergunta": "Uma preparação sinoatrial e uma fibra esquelética são mantidas viáveis sem conexões nervosas. A primeira dispara espontaneamente; a segunda só produz um potencial de ação quando recebe estímulo elétrico direto. A ivabradina reduz a frequência espontânea da preparação sinoatrial. Qual conclusão integra os achados?",
+        "alternativas": {
+                "A": "A fibra esquelética só é excitável se receber acetilcolina; o estímulo elétrico direto atua exclusivamente sobre o nervo ausente.",
+                "B": "Automaticidade depende de mecanismos celulares moduláveis; a falta de disparos espontâneos na fibra esquelética não significa perda de excitabilidade.",
+                "C": "Todo músculo sem nervos perde excitabilidade; os disparos sinoatriais demonstram necessariamente contaminação neuronal.",
+                "D": "A ivabradina interrompe a liberação de acetilcolina, demonstrando que cada disparo sinoatrial exige uma sinapse motora."
+        },
+        "gabarito": "B",
+        "distratores": {
+                "A": "A estimulação direta mostra que a despolarização muscular pode ser provocada sem transmissão pela placa motora.",
+                "B": "Gabarito correto: A célula nodal alcança o limiar espontaneamente; a fibra esquelética pode ser excitável sem possuir esse ritmo intrínseco.",
+                "C": "As respostas elétricas em ambas as preparações contradizem perda de excitabilidade causada apenas pela ausência de nervos.",
+                "D": "Ivabradina modula If; sua ação em tecido isolado não demonstra dependência de sinapse motora."
+        },
+        "pontuacao_maxima": 3.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Automaticidade das células nodais",
+                "Automaticidade nodal (Difícil)"
+        ]
+},
+    {
+        "id": "t17_1",
+        "codigo": "T17.1",
+        "topico_id": "T17",
+        "topico_nome": "Bases iônicas do potencial de ação ventricular",
+        "dificuldade": "Fácil",
+        "pergunta": "No início de um potencial de ação de um miócito ventricular normal, qual fluxo predomina na despolarização rápida?",
+        "alternativas": {
+                "A": "Entrada de Ca²⁺ por canais HCN.",
+                "B": "Saída de Na⁺ pela Na⁺/K⁺-ATPase.",
+                "C": "Entrada de Na⁺ por canais rápidos dependentes de voltagem.",
+                "D": "Saída de K⁺ por canais retificadores tardios."
+        },
+        "gabarito": "C",
+        "distratores": {
+                "A": "Confunde o potencial ventricular com correntes marca-passo e a seletividade de HCN.",
+                "B": "A bomba mantém gradientes, mas não gera a corrente rápida da fase 0.",
+                "C": "Gabarito correto: A abertura rápida de canais de Na⁺ produz a subida abrupta do potencial ventricular.",
+                "D": "A saída de carga positiva contribui para repolarização, não para a subida rápida."
+        },
+        "pontuacao_maxima": 1.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Bases iônicas do potencial de ação ventricular",
+                "Potencial ventricular (Fácil)"
+        ]
+},
+    {
+        "id": "t17_2",
+        "codigo": "T17.2",
+        "topico_id": "T17",
+        "topico_nome": "Bases iônicas do potencial de ação ventricular",
+        "dificuldade": "Fácil",
+        "pergunta": "Durante o platô ventricular, o potencial muda lentamente apesar da passagem de íons. Qual situação explica esse comportamento?",
+        "alternativas": {
+                "A": "Correntes de entrada, sobretudo de Ca²⁺, são aproximadamente contrabalançadas por correntes de saída, sobretudo de K⁺.",
+                "B": "Todos os canais de membrana permanecem fechados durante o platô.",
+                "C": "A membrana perde sua diferença de potencial e permanece em equilíbrio com todos os íons.",
+                "D": "A bomba de Na⁺/K⁺ mantém uma corrente rápida de entrada de Na⁺ igual à da fase 0."
+        },
+        "gabarito": "A",
+        "distratores": {
+                "A": "Gabarito correto: Pequena corrente líquida pode coexistir com fluxos relevantes de sentidos opostos.",
+                "B": "Potencial quase constante não significa ausência de correntes individuais.",
+                "C": "O platô não representa equilíbrio eletroquímico simultâneo de todos os íons.",
+                "D": "A bomba não gera a corrente rápida de entrada de Na⁺ nem substitui os canais do platô."
+        },
+        "pontuacao_maxima": 1.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Bases iônicas do potencial de ação ventricular",
+                "Potencial ventricular (Fácil)"
+        ]
+},
+    {
+        "id": "t17_3",
+        "codigo": "T17.3",
+        "topico_id": "T17",
+        "topico_nome": "Bases iônicas do potencial de ação ventricular",
+        "dificuldade": "Média",
+        "pergunta": "Um miócito ventricular recebe verapamil, e a corrente de Ca²⁺ tipo L diminui. Em uma comparação na qual as correntes de K⁺ são mantidas iguais, qual tendência é esperada para o platô?",
+        "alternativas": {
+                "A": "Manutenção obrigatória do platô, pois a corrente líquida independe de Ca²⁺.",
+                "B": "Substituição da fase 2 por uma nova fase 0 de Na⁺.",
+                "C": "Maior sustentação do platô pela redução de uma corrente de saída.",
+                "D": "Menor sustentação do platô pela redução de uma corrente de entrada."
+        },
+        "gabarito": "D",
+        "distratores": {
+                "A": "A duração depende do balanço de correntes, incluindo a corrente de Ca²⁺.",
+                "B": "Bloquear Ca²⁺ tipo L não obriga a reativação dos canais rápidos de Na⁺.",
+                "C": "A corrente tipo L transporta carga positiva para dentro nas condições usuais do platô.",
+                "D": "Gabarito correto: Reduzir entrada de carga positiva, mantendo a saída, favorece a repolarização mais precoce."
+        },
+        "pontuacao_maxima": 2.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Bases iônicas do potencial de ação ventricular",
+                "Potencial ventricular (Média)"
+        ]
+},
+    {
+        "id": "t17_4",
+        "codigo": "T17.4",
+        "topico_id": "T17",
+        "topico_nome": "Bases iônicas do potencial de ação ventricular",
+        "dificuldade": "Média",
+        "pergunta": "Um aumento sustentado do K⁺ extracelular torna o potencial diastólico ventricular menos negativo. Nessa preparação, a medida de canais rápidos de Na⁺ disponíveis diminui. Qual consequência é mais provável para a fase de despolarização?",
+        "alternativas": {
+                "A": "Subida passa a ser determinada exclusivamente pela Na⁺/K⁺-ATPase.",
+                "B": "Subida mais lenta por menor disponibilidade de canais de Na⁺ recuperados da inativação.",
+                "C": "Subida inalterada, pois a disponibilidade dos canais não interfere na corrente.",
+                "D": "Subida mais rápida apenas porque o potencial inicial está mais próximo do limiar."
+        },
+        "gabarito": "B",
+        "distratores": {
+                "A": "A bomba mantém gradientes e não substitui a corrente rápida na fase 0.",
+                "B": "Gabarito correto: A despolarização sustentada pode manter canais de Na⁺ inativados, reduzindo a corrente rápida.",
+                "C": "O número de canais disponíveis afeta a corrente e a velocidade de subida.",
+                "D": "Considera apenas a distância até o limiar e ignora a inativação medida."
+        },
+        "pontuacao_maxima": 2.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Bases iônicas do potencial de ação ventricular",
+                "Potencial ventricular (Média)"
+        ]
+},
+    {
+        "id": "t17_5",
+        "codigo": "T17.5",
+        "topico_id": "T17",
+        "topico_nome": "Bases iônicas do potencial de ação ventricular",
+        "dificuldade": "Difícil",
+        "pergunta": "Em miócitos ventriculares, X encurta o platô, reduz a liberação de Ca²⁺ do retículo sarcoplasmático e diminui a força. Y diminui a força, mas preserva o platô e a liberação de Ca²⁺. Não há alterações de ATP ou carga mecânica. Qual associação explica melhor os dois padrões?",
+        "alternativas": {
+                "A": "X e Y reduzem exclusivamente a entrada rápida de Na⁺ na fase 0.",
+                "B": "X reduz a corrente de Ca²⁺ tipo L; Y reduz a resposta dos miofilamentos ao Ca²⁺.",
+                "C": "X e Y reduzem exclusivamente a resposta dos miofilamentos ao Ca²⁺.",
+                "D": "X reduz a resposta dos miofilamentos ao Ca²⁺; Y reduz a corrente de Ca²⁺ tipo L."
+        },
+        "gabarito": "B",
+        "distratores": {
+                "A": "Os achados localizam efeitos no platô/acoplamento e no aparato contrátil, não apenas na fase 0.",
+                "B": "Gabarito correto: X altera sinal elétrico e disponibilidade de Ca²⁺; Y altera força após um sinal de Ca²⁺ preservado.",
+                "C": "Uma alteração isolada dos miofilamentos não explica o menor platô e o menor transiente em X.",
+                "D": "Inverte as etapas indicadas pelos registros de voltagem e de Ca²⁺."
+        },
+        "pontuacao_maxima": 3.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Bases iônicas do potencial de ação ventricular",
+                "Potencial ventricular (Difícil)"
+        ]
+},
+    {
+        "id": "t18_1",
+        "codigo": "T18.1",
+        "topico_id": "T18",
+        "topico_nome": "Liberação de Ca²⁺ induzida por Ca²⁺ no coração",
+        "dificuldade": "Fácil",
+        "pergunta": "Em um miócito ventricular, qual evento normalmente fornece o sinal inicial para a liberação de Ca²⁺ pelo retículo durante um potencial de ação?",
+        "alternativas": {
+                "A": "Saída de Ca²⁺ pelo NCX durante o modo direto.",
+                "B": "Transporte de Ca²⁺ do citosol para o retículo pela SERCA.",
+                "C": "Entrada de Ca²⁺ por canais tipo L do sarcolema.",
+                "D": "Mudança de voltagem de DHPR acoplado diretamente a RyR1."
+        },
+        "gabarito": "C",
+        "distratores": {
+                "A": "Esse transporte remove Ca²⁺ do citosol, em vez de fornecer o aumento local que inicia a liberação.",
+                "B": "A recaptação abastece o estoque, mas não é o gatilho imediato da liberação sistólica.",
+                "C": "Gabarito correto: O Ca²⁺ de entrada ativa agrupamentos de RyR2 próximos no retículo.",
+                "D": "Transporta para o ventrículo o mecanismo característico do músculo esquelético."
+        },
+        "pontuacao_maxima": 1.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Liberação de Ca²⁺ induzida por Ca²⁺ no coração",
+                "CICR cardíaco (Fácil)"
+        ]
+},
+    {
+        "id": "t18_2",
+        "codigo": "T18.2",
+        "topico_id": "T18",
+        "topico_nome": "Liberação de Ca²⁺ induzida por Ca²⁺ no coração",
+        "dificuldade": "Fácil",
+        "pergunta": "Após ativação de RyR2 em um miócito ventricular, em que sentido ocorre a liberação que amplia o sinal contrátil de Ca²⁺?",
+        "alternativas": {
+                "A": "Do citosol para o meio extracelular.",
+                "B": "Do retículo sarcoplasmático para o citosol.",
+                "C": "Do citosol para o retículo sarcoplasmático.",
+                "D": "Do meio extracelular diretamente para a troponina pelo RyR2."
+        },
+        "gabarito": "B",
+        "distratores": {
+                "A": "A extrusão celular ocorre por outras proteínas, como o NCX.",
+                "B": "Gabarito correto: RyR2 libera o Ca²⁺ armazenado no retículo para o citosol.",
+                "C": "Esse sentido corresponde à recaptação, realizada principalmente pela SERCA.",
+                "D": "RyR2 não forma uma ligação direta entre o meio extracelular e a troponina."
+        },
+        "pontuacao_maxima": 1.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Liberação de Ca²⁺ induzida por Ca²⁺ no coração",
+                "CICR cardíaco (Fácil)"
+        ]
+},
+    {
+        "id": "t18_3",
+        "codigo": "T18.3",
+        "topico_id": "T18",
+        "topico_nome": "Liberação de Ca²⁺ induzida por Ca²⁺ no coração",
+        "dificuldade": "Média",
+        "pergunta": "Um miócito ventricular com retículo inicialmente carregado é despolarizado sob controle de voltagem. A retirada breve do Ca²⁺ extracelular reduz muito a liberação de Ca²⁺ para o citosol, embora um ativador direto dos canais do retículo ainda libere Ca²⁺. O que os resultados indicam?",
+        "alternativas": {
+                "A": "O estoque foi necessariamente esvaziado por completo antes da despolarização.",
+                "B": "A despolarização ventricular ativa RyR2 independentemente da entrada de Ca²⁺.",
+                "C": "O retículo deixou de armazenar Ca²⁺, e o ativador criou novos íons no citosol.",
+                "D": "O estoque pode estar disponível, mas falta o gatilho de entrada para a liberação fisiológica."
+        },
+        "gabarito": "D",
+        "distratores": {
+                "A": "O teste com ativador direto contradiz o esvaziamento completo.",
+                "B": "A perda da resposta com retirada do Ca²⁺ externo contradiz essa independência nas condições testadas.",
+                "C": "Um ativador mobiliza íons existentes; não os produz.",
+                "D": "Gabarito correto: A liberação por ativação direta demonstra estoque mobilizável, enquanto a resposta elétrica exige o gatilho de Ca²⁺."
+        },
+        "pontuacao_maxima": 2.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Liberação de Ca²⁺ induzida por Ca²⁺ no coração",
+                "CICR cardíaco (Média)"
+        ]
+},
+    {
+        "id": "t18_4",
+        "codigo": "T18.4",
+        "topico_id": "T18",
+        "topico_nome": "Liberação de Ca²⁺ induzida por Ca²⁺ no coração",
+        "dificuldade": "Média",
+        "pergunta": "Dois miócitos recebem a mesma entrada de Ca²⁺ por canais tipo L. O segundo tem maior conteúdo de Ca²⁺ no retículo e apresenta maior liberação sistólica. Qual conclusão é adequada?",
+        "alternativas": {
+                "A": "A igualdade da entrada exige transientes citosólicos idênticos em qualquer condição.",
+                "B": "O maior transiente demonstra obrigatoriamente aumento da afinidade da troponina por Ca²⁺.",
+                "C": "A liberação do retículo ocorre sem nenhuma relação com seu conteúdo de Ca²⁺.",
+                "D": "O tamanho da resposta depende também do estado do estoque intracelular, não apenas da entrada gatilho."
+        },
+        "gabarito": "D",
+        "distratores": {
+                "A": "Ignora uma variável intracelular explicitamente diferente entre as células.",
+                "B": "A afinidade da troponina não é medida nem é necessária para explicar a maior liberação.",
+                "C": "Desconsidera que a quantidade armazenada condiciona a disponibilidade para liberação.",
+                "D": "Gabarito correto: Carga do retículo e propriedades de liberação influenciam a amplificação da entrada gatilho."
+        },
+        "pontuacao_maxima": 2.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Liberação de Ca²⁺ induzida por Ca²⁺ no coração",
+                "CICR cardíaco (Média)"
+        ]
+},
+    {
+        "id": "t18_5",
+        "codigo": "T18.5",
+        "topico_id": "T18",
+        "topico_nome": "Liberação de Ca²⁺ induzida por Ca²⁺ no coração",
+        "dificuldade": "Difícil",
+        "pergunta": "Com o potencial imposto, um modulador aumenta a liberação de Ca²⁺ pelo retículo, sem mudar a entrada total de Ca²⁺ tipo L. O conteúdo inicial do retículo foi igualado, e o fluxo de remoção durante a medida também foi controlado. Ainda não foram medidas as concentrações locais próximas aos canais. Qual conclusão respeita o alcance dos dados?",
+        "alternativas": {
+                "A": "Maior ganho global, com demonstração de ligação direta do modulador ao canal RyR2.",
+                "B": "Mesmo ganho global, com toda a diferença explicada por menor remoção de Ca²⁺.",
+                "C": "Maior ganho global, sem distinguir alteração de RyR2 de alteração do sinal no microdomínio.",
+                "D": "Mesmo ganho global, pois a entrada tipo L permanece igual nas duas condições."
+        },
+        "gabarito": "C",
+        "distratores": {
+                "A": "Inferir ligação molecular direta exige evidência que os testes funcionais apresentados não fornecem.",
+                "B": "A remoção foi controlada, e a variável informada é a liberação pelo retículo.",
+                "C": "Gabarito correto: Mais liberação para a mesma entrada indica maior ganho aparente, mas não identifica um alvo molecular único.",
+                "D": "Ganho relaciona saída e entrada; a liberação maior com entrada igual aumenta o quociente."
+        },
+        "pontuacao_maxima": 3.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Liberação de Ca²⁺ induzida por Ca²⁺ no coração",
+                "CICR cardíaco (Difícil)"
+        ]
+},
+    {
+        "id": "t18_6",
+        "codigo": "T18.6",
+        "topico_id": "T18",
+        "topico_nome": "Liberação de Ca²⁺ induzida por Ca²⁺ no coração",
+        "dificuldade": "Difícil",
+        "pergunta": "Um miócito ventricular apresenta entrada de Ca²⁺ tipo L normal, mas pequeno aumento de Ca²⁺ citosólico e pouca força. O conteúdo de Ca²⁺ do retículo está reduzido. Depois de repor experimentalmente esse conteúdo, o transiente e a força se recuperam sem mudar a corrente tipo L. Qual conclusão é mais consistente?",
+        "alternativas": {
+                "A": "O gatilho de entrada estava presente, mas a amplificação pelo estoque intracelular estava limitada.",
+                "B": "O teste demonstra que a troponina permaneceu incapaz de responder ao Ca²⁺ depois da reposição.",
+                "C": "A corrente tipo L estava funcionalmente ausente, apesar de sua medida normal.",
+                "D": "A força dependia apenas do Ca²⁺ que atravessava o sarcolema e não do retículo."
+        },
+        "gabarito": "A",
+        "distratores": {
+                "A": "Gabarito correto: A recuperação ao repor o estoque, com entrada inalterada, aponta para limitação da liberação intracelular disponível.",
+                "B": "A força recuperada demonstra resposta contrátil ao Ca²⁺ disponível após a intervenção.",
+                "C": "Contradiz o registro da corrente e sua manutenção durante o resgate.",
+                "D": "A força se modifica quando muda o estoque do retículo, apesar da mesma entrada sarcolemal."
+        },
+        "pontuacao_maxima": 3.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Liberação de Ca²⁺ induzida por Ca²⁺ no coração",
+                "CICR cardíaco (Difícil)"
+        ]
+},
+    {
+        "id": "t19_1",
+        "codigo": "T19.1",
+        "topico_id": "T19",
+        "topico_nome": "Remoção do Ca²⁺ e relaxamento cardíaco",
+        "dificuldade": "Fácil",
+        "pergunta": "Qual par relaciona corretamente duas vias de remoção de Ca²⁺ do citosol de um miócito ventricular durante o relaxamento?",
+        "alternativas": {
+                "A": "SERCA leva Ca²⁺ ao retículo; NCX no modo direto leva Ca²⁺ ao meio extracelular.",
+                "B": "SERCA libera Ca²⁺ do retículo; NCX no modo direto traz Ca²⁺ do meio extracelular.",
+                "C": "SERCA e NCX transportam Ca²⁺ exclusivamente para as mitocôndrias.",
+                "D": "SERCA leva Ca²⁺ ao meio extracelular; NCX leva Ca²⁺ ao retículo."
+        },
+        "gabarito": "A",
+        "distratores": {
+                "A": "Gabarito correto: As vias reduzem Ca²⁺ citosólico com destinos diferentes: armazenamento intracelular e extrusão celular.",
+                "B": "Inverte o sentido da SERCA e do NCX no modo especificado.",
+                "C": "Confunde essas proteínas com mecanismos de transporte mitocondrial.",
+                "D": "Troca a localização e o destino dos transportadores."
+        },
+        "pontuacao_maxima": 1.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Remoção do Ca²⁺ e relaxamento cardíaco",
+                "Relaxamento cardíaco (Fácil)"
+        ]
+},
+    {
+        "id": "t19_2",
+        "codigo": "T19.2",
+        "topico_id": "T19",
+        "topico_nome": "Remoção do Ca²⁺ e relaxamento cardíaco",
+        "dificuldade": "Fácil",
+        "pergunta": "Quando o Ca²⁺ citosólico ventricular diminui após a sístole, qual evento favorece o relaxamento dos miofilamentos?",
+        "alternativas": {
+                "A": "Aumento da ocupação da troponina C por Ca²⁺.",
+                "B": "Conversão de filamentos finos em filamentos grossos.",
+                "C": "Abertura sustentada dos canais RyR2 do retículo.",
+                "D": "Redução da ocupação da troponina C por Ca²⁺."
+        },
+        "gabarito": "D",
+        "distratores": {
+                "A": "Maior ocupação favorece ativação, não o relaxamento.",
+                "B": "Relaxamento não exige transformação estrutural entre os tipos de filamento.",
+                "C": "A liberação persistente se oporia à queda do Ca²⁺ citosólico.",
+                "D": "Gabarito correto: A perda do Ca²⁺ regulatório favorece o estado inibido do filamento fino."
+        },
+        "pontuacao_maxima": 1.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Remoção do Ca²⁺ e relaxamento cardíaco",
+                "Relaxamento cardíaco (Fácil)"
+        ]
+},
+    {
+        "id": "t19_3",
+        "codigo": "T19.3",
+        "topico_id": "T19",
+        "topico_nome": "Remoção do Ca²⁺ e relaxamento cardíaco",
+        "dificuldade": "Média",
+        "pergunta": "Em um miócito, digoxina inibe parcialmente a Na⁺/K⁺-ATPase e o Na⁺ intracelular aumenta. Considere o NCX inicialmente extrudindo Ca²⁺, com potencial e demais concentrações controlados. Qual tendência decorre da redução do gradiente de entrada de Na⁺?",
+        "alternativas": {
+                "A": "Maior recaptação direta pelo NCX, que passa a transportar Ca²⁺ ao retículo.",
+                "B": "Menor extrusão de Ca²⁺ pelo NCX, pela redução de sua força motriz.",
+                "C": "Maior extrusão de Ca²⁺ pelo NCX, pelo aumento do Na⁺ citosólico.",
+                "D": "Extrusão de Ca²⁺ pelo NCX preservada, porque apenas ATP determina seu funcionamento."
+        },
+        "gabarito": "B",
+        "distratores": {
+                "A": "O NCX sarcolemal não transporta Ca²⁺ para o retículo; esse destino corresponde à SERCA.",
+                "B": "Gabarito correto: A redução do gradiente de Na⁺ desfavorece o modo direto do trocador.",
+                "C": "O Na⁺ intracelular mais alto reduz, em vez de aumentar, a força de entrada do Na⁺.",
+                "D": "NCX utiliza diretamente o gradiente eletroquímico, não a hidrólise de ATP."
+        },
+        "pontuacao_maxima": 2.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Remoção do Ca²⁺ e relaxamento cardíaco",
+                "Relaxamento cardíaco (Média)"
+        ]
+},
+    {
+        "id": "t19_4",
+        "codigo": "T19.4",
+        "topico_id": "T19",
+        "topico_nome": "Remoção do Ca²⁺ e relaxamento cardíaco",
+        "dificuldade": "Difícil",
+        "pergunta": "Após um composto experimental, o potencial ventricular termina no mesmo instante do controle, mas o Ca²⁺ citosólico e a força demoram mais para cair. Em um ensaio separado com Ca²⁺ livre imposto, os miofilamentos relaxam normalmente quando o Ca²⁺ é reduzido. Qual hipótese deve ser priorizada?",
+        "alternativas": {
+                "A": "Aumento da sensibilidade dos miofilamentos que persiste mesmo quando o Ca²⁺ é imposto.",
+                "B": "Comprometimento da remoção citosólica de Ca²⁺, apesar da repolarização elétrica preservada.",
+                "C": "Prolongamento obrigatório do platô, mesmo com o registro de voltagem inalterado.",
+                "D": "Perda de toda capacidade de desligamento da miosina, mesmo com Ca²⁺ reduzido e ATP disponível."
+        },
+        "gabarito": "B",
+        "distratores": {
+                "A": "O ensaio separado não mostra a persistência de ativação que essa hipótese exigiria.",
+                "B": "Gabarito correto: A força acompanha o Ca²⁺ elevado, e o teste com Ca²⁺ imposto preserva o relaxamento contrátil; a remoção é a etapa prioritária.",
+                "C": "Contradiz a duração elétrica medida e confunde repolarização com remoção de Ca²⁺.",
+                "D": "O relaxamento normal no ensaio controlado é incompatível com perda completa do desligamento."
+        },
+        "pontuacao_maxima": 3.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Remoção do Ca²⁺ e relaxamento cardíaco",
+                "Relaxamento cardíaco (Difícil)"
+        ]
+},
+    {
+        "id": "t19_5",
+        "codigo": "T19.5",
+        "topico_id": "T19",
+        "topico_nome": "Remoção do Ca²⁺ e relaxamento cardíaco",
+        "dificuldade": "Difícil",
+        "pergunta": "Durante redução de ATP, um miócito acumula Na⁺ e remove Ca²⁺ mais lentamente. O ATP é então restaurado, mas o Na⁺ intracelular é mantido experimentalmente elevado. A recaptação pela SERCA melhora, enquanto a extrusão pelo NCX permanece reduzida, com potencial controlado. Qual explicação integra a recuperação desigual?",
+        "alternativas": {
+                "A": "Restaurar ATP normaliza necessariamente todo transporte de Ca²⁺, independentemente dos gradientes iônicos.",
+                "B": "SERCA transporta Ca²⁺ sem energia, e sua recuperação independe do ATP restaurado.",
+                "C": "SERCA recupera seu substrato energético direto; NCX continua limitado pelo gradiente de Na⁺ ainda alterado.",
+                "D": "NCX precisa hidrolisar ATP diretamente e por isso deveria recuperar antes da SERCA."
+        },
+        "gabarito": "C",
+        "distratores": {
+                "A": "Desconsidera a condição experimental que mantém elevado o Na⁺ intracelular.",
+                "B": "Ignora a natureza ATPásica da SERCA.",
+                "C": "Gabarito correto: A energia imediata da SERCA é ATP; a do NCX é o gradiente eletroquímico, cuja restauração foi impedida.",
+                "D": "Troca transporte ativo primário e secundário."
+        },
+        "pontuacao_maxima": 3.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Remoção do Ca²⁺ e relaxamento cardíaco",
+                "Relaxamento cardíaco (Difícil)"
+        ]
+},
+    {
+        "id": "t20_1",
+        "codigo": "T20.1",
+        "topico_id": "T20",
+        "topico_nome": "Duração do potencial de ação e período refratário cardíaco",
+        "dificuldade": "Fácil",
+        "pergunta": "Um segundo estímulo é aplicado a um miócito ventricular durante seu período refratário absoluto. O que se espera?",
+        "alternativas": {
+                "A": "A célula passa imediatamente a produzir potenciais de ação de forma automática.",
+                "B": "Inicia-se um novo potencial de ação sempre que o estímulo supera a intensidade do primeiro.",
+                "C": "O segundo potencial tem obrigatoriamente amplitude duas vezes maior que a do primeiro.",
+                "D": "Não se inicia um novo potencial de ação, mesmo com estímulo mais intenso dentro de condições fisiológicas."
+        },
+        "gabarito": "D",
+        "distratores": {
+                "A": "Um estímulo nesse período não transforma a célula ventricular em um marca-passo.",
+                "B": "Confunde refratariedade absoluta com relativa, na qual a intensidade pode influenciar a resposta.",
+                "C": "A amplitude não se soma dessa maneira a um potencial durante a fase refratária absoluta.",
+                "D": "Gabarito correto: No período absoluto, a disponibilidade de canais não permite iniciar um novo potencial de ação normal."
+        },
+        "pontuacao_maxima": 1.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Duração do potencial de ação e período refratário cardíaco",
+                "Período refratário cardíaco (Fácil)"
+        ]
+},
+    {
+        "id": "t20_2",
+        "codigo": "T20.2",
+        "topico_id": "T20",
+        "topico_nome": "Duração do potencial de ação e período refratário cardíaco",
+        "dificuldade": "Fácil",
+        "pergunta": "O período refratário ventricular ocupa grande parte da contração mecânica. Qual consequência isso favorece?",
+        "alternativas": {
+                "A": "Mantém o ventrículo permanentemente contraído entre batimentos.",
+                "B": "Impede a tetanização fisiológica por estímulos rapidamente repetidos.",
+                "C": "Elimina a necessidade de Ca²⁺ para cada contração.",
+                "D": "Permite somar livremente potenciais de ação durante todo o platô."
+        },
+        "gabarito": "B",
+        "distratores": {
+                "A": "O coração alterna contração e relaxamento; refratariedade não equivale a contração permanente.",
+                "B": "Gabarito correto: A indisponibilidade para nova excitação durante grande parte da contração limita a soma que produziria tétano.",
+                "C": "A refratariedade é elétrica e não substitui a função contrátil do Ca²⁺.",
+                "D": "O platô se associa a refratariedade importante, não à disponibilidade irrestrita para novos potenciais."
+        },
+        "pontuacao_maxima": 1.0,
+        "tipo": "multipla_escolha",
+        "componentes_conhecimento": [
+                "Duração do potencial de ação e período refratário cardíaco",
+                "Período refratário cardíaco (Fácil)"
+        ]
+}
 ]
 
 # =============================
@@ -2172,36 +3320,47 @@ QUESTIONS: List[Dict[str, Any]] = [
 # =============================
 def pick_adaptive_case(current_difficulty: str = "Fácil", used_cases: List[str] = None, topic_filter: str = None) -> Dict[str, Any]:
     """
-    Seleciona a próxima questão adaptativamente com base na dificuldade desejada do aluno.
-    Se topic_filter for None ou 'Qualquer', sorteia entre todos os 8 blocos de Biofísica.
+    Seleciona a próxima questão adaptativamente com base na dificuldade desejada e filtro de tópico/bloco.
+    Se topic_filter for None, 'Todos' ou 'Qualquer', sorteia entre todas as questões.
+    Se for um bloco (ex: 'Bloco 1', 'Bloco 2', 'Bloco 3'), filtra pelos tópicos daquele bloco.
+    Se for um tópico (ex: 'T1', 'T11'), filtra especificamente por ele.
     """
     used_cases = used_cases or []
     
     pool = QUESTIONS
-    if topic_filter and topic_filter not in ["Todos", "Qualquer", "Nenhum"]:
-        pool = [q for q in pool if q.get("topico_id") == topic_filter]
+    if topic_filter and topic_filter not in ["Todos", "Qualquer", "Nenhum", "all", ""]:
+        if topic_filter in BLOCKS:
+            block_topics = BLOCKS[topic_filter]["topicos"]
+            pool = [q for q in pool if q.get("topico_id") in block_topics]
+        else:
+            pool = [q for q in pool if q.get("topico_id") == topic_filter]
         
     if not pool:
         pool = QUESTIONS
         
     # 1. Tenta pegar questão não respondida do pool na dificuldade desejada
-    matching = [q for q in pool if q.get("dificuldade") == current_difficulty and q["id"] not in used_cases]
-    
-    # 2. Se esgotou no pool específico, tenta em todas as questões da dificuldade desejada (de qualquer bloco)
-    if not matching:
-        matching = [q for q in QUESTIONS if q.get("dificuldade") == current_difficulty and q["id"] not in used_cases]
-        
-    # 3. Se esgotou na dificuldade desejada, tenta qualquer questão não respondida
-    if not matching:
+    if current_difficulty and current_difficulty not in ["Qualquer", "Todos", "Adaptativo"]:
+        matching = [q for q in pool if q.get("dificuldade") == current_difficulty and q["id"] not in used_cases]
+        if not matching:
+            matching = [q for q in pool if q["id"] not in used_cases]
+    else:
         matching = [q for q in pool if q["id"] not in used_cases]
+    
+    # 2. Se esgotou no pool específico, tenta no pool geral
     if not matching:
-        matching = [q for q in QUESTIONS if q["id"] not in used_cases]
+        if current_difficulty and current_difficulty not in ["Qualquer", "Todos", "Adaptativo"]:
+            matching = [q for q in QUESTIONS if q.get("dificuldade") == current_difficulty and q["id"] not in used_cases]
+        if not matching:
+            matching = [q for q in QUESTIONS if q["id"] not in used_cases]
         
-    # 4. Se todas as 46 questões foram respondidas, sorteia qualquer uma da dificuldade desejada
+    # 3. Se todas as questões foram respondidas, sorteia dentro do pool
     if not matching:
-        matching = [q for q in QUESTIONS if q.get("dificuldade") == current_difficulty]
+        if current_difficulty and current_difficulty not in ["Qualquer", "Todos", "Adaptativo"]:
+            matching = [q for q in pool if q.get("dificuldade") == current_difficulty]
+        if not matching:
+            matching = pool
         
-    # 5. Fallback final: qualquer questão
+    # 4. Fallback final: qualquer questão
     if not matching:
         matching = QUESTIONS
         

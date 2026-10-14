@@ -1,7 +1,7 @@
 import streamlit as st
 import extra_streamlit_components as stx
 from logic import (
-    APP_NAME, QUESTIONS, TOPICS,
+    APP_NAME, QUESTIONS, TOPICS, BLOCKS,
     pick_adaptive_case, pick_new_case, get_case,
     evaluate_mcq_answer, finalize_question_response,
     level_from_score, progress_to_next_level,
@@ -202,18 +202,25 @@ def render_top_navbar():
             diff_slug = "facil" if diff == "Fácil" else ("media" if diff == "Média" else "dificil")
             
             cur_topic_key = st.session_state.get("topic_filter", "T1")
-            cur_topic_idx = TOPIC_KEYS.index(cur_topic_key) + 1 if cur_topic_key in TOPIC_KEYS else 1
-            cur_topic_full = TOPICS.get(cur_topic_key, "Transporte em Membranas")
+            cur_topic_full = TOPICS.get(cur_topic_key, "Biofísica")
+            
+            # Identifica o Bloco correspondente
+            cur_block_name = "Bloco 1"
+            for b_name, b_info in BLOCKS.items():
+                if cur_topic_key in b_info.get("topicos", []):
+                    cur_block_name = b_name
+                    break
             
             ans_cnt = len(st.session_state.get("completed_cases", []))
+            mode_lbl = st.session_state.get("manual_difficulty") or "Adaptativo"
             
             st.markdown(f"""
             <div class='nav-stats-bar'>
-                <span class='nav-pill nav-pill-block' title='Bloco {cur_topic_idx}: {cur_topic_full}'>
-                    <span class='material-icons-outlined' style='font-size:15px;'>category</span> Bloco {cur_topic_idx}
+                <span class='nav-pill nav-pill-block' title='{cur_block_name}: {cur_topic_key} - {cur_topic_full}'>
+                    <span class='material-icons-outlined' style='font-size:15px;'>category</span> {cur_block_name} ({cur_topic_key})
                 </span>
-                <span class='nav-pill nav-pill-diff-{diff_slug}'>
-                    <span class='diff-dot diff-dot-{diff_slug}'></span> {diff}
+                <span class='nav-pill nav-pill-diff-{diff_slug}' title='Modo: {mode_lbl}'>
+                    <span class='diff-dot diff-dot-{diff_slug}'></span> Nível: {diff}
                 </span>
                 <span class='nav-pill nav-pill-answered' title='Questões respondidas nesta sessão'>
                     <span class='material-icons-outlined' style='font-size:15px;'>task_alt</span> Respondidas <b>{ans_cnt}</b>
@@ -297,7 +304,11 @@ def init_state():
         "chat": [], "show_next_case_btn": False, "used_cases": [],
         "current_timer_id": None, "case_counter": 0, "current_evaluation": None,
         "submitted_answer": False, "selected_option": None, "insistence_count": 0,
-        "topic_attempts": 0, "completed_cases": []
+        "topic_attempts": 0, "completed_cases": [],
+        "seen_history": [], "history_idx": 0,
+        "selected_theme_filter": "Todos", "selected_theme_display": "🎲 Todos os Temas (Modo Aleatório)",
+        "manual_difficulty": None, "manual_difficulty_display": "⚡ Modo Adaptativo (Automático)",
+        "answers_history": {}
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -314,6 +325,14 @@ def init_state():
                 if k == "used_cases":
                     val = [uid for uid in val if uid in valid_q_ids]
                 st.session_state[k] = val
+
+    if st.session_state.current_case_id:
+        if "seen_history" not in st.session_state or not st.session_state.seen_history:
+            st.session_state.seen_history = [st.session_state.current_case_id]
+            st.session_state.history_idx = 0
+        elif st.session_state.current_case_id not in st.session_state.seen_history:
+            st.session_state.seen_history.append(st.session_state.current_case_id)
+            st.session_state.history_idx = len(st.session_state.seen_history) - 1
 
 def persist_now():
     user = get_current_user()
@@ -337,50 +356,68 @@ def persist_now():
         streak=st.session_state.streak
     )
 
-def start_new_case(forced_topic=None, forced_diff=None):
-    if forced_topic:
-        st.session_state.topic_filter = forced_topic
-        if forced_topic in TOPIC_KEYS:
-            st.session_state.current_topic_idx = TOPIC_KEYS.index(forced_topic)
+def start_new_case(forced_topic=None, forced_diff=None, target_case_id=None):
+    if target_case_id:
+        new_case = get_case(target_case_id)
     else:
-        st.session_state.topic_filter = None
+        # 1. Filtro de Tema / Bloco
+        topic = forced_topic if forced_topic is not None else st.session_state.get("selected_theme_filter", "Todos")
+        if topic in ["Todos", "Qualquer", "Nenhum", "", "🎲 Todos os Temas (Modo Aleatório)"]:
+            topic = None
             
-    if forced_diff:
-        st.session_state.current_difficulty = forced_diff
+        # 2. Filtro de Nível (Manual vs Adaptativo)
+        manual_d = st.session_state.get("manual_difficulty")
+        if manual_d and manual_d not in ["⚡ Modo Adaptativo (Automático)", "Adaptativo", "Automático", "Qualquer"]:
+            diff = manual_d
+        else:
+            diff = forced_diff or st.session_state.get("current_difficulty", "Fácil")
+            
+        new_case = pick_adaptive_case(current_difficulty=diff, used_cases=st.session_state.used_cases, topic_filter=topic)
         
-    st.session_state.topic_attempts = 0
-    diff = st.session_state.get("current_difficulty", "Fácil")
-    topic = st.session_state.get("topic_filter", None)
-    
-    new_case = pick_adaptive_case(current_difficulty=diff, used_cases=st.session_state.used_cases, topic_filter=topic)
     st.session_state.current_case_id = new_case["id"]
     if new_case["id"] not in st.session_state.used_cases:
         st.session_state.used_cases.append(new_case["id"])
+        
+    # Atualiza histórico de navegação
+    if "seen_history" not in st.session_state:
+        st.session_state.seen_history = []
+    if new_case["id"] not in st.session_state.seen_history:
+        st.session_state.seen_history.append(new_case["id"])
+    st.session_state.history_idx = st.session_state.seen_history.index(new_case["id"])
         
     cur_topic_key = new_case.get("topico_id", "T1")
     st.session_state.topic_filter = cur_topic_key
     if cur_topic_key in TOPIC_KEYS:
         st.session_state.current_topic_idx = TOPIC_KEYS.index(cur_topic_key)
         
-    cur_topic_num = TOPIC_KEYS.index(cur_topic_key) + 1 if cur_topic_key in TOPIC_KEYS else 1
-    
-    # Se já há mensagens no chat, adiciona marcador de transição sem apagar o histórico anterior
+    # Mensagem contextual no chat
     if st.session_state.get("chat"):
         st.session_state.chat.append({
             "role": "assistant",
-            "content": f"**Agora estamos no Bloco {cur_topic_num}:** *{new_case.get('topico_nome', '')}* ({new_case.get('codigo', '')} - Nível {new_case.get('dificuldade', '')}). Se tiver dúvidas conceituais, pode me perguntar!"
+            "content": f"**Agora estamos na Questão {new_case.get('codigo', '')}:** *{new_case.get('topico_nome', '')}* (Nível {new_case.get('dificuldade', '')}). Se tiver dúvidas conceituais, pode me perguntar!"
         })
     else:
         st.session_state.chat = [{
             "role": "assistant",
-            "content": f"Olá! Sou seu tutor **Helix.AI**. Estou aqui para tirar dúvidas e ajudar você a entender os conceitos do bloco *{new_case.get('topico_nome', '')}*. Pode me perguntar qualquer dúvida!"
+            "content": f"Olá! Sou seu tutor **Helix.AI**. Estou aqui para tirar dúvidas e ajudar você a entender os conceitos de *{new_case.get('topico_nome', '')}*. Pode me perguntar qualquer dúvida!"
         }]
         
     st.session_state.active_chat_case_id = new_case["id"]
     st.session_state.show_next_case_btn = False
-    st.session_state.current_evaluation = None
-    st.session_state.submitted_answer = False
-    st.session_state.selected_option = None
+    
+    # Restaura resposta do histórico se esta questão já foi respondida
+    answers_hist = st.session_state.get("answers_history", {})
+    if new_case["id"] in answers_hist:
+        cached = answers_hist[new_case["id"]]
+        st.session_state.submitted_answer = cached.get("submitted", True)
+        st.session_state.selected_option = cached.get("selected_option")
+        st.session_state.current_evaluation = cached.get("evaluation")
+    else:
+        st.session_state.current_evaluation = None
+        st.session_state.submitted_answer = False
+        st.session_state.selected_option = None
+        
+    st.session_state.topic_attempts = 0
     st.session_state.insistence_count = 0
     st.rerun()
 
@@ -439,19 +476,138 @@ def main():
     with col_question:
         ans_cnt = len(st.session_state.get("completed_cases", []))
         
+        # ── PAINEL DE CONTROLE: SELEÇÃO DE TEMA, NÍVEL E NAVEGAÇÃO LIVRE ──
+        with st.container(border=True):
+            col_t1, col_t2 = st.columns([1.6, 1.2])
+            
+            with col_t1:
+                # 1. Seletor de Tema / Assunto
+                theme_options = [
+                    "🎲 Todos os Temas (Modo Aleatório)",
+                    "📦 Bloco 1: Transporte em Membranas (T1 a T8)",
+                    "⚡ Bloco 2: Bioeletrogênese e Potenciais (T9 e T10)",
+                    "💪 Bloco 3: Biofísica Muscular (T11 a T20)"
+                ]
+                for tk, tv in TOPICS.items():
+                    theme_options.append(f"{tk} — {tv}")
+                    
+                cur_theme_disp = st.session_state.get("selected_theme_display", theme_options[0])
+                if cur_theme_disp not in theme_options:
+                    cur_theme_disp = theme_options[0]
+                    
+                sel_theme = st.selectbox(
+                    "🎯 Tema / Assunto:",
+                    theme_options,
+                    index=theme_options.index(cur_theme_disp),
+                    key="theme_selector_widget"
+                )
+                if sel_theme != st.session_state.get("selected_theme_display"):
+                    st.session_state.selected_theme_display = sel_theme
+                    if sel_theme.startswith("🎲"):
+                        st.session_state.selected_theme_filter = "Todos"
+                    elif sel_theme.startswith("📦 Bloco 1"):
+                        st.session_state.selected_theme_filter = "Bloco 1"
+                    elif sel_theme.startswith("⚡ Bloco 2"):
+                        st.session_state.selected_theme_filter = "Bloco 2"
+                    elif sel_theme.startswith("💪 Bloco 3"):
+                        st.session_state.selected_theme_filter = "Bloco 3"
+                    else:
+                        st.session_state.selected_theme_filter = sel_theme.split(" — ")[0].strip()
+                    start_new_case()
+                    
+            with col_t2:
+                # 2. Seletor de Nível (Modo Adaptativo vs Nível Fixo)
+                diff_options = ["⚡ Modo Adaptativo (Automático)", "Fácil", "Média", "Difícil"]
+                cur_diff_disp = st.session_state.get("manual_difficulty_display", diff_options[0])
+                if cur_diff_disp not in diff_options:
+                    cur_diff_disp = diff_options[0]
+                    
+                sel_diff = st.selectbox(
+                    "📊 Modo / Dificuldade:",
+                    diff_options,
+                    index=diff_options.index(cur_diff_disp),
+                    key="diff_selector_widget"
+                )
+                if sel_diff != st.session_state.get("manual_difficulty_display"):
+                    st.session_state.manual_difficulty_display = sel_diff
+                    if sel_diff == "⚡ Modo Adaptativo (Automático)":
+                        st.session_state.manual_difficulty = None
+                    else:
+                        st.session_state.manual_difficulty = sel_diff
+                    start_new_case()
+
+            # 3. Barra de Navegação: Voltar / Pular para Qualquer Questão / Avançar
+            nav_c1, nav_c2, nav_c3 = st.columns([1.1, 2.6, 1.1])
+            with nav_c1:
+                hist = st.session_state.get("seen_history", [])
+                h_idx = st.session_state.get("history_idx", 0)
+                can_back = (h_idx > 0 and len(hist) > 1)
+                if st.button("◀ Anterior", disabled=not can_back, use_container_width=True, icon=":material/arrow_back:"):
+                    target_id = hist[h_idx - 1]
+                    start_new_case(target_case_id=target_id)
+                    
+            with nav_c2:
+                # Seletor para ir diretamente a qualquer questão do sistema
+                q_opts_map = {}
+                ans_hist = st.session_state.get("answers_history", {})
+                completed = st.session_state.get("completed_cases", [])
+                
+                # Lista questões respeitando o filtro de tema atual se houver
+                cur_tf = st.session_state.get("selected_theme_filter", "Todos")
+                if cur_tf and cur_tf != "Todos":
+                    if cur_tf in BLOCKS:
+                        b_topics = BLOCKS[cur_tf]["topicos"]
+                        available_qs = [q for q in QUESTIONS if q.get("topico_id") in b_topics]
+                    else:
+                        available_qs = [q for q in QUESTIONS if q.get("topico_id") == cur_tf]
+                else:
+                    available_qs = QUESTIONS
+                    
+                for q in available_qs:
+                    qid = q["id"]
+                    status_icon = "✅" if qid in completed else ("📝" if qid in ans_hist else "⚪")
+                    q_label = f"{status_icon} [{q['codigo']}] ({q['dificuldade']}) {q['topico_id']}: {q['pergunta'][:42]}..."
+                    q_opts_map[q_label] = qid
+                    
+                cur_q_label = next((k for k, v in q_opts_map.items() if v == case["id"]), None)
+                if not cur_q_label:
+                    cur_q_label = f"📍 [{case.get('codigo','')}] ({case.get('dificuldade','')}) {case.get('topico_id','')}: {case.get('pergunta','')[:42]}..."
+                    q_opts_map[cur_q_label] = case["id"]
+                    
+                chosen_label = st.selectbox(
+                    "Ir para questão:",
+                    options=list(q_opts_map.keys()),
+                    index=list(q_opts_map.keys()).index(cur_q_label),
+                    key=f"jump_q_select_{case['id']}",
+                    label_visibility="collapsed"
+                )
+                if chosen_label != cur_q_label:
+                    target_id = q_opts_map[chosen_label]
+                    start_new_case(target_case_id=target_id)
+                    
+            with nav_c3:
+                can_forward = (h_idx < len(hist) - 1)
+                if can_forward:
+                    if st.button("Avançar ▶", use_container_width=True, icon=":material/arrow_forward:"):
+                        target_id = hist[h_idx + 1]
+                        start_new_case(target_case_id=target_id)
+                else:
+                    if st.button("Nova 🎲", use_container_width=True, icon=":material/shuffle:"):
+                        start_new_case()
+
+        st.markdown("<div style='margin-bottom: 0.6rem;'></div>", unsafe_allow_html=True)
+        
         # Cabeçalho Minimalista da Questão & Informações de Desempenho
         st.markdown(f"""
         <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;'>
             <div style='font-size: 1.05rem; font-weight: 700; color: #10b981; display: flex; align-items: center; gap: 6px;'>
-                <span class='material-icons-outlined' style='font-size:20px;'>science</span> Bloco {cur_topic_num}: {case.get('topico_nome', '')}
+                <span class='material-icons-outlined' style='font-size:20px;'>science</span> {case.get('topico_id', '')}: {case.get('topico_nome', '')}
             </div>
             <div style='font-size: 0.85rem; font-weight: 600; color: #64748b;'>
                 <b>Respondidas:</b> {ans_cnt}  |  <b>Pontuação:</b> {st.session_state.score:.1f} pts  |  <b>Streak:</b> {st.session_state.streak}
             </div>
         </div>
         """, unsafe_allow_html=True)
-        
-        st.markdown("<div style='margin-bottom: 0.6rem;'></div>", unsafe_allow_html=True)
         
         # Card da Questão Atual
         diff_name = case.get("dificuldade", "Fácil")
@@ -498,32 +654,41 @@ def main():
                         eval_res = evaluate_mcq_answer(case, chosen)
                         st.session_state.submitted_answer = True
                         
-                        # Motor de Progressão Adaptativa: Fácil -> Média -> Difícil
+                        # Salva no histórico de respostas
+                        if "answers_history" not in st.session_state:
+                            st.session_state.answers_history = {}
+                        st.session_state.answers_history[case["id"]] = {
+                            "submitted": True,
+                            "selected_option": chosen,
+                            "evaluation": eval_res
+                        }
+                        
+                        # Motor de Progressão Adaptativa (se manual_difficulty não estiver fixado)
+                        manual_d = st.session_state.get("manual_difficulty")
                         cur_diff = st.session_state.get("current_difficulty", "Fácil")
                         advance_block = False
                         
                         if eval_res["is_correct"]:
                             if attempts == 1:
                                 earned_pts = 1.0
-                                if cur_diff == "Fácil":
-                                    next_diff = "Média"
-                                elif cur_diff == "Média":
-                                    next_diff = "Difícil"
-                                else:
-                                    next_diff = "Fácil"
-                                    advance_block = True
-                                perf_msg = f"⭐ **Excelente! Acertou de primeira!** (+1.0 pt)\n\nDemonstrou domínio do conceito. Próxima questão adaptada para o nível **{next_diff}**!"
+                                if cur_diff == "Fácil": next_diff = "Média"
+                                elif cur_diff == "Média": next_diff = "Difícil"
+                                else: next_diff = "Fácil"; advance_block = True
+                                perf_msg = f"⭐ **Excelente! Acertou de primeira!** (+1.0 pt)"
                             elif attempts == 2:
                                 earned_pts = 0.7
-                                if cur_diff == "Fácil":
-                                    next_diff = "Média"
-                                else:
-                                    next_diff = "Média"
-                                perf_msg = f"👍 **Muito bem! Acertou na 2ª tentativa!** (+0.7 pt)\n\nBoa correção de raciocínio. Próxima questão no nível **{next_diff}**."
+                                next_diff = "Média"
+                                perf_msg = f"👍 **Muito bem! Acertou na 2ª tentativa!** (+0.7 pt)"
                             else:
                                 earned_pts = 0.4
                                 next_diff = "Fácil"
-                                perf_msg = f"💡 **Questão concluída após {attempts} tentativas!** (+0.4 pt)\n\nReforço conceitual ativado: a próxima questão será mantida no nível **Fácil** para consolidação."
+                                perf_msg = f"💡 **Questão concluída após {attempts} tentativas!** (+0.4 pt)"
+                                
+                            if manual_d:
+                                next_diff = manual_d
+                                perf_msg += f"\n\nNível selecionado manualmente em **{manual_d}**."
+                            else:
+                                perf_msg += f"\n\nPróxima questão adaptada para o nível **{next_diff}**!"
                                 
                             eval_res["points_gained"] = earned_pts
                             eval_res["next_diff"] = next_diff
@@ -557,7 +722,7 @@ def main():
                         st.rerun()
             else:
                 # Resposta confirmada - Exibe feedback detalhado
-                eval_res = st.session_state.current_evaluation
+                eval_res = st.session_state.current_evaluation or {}
                 is_corr = eval_res.get("is_correct", False)
                 selected_opt = eval_res.get("selected_option", "")
                 gab_opt = eval_res.get("correct_option", "")
@@ -597,13 +762,21 @@ def main():
 **Justificativa do Gabarito (Alternativa {gab_opt}):**  
 {eval_res.get('correct_explanation', '')}
 """)
-                    
                     st.markdown("<div style='margin-top: 1.2rem;'></div>", unsafe_allow_html=True)
-                    next_diff = eval_res.get("next_diff", "Média")
-                    advance_block = eval_res.get("advance_block", False)
+                    next_diff = eval_res.get("next_diff", st.session_state.get("manual_difficulty") or "Média")
                     
-                    if st.button(f"Próxima Questão (Nível {next_diff})", type="primary", use_container_width=True, icon=":material/arrow_forward:"):
-                        start_new_case(forced_topic=None, forced_diff=next_diff)
+                    c_btn1, c_btn2 = st.columns(2)
+                    with c_btn1:
+                        if st.button(f"Próxima Questão ({next_diff})", type="primary", use_container_width=True, icon=":material/arrow_forward:"):
+                            start_new_case(forced_diff=next_diff)
+                    with c_btn2:
+                        if st.button("Tentar Novamente esta Questão", use_container_width=True, icon=":material/refresh:"):
+                            st.session_state.submitted_answer = False
+                            st.session_state.selected_option = None
+                            st.session_state.current_evaluation = None
+                            if case["id"] in st.session_state.get("answers_history", {}):
+                                del st.session_state.answers_history[case["id"]]
+                            st.rerun()
                 else:
                     st.error(f"""
 ### Alternativa {selected_opt} Incorreta (Tentativa {attempts})
@@ -616,13 +789,19 @@ def main():
 
 *Dica:* Você pode usar o chat com o **Tutor Helix.AI** ao lado para tirar dúvidas conceituais antes de tentar novamente!
 """)
-                    
                     st.markdown("<div style='margin-top: 1.2rem;'></div>", unsafe_allow_html=True)
-                    if st.button("Tentar Novamente esta Questão", type="primary", use_container_width=True, icon=":material/refresh:"):
-                        st.session_state.submitted_answer = False
-                        st.session_state.selected_option = None
-                        st.session_state.current_evaluation = None
-                        st.rerun()
+                    c_btn1, c_btn2 = st.columns(2)
+                    with c_btn1:
+                        if st.button("Tentar Novamente esta Questão", type="primary", use_container_width=True, icon=":material/refresh:"):
+                            st.session_state.submitted_answer = False
+                            st.session_state.selected_option = None
+                            st.session_state.current_evaluation = None
+                            if case["id"] in st.session_state.get("answers_history", {}):
+                                del st.session_state.answers_history[case["id"]]
+                            st.rerun()
+                    with c_btn2:
+                        if st.button("Pular para Outra Questão 🎲", use_container_width=True, icon=":material/skip_next:"):
+                            start_new_case()
 
     # =========================================================================
     # COLUNA DIREITA: TUTOR SOCRÁTICO HELIX.AI (COM PROTEÇÃO 4 INSISTÊNCIAS)

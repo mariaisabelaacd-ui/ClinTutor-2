@@ -592,21 +592,23 @@ def show_advanced_professor_dashboard():
             
             qb1 = len([q for q in QUESTIONS if q.get("topico_id") in BLOCKS["Bloco 1"]["topicos"]])
             qb2 = len([q for q in QUESTIONS if q.get("topico_id") in BLOCKS["Bloco 2"]["topicos"]])
+            qb3 = len([q for q in QUESTIONS if q.get("topico_id") in BLOCKS["Bloco 3"]["topicos"]])
             
             b_col1, b_col2, b_col3, b_col4 = st.columns(4)
             with b_col1:
                 st.markdown(f"**Total de Questões:** `{len(QUESTIONS)}`")
                 st.markdown(f"• **Bloco 1 (T1 a T8):** `{qb1}` questões")
                 st.markdown(f"• **Bloco 2 (T9 e T10):** `{qb2}` questões")
+                st.markdown(f"• **Bloco 3 (T11 a T20):** `{qb3}` questões")
             with b_col2:
                 st.markdown("**Distribuição por Nível:**")
                 st.markdown(f"• **Fáceis:** `{q_facil}` questões")
                 st.markdown(f"• **Médias:** `{q_media}` questões")
                 st.markdown(f"• **Difíceis:** `{q_dificil}` questões")
             with b_col3:
-                st.markdown("**Novos Tópicos de Bioeletrogênese:**")
-                st.markdown("• **T9:** Nernst & Gradientes (15 q.)")
-                st.markdown("• **T10:** Goldman & Repouso (15 q.)")
+                st.markdown("**Biofísica Muscular (Novo Lote):**")
+                st.markdown("• **T11 a T15:** Músculo Esquelético")
+                st.markdown("• **T16 a T20:** Biofísica Cardíaca")
             with b_col4:
                 st.markdown("**Garantia do Sistema:**")
                 st.markdown("🎲 **Sorteio Randomizado:** Ativo")
@@ -614,9 +616,10 @@ def show_advanced_professor_dashboard():
 
         st.markdown("<div style='margin-top: 1.2rem;'></div>", unsafe_allow_html=True)
 
-        # ── COMPARATIVO ENTRE BLOCO 1 E BLOCO 2 ──
+        # ── COMPARATIVO ENTRE OS BLOCOS ──
         b1_topics = BLOCKS["Bloco 1"]["topicos"]
         b2_topics = BLOCKS["Bloco 2"]["topicos"]
+        b3_topics = BLOCKS["Bloco 3"]["topicos"]
 
         b1_tot = sum(category_stats[tk]["total_attempts"] for tk in b1_topics if tk in category_stats)
         b1_corr = sum(category_stats[tk]["correct_attempts"] for tk in b1_topics if tk in category_stats)
@@ -626,23 +629,32 @@ def show_advanced_professor_dashboard():
         b2_corr = sum(category_stats[tk]["correct_attempts"] for tk in b2_topics if tk in category_stats)
         b2_acc = (b2_corr / b2_tot * 100) if b2_tot > 0 else 0.0
 
-        col_b1, col_b2 = st.columns(2)
+        b3_tot = sum(category_stats[tk]["total_attempts"] for tk in b3_topics if tk in category_stats)
+        b3_corr = sum(category_stats[tk]["correct_attempts"] for tk in b3_topics if tk in category_stats)
+        b3_acc = (b3_corr / b3_tot * 100) if b3_tot > 0 else 0.0
+
+        col_b1, col_b2, col_b3 = st.columns(3)
         with col_b1:
             with st.container(border=True):
-                st.markdown("#### 📦 **Bloco 1:** Transporte em Membranas (T1 a T8)")
-                st.markdown(f"**Respostas Registradas:** `{b1_tot}` | **Taxa de Acerto:** `{b1_acc:.1f}%` ({b1_corr}/{b1_tot})")
+                st.markdown("#### 📦 **Bloco 1:** Transporte (T1 a T8)")
+                st.markdown(f"**Respostas:** `{b1_tot}` | **Acertos:** `{b1_acc:.1f}%` ({b1_corr}/{b1_tot})")
                 st.progress(b1_acc / 100.0 if b1_tot > 0 else 0.0)
         with col_b2:
             with st.container(border=True):
-                st.markdown("#### ⚡ **Bloco 2:** Bioeletrogênese & Potenciais (T9 e T10)")
-                st.markdown(f"**Respostas Registradas:** `{b2_tot}` | **Taxa de Acerto:** `{b2_acc:.1f}%` ({b2_corr}/{b2_tot})")
+                st.markdown("#### ⚡ **Bloco 2:** Bioeletrogênese (T9 e T10)")
+                st.markdown(f"**Respostas:** `{b2_tot}` | **Acertos:** `{b2_acc:.1f}%` ({b2_corr}/{b2_tot})")
                 st.progress(b2_acc / 100.0 if b2_tot > 0 else 0.0)
+        with col_b3:
+            with st.container(border=True):
+                st.markdown("#### 💪 **Bloco 3:** Muscular (T11 a T20)")
+                st.markdown(f"**Respostas:** `{b3_tot}` | **Acertos:** `{b3_acc:.1f}%` ({b3_corr}/{b3_tot})")
+                st.progress(b3_acc / 100.0 if b3_tot > 0 else 0.0)
 
         st.markdown("<div style='margin-top: 1rem;'></div>", unsafe_allow_html=True)
         
         selected_block_view = st.radio(
             "Filtrar Tópicos por Bloco:",
-            ["Todos os Tópicos (T1 a T10)", "Apenas Bloco 1 (T1 a T8 - Transporte)", "Apenas Bloco 2 (T9 e T10 - Bioeletrogênese)"],
+            ["Todos os Tópicos (T1 a T20)", "Apenas Bloco 1 (T1 a T8 - Transporte)", "Apenas Bloco 2 (T9 e T10 - Bioeletrogênese)", "Apenas Bloco 3 (T11 a T20 - Biofísica Muscular)"],
             horizontal=True
         )
 
@@ -653,6 +665,8 @@ def show_advanced_professor_dashboard():
             filtered_topics = b1_topics
         elif "Bloco 2" in selected_block_view:
             filtered_topics = b2_topics
+        elif "Bloco 3" in selected_block_view:
+            filtered_topics = b3_topics
         else:
             filtered_topics = list(TOPICS.keys())
 
@@ -667,7 +681,7 @@ def show_advanced_professor_dashboard():
             tot = cat["total_attempts"]
             corr = cat["correct_attempts"]
             rate = (corr / tot * 100) if tot > 0 else 0.0
-            block_tag = " [Bloco 1]" if t_id in b1_topics else " [Bloco 2]"
+            block_tag = " [Bloco 1]" if t_id in b1_topics else (" [Bloco 2]" if t_id in b2_topics else " [Bloco 3]")
             
             with st.expander(f"📌 {t_id}{block_tag}: {t_name} — {rate:.1f}% de Acerto ({corr}/{tot} tentativas)", expanded=False):
                 q_list = list(cat["questions"].values())
@@ -755,16 +769,21 @@ def show_advanced_professor_dashboard():
             q_map_all = {q['id']: q for q in QUESTIONS}
             s_b1_cases = [cid for cid in used_cases_list if q_map_all.get(cid, {}).get("topico_id") in b1_topics]
             s_b2_cases = [cid for cid in used_cases_list if q_map_all.get(cid, {}).get("topico_id") in b2_topics]
+            s_b3_cases = [cid for cid in used_cases_list if q_map_all.get(cid, {}).get("topico_id") in b3_topics]
 
-            sc1, sc2 = st.columns(2)
+            sc1, sc2, sc3 = st.columns(3)
             with sc1:
                 with st.container(border=True):
-                    st.markdown("#### 📦 **Bloco 1 (T1-T8):** Transporte em Membranas")
-                    st.markdown(f"**Questões Respondidas:** `{len(s_b1_cases)}` questões")
+                    st.markdown("#### 📦 **Bloco 1 (T1-T8):** Transporte")
+                    st.markdown(f"**Respondidas:** `{len(s_b1_cases)}` questões")
             with sc2:
                 with st.container(border=True):
-                    st.markdown("#### ⚡ **Bloco 2 (T9-T10):** Bioeletrogênese & Potenciais")
-                    st.markdown(f"**Questões Respondidas:** `{len(s_b2_cases)}` questões")
+                    st.markdown("#### ⚡ **Bloco 2 (T9-T10):** Bioeletrogênese")
+                    st.markdown(f"**Respondidas:** `{len(s_b2_cases)}` questões")
+            with sc3:
+                with st.container(border=True):
+                    st.markdown("#### 💪 **Bloco 3 (T11-T20):** Muscular")
+                    st.markdown(f"**Respondidas:** `{len(s_b3_cases)}` questões")
 
             st.markdown("<div style='margin-top: 1rem;'></div>", unsafe_allow_html=True)
             
@@ -775,7 +794,7 @@ def show_advanced_professor_dashboard():
                 
                 block_filter_st = st.selectbox(
                     "Filtrar Lista de Questões:",
-                    ["Todos os Blocos (T1 a T10)", "Apenas Bloco 1 (T1 a T8)", "Apenas Bloco 2 (T9 e T10)"],
+                    ["Todos os Blocos (T1 a T20)", "Apenas Bloco 1 (T1 a T8)", "Apenas Bloco 2 (T9 e T10)", "Apenas Bloco 3 (T11 a T20)"],
                     key=f"flt_st_{uid}"
                 )
                 
@@ -794,6 +813,8 @@ def show_advanced_professor_dashboard():
                         display_list = [c for c in display_list if q_map.get(c.get("case_id", ""), {}).get("topico_id") in b1_topics]
                     elif "Bloco 2" in block_filter_st:
                         display_list = [c for c in display_list if q_map.get(c.get("case_id", ""), {}).get("topico_id") in b2_topics]
+                    elif "Bloco 3" in block_filter_st:
+                        display_list = [c for c in display_list if q_map.get(c.get("case_id", ""), {}).get("topico_id") in b3_topics]
 
                     if not display_list:
                         st.info("Nenhuma questão registrada neste bloco para este aluno.")
