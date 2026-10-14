@@ -3425,9 +3425,9 @@ def evaluate_mcq_answer(question: Dict[str, Any], selected_option: str) -> Dict[
     level = "Avançado" if is_correct else "Incorreto"
     
     if is_correct:
-        feedback_text = f"**Excelente!** A alternativa **{gabarito}** está correta.\n\n💡 *Justificativa:* {correct_explanation}"
+        feedback_text = f"**Excelente!** A alternativa **{gabarito}** está correta.\n\n*Justificativa:* {correct_explanation}"
     else:
-        feedback_text = f"**Atenção:** A alternativa **{opt}** está incorreta.\n\n❌ *Por que está errada:* {why_wrong}\n\n🎯 *Por que é um distrator:* {why_distractor}"
+        feedback_text = f"**Atenção:** A alternativa **{opt}** está incorreta.\n\n*Por que está errada:* {why_wrong}\n\n*Por que é um distrator:* {why_distractor}"
     
     return {
         "is_correct": is_correct,
